@@ -1,0 +1,120 @@
+@usr_InitPost
+
+   s_AxisLetterX               = get_axis_name(submachine_ID,1) ; first axis letter
+	s_AxisLetterY               = get_axis_name(submachine_ID,2) ; secound axis letter
+	s_AxisLetterZ               = get_axis_name(submachine_ID,3) ; third axis letter
+{{-if HasFirstAxis}}
+	s_FirstRotAxisLetter        = get_axis_name(submachine_ID,4) ; letter of first rotation axis
+   	{{-if HasSecondAxis}}
+   		s_SecondRotAxisLetter       = get_axis_name(submachine_ID,5) ; letter of second rotation axis
+   	{{end-}}
+{{end~}}
+   s_RotationOrder             = get_plane_rotation_order(submachine_ID)   
+
+   ;---CNC-Software version and parametric feed
+   ;----File
+   s_Prefix                 = 'O'
+   s_Sufix                  = '.NC'
+   s_ProgramNr_f            = 'z4.0(n)'
+   b_GCodeFileWithNr        = false    ;true = open/close files with program_number, false = open/close files with the name from Software
+   ;----Basic options
+   i_MaxExtendedHomeNr      = {{usr.HomeNumberRange}}        ;6 = G54-59, 48 = G54.1 P1-P48, 300 = G54.1 P1-P300 (rule should be checked in @usr_PrintHomeNumber)
+   b_TappingWithM29         = {{usr.b_TappingWithM29}}    ;true = Tapping with M29 bevor G84
+   b_TappingWithG95         = {{usr.b_TappingWithG95}}    ;true = Tapping with G95/pitch, false = with feed
+{{-if HasFirstAxis}}
+	b_WithClamping           = {{usr.b_WithClamping}}	;true = M-Codes in @start_of_job and in @end_of_job | For x5_job in @usr_RotateToPlane, @drill_plane
+{{-end}}
+b_G49WithZ               = {{usr.b_G49WithZ}}    ;true = G49 G53/G91 G28 Z0. ; false = G49 (MP5006#6=0 ==> with Z-movement / MP5006#6=1 coord. without Z-movement just system new positioning)
+   b_UseVMIDRetreatLimits   = {{usr.b_UseVMIDRetreatLimits}}	;true = used VMID Limits instead of fixed limits
+   b_SmoothinAvailable      = {{!(usr.sVMID_MO_HSCoption == "none")}}		;true = activated HSC/Smoothing function
+   ;-> !! Assign HSC option in the machine options !! and see @usr_ResetHSC <-
+   ;----Feed/Parametric Feed
+{{if usr.withParametricfeed-}}
+	b_ParametricFeed         = false    ;shoud be checked which # parameters are free
+   i_StartParamFeed         = 601      ;First # parameter free for parametric feed
+{{end~}}
+b_FeedSpinInEachJob      = {{usr.b_FeedSpinInEachJob}}    ;true = feed&spin codes at each @start_of_job
+   ;---Spin
+   b_WithoutSpeedMonitoring = {{usr.b_WithoutSpeedMonitoring}}    ;true = use M203/M204 spin without monitoring, false = M3/M4
+   ;---Tool
+   b_T0callEndPrg           = {{usr.b_T0callEndPrg}}    ;true = call T0 tool by end programm
+   b_ToolPreselect          = {{usr.b_ToolPreselect}}    ;true = preselection of the next tool in @change_tool
+   b_TCwithPlaceNumber      = {{usr.b_TCwithPlaceNumber}}    ;true = tool change with place number in tool ID
+   b_M1beforToolChange      = {{usr.b_M1beforToolChange}}    ;true = M1 befor change tool
+   b_M1AfterToolChange      = {{usr.b_M1AfterToolChange}}    ;true = M1 after change tool
+   b_M5beforToolChange      = {{usr.b_M5beforToolChange}}    ;true = M5  befor change tool
+   i_HOffset                = {{usr.i_HOffset}}        ;-1 = no output / 0 = h_offset from SolidCAM-Job / -2 = from tool position,index_table (always H01) / 4120 ==> H#4120
+   i_DOffset                = {{usr.i_DOffset}}        ;-1 = no output / 0 = d_offset from SolidCAM-Job / -2 = from tool position,index_table (always D01) / 4120 ==> D#4120
+   b_FineToolCorr           = {{usr.b_FineToolCorr}}    ;true = tool fine correction in tool table H and D
+   b_ToolWearWithG10        = {{usr.b_ToolWearWithG10}}    ;true = tool wear with G10 ; false = tool wear direct over machine address
+   i_ToolWearCompDiam       = {{usr.i_ToolWearCompDiam}}       ;13 = System C (G10 L11/13 P), 10 = System A/B can not tool wear correction
+   ;---Subprograms and Loops
+   b_M98                    = {{usr.b_M98}}    ;true = subprograms in external files (M98), false = subprograms in main program (M97)
+   b_SubProgramG65          = {{usr.b_SubProgramG65}}	;true = calling of subprograms with the G65 (macro)
+   ;---Kinematic / Approach & Retreat
+   s_Retreat                = '{{usr.sRetreatCommand}}'    ;G28, G30 or G53
+   s_G28With                = '{{usr.sO_G28With}}'    ;Address space WUV or ZXY for G28
+   	{{-if HasFirstAxis}}
+   		;---Tilting
+   		s_TiltCycle              = '{{usr.tiltCycle}}'	;G68.2 or Mxxx = TiltCycles; SC = SolidCAM calculation macro (@usr_NewCalcHomeData|iL_MultiplierFirstRotAxis and iL_MultiplierSecondRotAxis must be correct defined)
+   	{{end~}}
+   	b_HomeNumberAtEachJob    = {{usr.b_HomeNumberAtEachJob}}    ;true = HomeNumber by each Job
+	{{-if usr.tiltCycle == "SC"}}
+   		;----Calc Marcro
+   		b_CalcMacroTest          = false    ;true = print the values of new or MAC-Positions (@usr_NewCalcHomeData)
+   		i_CalcMacroNumber        = {{usr.i_CalcMacroNumber}}     ;Number of Subprogram of SoliDCAM calculation macro (@usr_NewCalcHomeData)
+   		i_StartParamPos          = {{usr.i_StartParamPos}}      ;First free # parameter for SoliDCAM calculation macro (@usr_NewCalcHomeData)
+   		i_CalcHomeSavedIn        = {{usr.i_CalcHomeSavedIn}}        ;305(299) = G54.1 P299 / 47 = G54.1 P47 / 5 = G58 (active home number with new position after calculation macro)
+   		i_MRZPointSavedIn        = {{usr.i_MRZPointSavedIn}}       ;306(300) = G54.1 P300 / 48 = G54.1 P48 / 6 = G59 (home number of the M.R.Z. Point for calculation macro)
+   {{end~}}
+	{{-if HasFirstAxis}}
+   		;---Simultan
+   		s_CoordSetSim            = '{{usr.s_CoordSetSim}}'       ;for simultaneus without RTCP (RPOS;MPOS;TPOS;TOPOS or nothing for HPOS)
+   		i_TCPType                = {{usr.i_TCPType}}        ;1=G43.4 with angles / 2=G43.5 with vectors (MP11776 defines the tolerance in mm)
+   	{{-end}}
+
+   if !b_SubProgramG65
+      if b_M98
+         i_ProcCall=98
+         s_ProcWord='P'
+      else
+         i_ProcCall=97
+         s_ProcWord='P'
+      endif
+   else
+      i_ProcCall=65
+      s_ProcWord='P'
+   endif
+
+   ;Machinetype 3x 4x or 5
+{{-if HasFirstAxis}}
+   if s_SecondRotAxisLetter eq '' and s_FirstRotAxisLetter eq '' ;3x
+      b_Is3XMachine = true
+      b_Is4XMachine = false
+      b_Is5XMachine = false
+   elseif s_SecondRotAxisLetter eq '' and s_FirstRotAxisLetter ne '' ;4x
+      b_Is3XMachine = false
+      b_Is4XMachine = true
+      b_Is5XMachine = false
+   else ;5x
+      b_Is3XMachine = false
+      b_Is4XMachine = false
+      b_Is5XMachine = true
+   endif
+{{else}}
+	b_Is3XMachine = true
+{{end}}
+
+   call @usr_TestHeadHead((1)) ;enter here the submachine ID which contains the original axes
+   call @usr_TestToStraightKinematics
+
+   if s_RotationOrder eq 'KINEMATIC'
+      if !b_StraightKinematics
+         call @usr_PrintMessage((18),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@usr_InitPost'))
+      endif
+   elseif instr(s_RotationOrder,'Z1') ne 0 or instr(s_RotationOrder,'Y1') ne 0 or instr(s_RotationOrder,'X1') ne 0 
+      call @usr_PrintMessage((25),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@usr_InitPost'))
+   elseif s_RotationOrder eq 'CYCLE19'
+      call @usr_PrintMessage((26),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@usr_InitPost'))
+   endif
+endp
