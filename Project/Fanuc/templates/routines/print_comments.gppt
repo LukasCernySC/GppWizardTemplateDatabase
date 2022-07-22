@@ -24,14 +24,18 @@
    sLA_Message<<4>>  = '{{res.sLA_Message4}}'
    sLA_Message<<5>>  = '{{res.sLA_Message5}}'
    sLA_Message<<6>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message6}}'
-   sLA_Message<<7>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): @drill_4x_pnt noch nicht getestet!'
-   sLA_Message<<8>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Abwicklung mit KopfKopf-Kinematik nicht mï¿½glich'
-   sLA_Message<<9>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Die NP-Positionen dï¿½rfen bei 3X-Ausgabe nicht verwendet werden'
-   sLA_Message<<10>> = 'PP/CAM: Ein Wechsel der SUB-MASCHINE zwischen Jobs ist nicht erlaubt! Kann aber, wenn benï¿½tigt, mit "b_SubMachineChange" erlaubt werden.'
-   sLA_Message<<11>> = 'PP/VMID: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei Verwendung der Loops muss der VMID-Parameter "Unterprogramme" aktiviert werden'
-   sLA_Message<<12>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Fehlerhafter Adressraum angegeben fï¿½r G28'
-   sLA_Message<<13>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei Bohrzyklus "'+drill_cycle_name+'" sollte ein Gewindebohrer benutzt werden'
-   sLA_Message<<14>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Unter Verschiedene Job-Parameter "3D-Kompensation" muss definiert werden'
+   sLA_Message<<7>>  = {{if HasFirstAxis-}}
+   '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message7}}'
+   {{else-}}
+   {{"\x27\x27 ;not used"}}
+   {{end-}}
+   sLA_Message<<8>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message8}}'
+   sLA_Message<<9>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message9}}'
+   sLA_Message<<10>> = '{{res.sLA_Message10}}'
+   sLA_Message<<11>> = '{{res.sLA_Message11}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message11_1}}'
+   sLA_Message<<12>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message12}}'
+   sLA_Message<<13>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message13}}'+drill_cycle_name+'{{res.sLA_Message13_1}}'
+   sLA_Message<<14>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message14}}-{{}}'
    sLA_Message<<15>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Das Format beim Zyklus G84/G74 mit M29 sollte ï¿½berprï¿½ft werden'
    sLA_Message<<16>> = job_name+': Sie kï¿½nnen optional auch unter Bewegungseingrenzung --> die 4.Achse ausschalten.'
    sLA_Message<<17>> = 'PP: Error! Check VMID definition. Dummy device is wrong!'
