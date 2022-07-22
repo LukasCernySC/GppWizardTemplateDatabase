@@ -36,20 +36,21 @@
    sLA_Message<<12>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message12}}'
    sLA_Message<<13>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message13}}'+drill_cycle_name+'{{res.sLA_Message13_1}}'
    sLA_Message<<14>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message14}}-{{}}'
-   sLA_Message<<15>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Das Format beim Zyklus G84/G74 mit M29 sollte ï¿½berprï¿½ft werden'
-   sLA_Message<<16>> = job_name+': Sie kï¿½nnen optional auch unter Bewegungseingrenzung --> die 4.Achse ausschalten.'
-   sLA_Message<<17>> = 'PP: Error! Check VMID definition. Dummy device is wrong!'
-   sLA_Message<<18>> = 'PP: Schwenkreihenfole Kinematik-Achsen und 45-Grad Kinematik nicht mï¿½glich, auf Benutzerdefiniert wechseln!'
-   sLA_Message<<19>> = 'PP/VMID: HSC-Option (G05.1 oder G121 in den Maschinenoptionen nicht gesetzt!'
-   sLA_Message<<20>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): HSC-Stufe (P1 oder M3 usw) in den Joboptionen nicht gesetzt!'
-   sLA_Message<<21>> = 'Die Bruchkontrolle nicht integriert. Bitte wenden Sie sich an den SolidCAM Support'
-   sLA_Message<<22>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei der Spiegelung um nur einer Achse ist die Kreisbewegung und die Korrekturrichtung umgekehrt'
-   sLA_Message<<23>> = 'Die maximale programmierbare Nullpunktnummer ï¿½berschritten. Bitte prï¿½fen Sie die GPP-Parameter "i_MRZPointSavedIn"'
-   sLA_Message<<24>> = 'Die maximale programmierbare Nullpunktnummer ï¿½berschritten. Bitte prï¿½fen Sie die GPP-Parameter "i_CalcHomeSavedIn"'
-   sLA_Message<<25>> = 'PP: Schwenkreihenfolge fï¿½r G68.2 nicht zulï¿½ssig'
+   sLA_Message<<15>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message15}}'
+   sLA_Message<<16>> = '';not used
+   sLA_Message<<17>> = '{{res.sLA_Message17}}'
+   sLA_Message<<18>> = '{{res.sLA_Message18}}'
+   sLA_Message<<19>> = '';not used
+   sLA_Message<<20>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message20}}'
+   sLA_Message<<21>> = '';not used
+   sLA_Message<<22>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message22}}'
+   sLA_Message<<23>> = '{{res.sLA_Message23}}'
+   sLA_Message<<24>> = '{{res.sLA_Message24}}'
+   sLA_Message<<25>> = '{{res.sLA_Message25}}'
+   sLA_Message<<26>> = '{{res.sLA_Message26}}'
    
    ;'\x09' = TAP
-   sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '\x0a' + ';.....Meldung Nr.'+tostr(iL_MessageCounter)+' Aufruf aus '+sL_CallRoutine
+   sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '\x0a' + ';.....{{res.alert}}'+tostr(iL_MessageCounter)+'{{res.call_from}}'+sL_CallRoutine
 
    if instr(sL_ToDo,'{{res.message}}') ne 0
       if sL_CallRoutine ne ''
@@ -60,7 +61,7 @@
       endif 
       
       if sL_CallRoutine ne ''
-         sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '; Meldung Nr.'+tostr(iL_MessageCounter)+' Aufruf aus '+sL_CallRoutine ;TPL 4.0
+         sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '; {{res.alert}}'+tostr(iL_MessageCounter)+'{{res.call_from}}'+sL_CallRoutine ;TPL 4.0
       endif
    endif
    
@@ -70,7 +71,7 @@
       {nl,';--------------------------------------------'}
       {nl}
       if instr(sL_ToDo,'{{res.abort}}') ne 0
-         {nl,';--- Abbruch der NC-Erzeugung ---'}
+         {nl,';--- {{res.gcode_abort}} ---'}
          abort
       endif
    endif

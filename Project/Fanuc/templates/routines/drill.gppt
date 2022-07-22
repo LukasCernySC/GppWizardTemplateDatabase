@@ -126,7 +126,7 @@ end
    if !rotate_plane_off
       if !b_G49WithZ
          if i_HOffset eq -1
-            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill_plane'))
+            call @usr_PrintMessage((1),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@drill_plane'))
          else
             {nb (43):gcode_f i_HOffset:h_offset_f}
             b_G49Active=false
@@ -169,7 +169,7 @@ end
             {nb (43.5):gcode_f}
          endif
          if i_HOffset eq -1
-            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill_plane'))
+            call @usr_PrintMessage((1),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@drill_plane'))
          else
             {i_HOffset:h_offset_f sA_Comment<<3>>}
          endif
@@ -193,7 +193,7 @@ endp
    
    if drill_cycle_name eq 'G84_G74'
       if tool_type ne tap_mill
-         call @usr_PrintMessage((13),('meldung+abbruch'),('@drill'))
+         call @usr_PrintMessage((13),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@drill'))
       endif
    endif
 
@@ -212,7 +212,7 @@ endp
       n_DrillLowerZ = (drill_depth*-1)
       if b_G49WithZ
          if i_HOffset eq -1
-            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill'))
+            call @usr_PrintMessage((1),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@drill'))
          else
             {nb,(43):gcode_f,i_HOffset:h_offset_f (0):zhpos_f}
             b_G49Active = false
@@ -289,7 +289,7 @@ if usr.b_DC_G84}}
       endif
       
       if b_TappingWithM29
-         call @usr_PrintMessage((15),('meldung+abbruch'),('@drill'))
+         call @usr_PrintMessage((15),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@drill'))
          {nb,(29):mcode_f,spin}
       else
          {nb,(80):mcode_f,spin}
@@ -383,7 +383,7 @@ endp
 {{if HasFirstAxis}}
 @drill4x_pnt
 
-   call @usr_PrintMessage((7),('meldung+abbruch'),('@drill'))
+   call @usr_PrintMessage((7),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@drill'))
    gcode=0
    {nb gcode[xopos:xlpos_f],[yopos:ylpos_f],[zopos:zlpos_f],(apos+angle):apos_f}
 

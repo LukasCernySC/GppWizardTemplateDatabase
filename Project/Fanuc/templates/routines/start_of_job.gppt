@@ -1,7 +1,7 @@
 @start_of_job
 
    if i_SubmaschineIDSave ne submachine_ID and !b_SubMachineChange
-      call @usr_PrintMessage((10),('meldung+abbruch'),('@start_of_job'))
+      call @usr_PrintMessage((10),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
    endif
 
 {{if usr.b_HomeNumberAtEachJob-}}
@@ -13,15 +13,15 @@
    call @usr_InitPrintComments
 
    if position ne 1 and b_Is3XMachine ;because of parts from 5x-VMID
-      call @usr_PrintMessage((9),('meldung+abbruch'),('@start_of_job'))
+      call @usr_PrintMessage((9),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
    endif
 
    if b_LoopTransform and !bA_ProcInLoop<<label>>
-      call @usr_PrintMessage((11),('meldung+abbruch'),('@start_of_job'))
+      call @usr_PrintMessage((11),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
    endif
 
    if b_IsHeadHead and rot_axis_type ne axis4_none
-      call @usr_PrintMessage((8),('meldung+abbruch'),('@start_of_job'))
+      call @usr_PrintMessage((8),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
    endif
 
    call @usr_InitPost ;because of different format of coord. at x5_job
@@ -35,12 +35,12 @@ if HSM_job eq true or left(job_type,3) eq '3-d' or left(job_type,3) eq 'hss' or 
             if sVMID_MI_HSCaditional ne ''
                {' 'sVMID_MI_HSCaditional}
             else
-               call @usr_PrintMessage((20),('meldung'),('@start_of_job'))
+               call @usr_PrintMessage((20),('{{res.message | string.downcase}}'),('@start_of_job'))
             endif
             {' 's_FirstComment'HSC EIN's_LastComment}
             b_HighSpeed = true
          else
-            call @usr_PrintMessage((19),('meldung+abbruch'),('@start_of_job'))
+            {{#call @usr_PrintMessage((19),('meldung+abbruch'),('@start_of_job'))}}
          endif
       else
          
@@ -73,7 +73,7 @@ if HSM_job eq true or left(job_type,3) eq '3-d' or left(job_type,3) eq 'hss' or 
         	{nb,'#[12000 + #4120] = #561'}
         else
         	if i_ToolWearCompDiam eq 10 or i_ToolWearCompDiam eq 11 ;system A/system B
-            	call @usr_PrintMessage((6),('meldung+abbruch'),('@start_of_job'))
+            	call @usr_PrintMessage((6),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
         	elseif i_ToolWearCompDiam eq 13 ;system C
             	{nb,(10):gcode_f'L11 P'tool_number:integer_def_f' R#560'} ;Verschleiss Lï¿½nge
             	{nb,(10):gcode_f'L13 P'tool_number:integer_def_f' R[#561*2]'} ;Verschleiss Durchmesser

@@ -110,11 +110,11 @@ b_FeedSpinInEachJob      = {{usr.b_FeedSpinInEachJob}}    ;true = feed&spin code
 
    if s_RotationOrder eq 'KINEMATIC'
       if !b_StraightKinematics
-         call @usr_PrintMessage((18),('meldung+abbruch'),('@usr_InitPost'))
+         call @usr_PrintMessage((18),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@usr_InitPost'))
       endif
    elseif instr(s_RotationOrder,'Z1') ne 0 or instr(s_RotationOrder,'Y1') ne 0 or instr(s_RotationOrder,'X1') ne 0 
-      call @usr_PrintMessage((25),('meldung+abbruch'),('@usr_InitPost'))
+      call @usr_PrintMessage((25),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@usr_InitPost'))
    elseif s_RotationOrder eq 'CYCLE19'
-      call @usr_PrintMessage((19),('meldung+abbruch'),('@usr_InitPost'))
+      call @usr_PrintMessage((26),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@usr_InitPost'))
    endif
 endp
