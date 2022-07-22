@@ -1,0 +1,323 @@
+{{if vmid.anyCoolantActive}}
+;-------------------
+;#region |07-Coolant
+;-------------------
+
+@controlled_coolant
+
+   if coolant_control eq 1
+   b_CoolantOnCode=true
+      call @usr_coolingOn
+   else
+      call @usr_CoolingOff
+   endif
+   
+endp
+
+;-------------------
+
+@usr_coolingOn
+
+   ;0- no action
+   ;1- on
+   ;2- off
+   if flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_FloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_FloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if LP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_LpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_LpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if HP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_HpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_HpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if flood_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_FloodIvalCoolantOn:mcode_f}
+      if flood_coolant_val ne 0
+         {flood_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_FloodIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_ThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_ThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if HP_through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_HpThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_HpThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if LP_through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_LpThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_LpThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if through_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_ThroughIvalCoolantOn:mcode_f}
+      if through_coolant_val ne 0
+         {through_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_ThroughIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if air_blast_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_AirBlastCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_AirBlastCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if air_through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_AirThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_AirThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if HP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_HpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_HpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if LP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_LpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_LpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mist_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MistIvalCoolantOn:mcode_f}
+      if mist_coolant_val ne 0
+         {mist_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MistIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if minimum_quantity_L eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MinQuanityLCoolantOn:mcode_f}
+      if minimum_quantity_L_val ne 0
+         {minimum_quantity_L_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MinQuanityLCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_HP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachHpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachHpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_LP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachLpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachLpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_flood_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachFloodIvalCoolantOn:mcode_f}
+      if mach_flood_coolant_val ne 0
+         {mach_flood_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachFloodIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_LP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachLpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachLpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_HP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachHpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachHpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_mist_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachMistIvalCoolantOn:mcode_f}
+      if mach_mist_coolant_val ne 0
+         {mach_mist_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachMistIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_active_air_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachActiveAirCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachActiveAirCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_bed_rinsing_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachBedRinsingCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachBedRinsingCoolantOff
+      b_CoolantOnCode=true
+   
+   endif
+
+   b_CoolantOnCode=false
+
+endp
+
+;-------------------
+
+@usr_CoolingOff
+
+   while i_CoolantCount > i_RemoveCount
+      i_RemoveCount=(i_RemoveCount+1)
+      iLookAheadCount=0
+      while i_CoolantCount > iLookAheadCount
+         iLookAheadCount=(iLookAheadCount+1)
+         if i_RemoveCount+iLookAheadCount <= 9999
+            if iA_CoolCodeSave<<i_RemoveCount>> eq iA_CoolCodeSave<<i_RemoveCount+iLookAheadCount>>
+               iA_CoolCodeSave<<i_RemoveCount+iLookAheadCount>>=0
+            endif
+         endif
+      endw
+      if iA_CoolCodeSave<<i_RemoveCount>> ne 0
+         {nb,iA_CoolCodeSave<<i_RemoveCount>>:mcode_f}
+      endif
+   endw
+   i_RemoveCount  = 0
+   i_CoolantCount = 0
+
+endp
+
+;-------------------
+;#endregion
+{{end}}

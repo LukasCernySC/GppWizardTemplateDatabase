@@ -1,0 +1,90 @@
+@usr_ParametricFeedDef
+
+   if b_ParametricFeed
+      if left(job_type,6) ne 'spiral' and job_type ne 'tool_box'
+         if instr(job_type,'drill') eq 0
+            if HSM_job
+               {nb,'#'(i_StartParamFeed)'='feed_rapid:ParametricFeed_f,sA_Comment<<24>>}
+               {nb,'#'(i_StartParamFeed+1)'='feed_rate:ParametricFeed_f,sA_Comment<<25>>}
+               {nb,'#'(i_StartParamFeed+2)'='feed_ramp_down:ParametricFeed_f,sA_Comment<<26>>}
+               {nb,'#'(i_StartParamFeed+3)'='feed_ramp_up:ParametricFeed_f,sA_Comment<<27>>}
+            else
+               if X5_job or left(job_type,3) eq 'hss'
+                  {nb,'#'(i_StartParamFeed+1)'='feed_rate:ParametricFeed_f,sA_Comment<<25>>}
+                  {nb,'#'(i_StartParamFeed+2)'='z_feed:ParametricFeed_f,sA_Comment<<28>>}
+                  {nb,'#'(i_StartParamFeed+3)'='finish_feed:ParametricFeed_f,sA_Comment<<29>>}
+                  n_SaveZFeed=z_feed
+               else
+                  if job_type eq 'face_milling'  ;Planfraesen
+                     {nb,'#'(i_StartParamFeed)'='feed_link:ParametricFeed_f,sA_Comment<<30>>}
+                  endif
+                  {nb,'#'(i_StartParamFeed+1)'='feed_rate:ParametricFeed_f,sA_Comment<<25>>}
+                  {nb,'#'(i_StartParamFeed+2)'='z_feed:ParametricFeed_f,sA_Comment<<28>>}
+                  {nb,'#'(i_StartParamFeed+4)'='finish_feed:ParametricFeed_f,sA_Comment<<50>>}
+                  {nb,'#'(i_StartParamFeed+5)'='(finish_feed*feed_lead_in_percent/100):ParametricFeed_f,sA_Comment<<51>>}
+                  {nb,'#'(i_StartParamFeed+6)'='(finish_feed*feed_lead_out_percent/100):ParametricFeed_f,sA_Comment<<52>>}
+               endif
+            endif
+         else
+            {nb,'#'(i_StartParamFeed+7)'='z_feed:ParametricFeed_f,sA_Comment<<31>>}
+         endif
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@usr_ParametricFeedPrint
+
+   if change(feed) or s_FeedTypeSave ne feed_type
+      if instr(job_type,'drill') eq 0
+         if HSM_job
+            if feed_type eq 'feed_rate'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed+1):'5.3(n)')
+            endif
+            if feed_type eq 'ramp_down_feed'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed+2):'5.3(n)')
+            endif
+            if feed_type eq 'ramp_up_feed'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed+3):'5.3(n)')
+            endif
+            if feed_type eq 'feed_rapid'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed):'5.3(n)')
+            endif
+         else
+            if X5_job or left(job_type,3) eq 'hss' ; feed_type always feed_rate
+               if feed eq n_SaveZFeed ;z_feed  ; (because of bug in SC2008 R12 and SC2009)
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+2):'5.3(n)')
+               else
+                  if feed eq finish_feed
+                     s_ParaFeedValue='#'+tostr((i_StartParamFeed+3):'5.3(n)')
+                  else
+                     s_ParaFeedValue='#'+tostr((i_StartParamFeed+1):'5.3(n)')
+                  endif
+               endif
+            else
+               if feed_type eq 'z_feed' or feed_type eq 'z_feed_safety'
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+2):'5.3(n)')
+               elseif feed_type eq 'feed_link'  ;job Planfraesen
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed):'5.3(n)')
+               elseif feed eq finish_feed
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+4):'5.3(n)')
+               elseif feed_type eq 'feed_finish_lead_in'
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+5):'5.3(n)')
+               elseif feed_type eq 'feed_finish_lead_out'
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+6):'5.3(n)')
+               else ;feed_rate
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+1):'5.3(n)')
+               endif
+            endif
+         endif
+      else
+         s_ParaFeedValue='#'+tostr((i_StartParamFeed+7):'5.3(n)')
+      endif
+      {'F's_ParaFeedValue}
+   endif
+
+   s_FeedTypeSave=feed_type
+
+endp

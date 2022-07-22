@@ -1,0 +1,130 @@
+{{-
+b_WithEncryption = usr.useEncryption
+s_FirstComment = "\x3b\x20"
+sA_Status = [ "open", "beta", "closed" ]
+}}
+ 
+{{s_FirstComment-}}{{ MyPrintSign("\x2d",78)}}
+{{s_FirstComment-}}Status				: {{sA_Status[0]~}}
+
+{{s_FirstComment-}}{{ MyPrintSign("\x2d",78)}}
+{{s_FirstComment}}reseller				: {{usr.reseller}}
+{{s_FirstComment}}customer				: {{usr.customer}}
+{{s_FirstComment}}machine				: {{mach.machine}}
+{{s_FirstComment}}type					: {{}}
+{{-
+
+for axe in vmid.axes
+	axe.name
+end
+
+}} machine plane XY
+{{s_FirstComment}}control unit			: {{mach.controller}}
+{{s_FirstComment}}CAM Version			: {{usr.camversion}}
+{{ b_IsGmbH = usr.reseller | string.downcase | string.contains "gmbh" }}
+
+{{-if b_IsGmbH && usr.postnumber > 0}}
+	{{-s_FirstComment}}Nummer{{ MyPrintSign("\x09",4)}}: PP-
+	{{-usr.postnumber}}
+{{end-}}
+
+{{s_FirstComment-}}{{MyPrintSign("\x2d",78)}}
+{{s_FirstComment-}} specials				: deep drill
+{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: zero point setup
+{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: jump marks
+{{s_FirstComment-}}{{MyPrintSign("\x2d",78)}}
+{{s_FirstComment-}}part_options
+{{-MyPrintSign("\x09",2)
+if usr | object.has_key "bVMID_MO_FineShiftAfterRot"
+	iL_Tab = 6
+else
+	iL_Tab = 6
+end
+iL_Tab2 = 4
+iL_Tab3 = 4
+#if usr | object.has_key "bCalcMacroVMID"
+if usr.tiltCycle == "SC"
+	if res.CommentPartOptions2 == "Calc macro"
+		iL_Add = 1
+	else
+		iL_Add = 0
+	end~}}
+	: {{res.CommentPartOptions2}}{{MyPrintSign("\x09",iL_Tab2+iL_Add)}}(bCalcMacroVMID){{MyPrintSign("\x09",iL_Tab3)}}| in case of SC calculation macro, otherwise could be deleted
+	{{b_WasOption1 = true~}}
+{{end-}}
+
+{{if usr | object.has_key "bVMID_MO_G93"~}}	
+	{{s_FirstComment-}}{{MyPrintSign("\x09",iL_Tab)}}: G93(Inversenvorschub){{MyPrintSign("\x09",iL_Tab2)}}(bVMID_MO_G93)       | should be added in VMID if G93 is nedeed in @line_5x (Settings 34 and 79)
+{{end-}}
+
+{{if usr | object.has_key "sVMID_MO_HSCoption"~}}
+	{{if b_WasOption1
+		s_FirstComment}}{{MyPrintSign("\x09",iL_Tab)
+	end~}}
+: HSC-Option{{MyPrintSign("\x09",iL_Tab2+1)}}(sVMID_MO_HSCoption){{MyPrintSign("\x09",iL_Tab3-1)}}| Command for HSC Operation
+{{end-}}
+
+{{if usr | object.has_key "bVMID_MO_WithZeroPointSeting"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",iL_Tab)}}: Nullpunkte schreiben{{MyPrintSign("\x09",iL_Tab2-1)}}(bVMID_MO_WithZeroPointSeting){{MyPrintSign("\x09",iL_Tab3-3)}}| 
+{{end-}}
+
+{{if usr | object.has_key "bVMID_MO_FineShiftAfterRot"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",iL_Tab)}}: Feinkorrektur nach Drehung	(bVMID_MO_FineShiftAfterRot)	| 
+{{end-}}
+
+
+{{s_FirstComment-}}{{MyPrintSign("\x2d",78)}}
+{{s_FirstComment-}}job_options
+{{-MyPrintSign("\x09",2)
+
+if usr | object.has_key "bVMID_MI_PRGStop"~}}
+	: PROGR_STOP                (bVMID_MI_PRGStop)         | program stopp @misc_act
+{{end-}}
+
+{{if usr | object.has_key "bVMID_MI_HSCbyAllJobs"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: HSC Ausgabe in allen Jobs (bVMID_MI_HSCbyAllJobs)    | Activate overgrinding even with 2.5D Jobs 
+{{end-}}
+
+{{if usr | object.has_key "sVMID_MI_HSCaditional"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: HSC Zusatz                (sVMID_MI_HSCaditional)    | Addition for HSC Command
+{{end-}}
+
+{{if usr | object.has_key "bVMID_MI_G61_On"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: G61_GENAUHALT_AN          (bVMID_MI_G61_On)          | Exact stop / G64 cancels this command
+{{end-}}
+
+{{if usr | object.has_key "iVMID_MI_3DCompSide"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: 3D-Kompensationseite      (iVMID_MI_3DCompSide)      | Compensation side in @compensation_3d (not possible because ZigZag Strategy in Operation)
+{{end-}}
+
+{{if usr | object.has_key "sVMID_MI_UserInputStart"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: Ausgabe am Job Start      (sVMID_MI_UserInputStart)  | additional optional output at job start
+{{end-}}
+
+{{if usr | object.has_key "sVMID_MI_UserInputEnd"~}}
+	{{s_FirstComment-}}{{MyPrintSign("\x09",6)}}: Ausgabe am Job Ende       (sVMID_MI_UserInputEnd)    | additional optional output at job end
+{{end-}}
+
+{{s_FirstComment-}}{{MyPrintSign("\x2d",78)}}
+{{s_FirstComment-}}08.07.2022 TPL 1.0   : Start Template for all Fanuc i-Serie (3X, 4X, 5X) with GPP Wizard (SolidCAM, RJU)
+{{s_FirstComment-}}{{ MyPrintSign("\x2d",78)}}
+
+{{s_FirstComment-}}----VMIDs used-----
+{{sL_VmidBoolName = "b_Is" + vmid.id | string.replace("\x20","") | string.replace("\x2d","\x5f")}}
+{{s_FirstComment-}}| {{vmid.id}}.vmid | {{sL_VmidBoolName}}
+{{-if b_IsGmbH-}}
+| PP-{{usr.postnumber
+end}}
+
+@usr_Revision(string sL_RevLocal)
+
+	sL_RevLocal = 'REV 1.0-{{usr.camversion | string.slice (usr.camversion | string.size - 2)}} {{date.now | date.to_string '%d/%m/%y'}}' {{s_FirstComment | string.replace "\x20" ""}}{{usr.postguy}} | new for {{usr.customer}} 
+{{-
+	if b_IsGmbH
+		if usr.postnumber > 0
+			}} (PP-{{usr.postnumber}}){{
+		end
+	end
+}}
+
+endp

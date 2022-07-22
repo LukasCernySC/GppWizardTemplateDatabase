@@ -1,0 +1,64 @@
+{{-if vmid.spindles[0].coolants.flood}}
+	global integer i_FloodCoolantOn i_FloodCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.through}}
+	global integer i_ThroughCoolantOn i_ThroughCoolantoff
+{{-end-}}
+{{if vmid.spindles[0].coolants.air}}
+	global integer i_AirBlastCoolantOn i_AirBlastCoolantOff
+{{-end-}}
+{{-if vmid.spindles[0].coolants.airThrough}}
+	global integer i_AirThroughCoolantOn i_AirThroughCoolantOff 
+{{-end-}}
+{{if vmid.spindles[0].coolants.floodHighLow}}
+	global integer i_HpFloodCoolantOn i_HpFloodCoolantOff i_LpFloodCoolantOn i_LpFloodCoolantOff i_MpFloodCoolantOn i_MpFloodCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.throughHighLow}}
+	global integer i_HpThroughCoolantOn i_HpThroughCoolantOff i_LpThroughCoolantOff i_LpThroughCoolantOn i_MpThroughCoolantOff i_MpThroughCoolantOn
+{{-end-}}
+{{if vmid.spindles[0].coolants.mist}}
+	global integer i_MistCoolantOn i_MistCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.mistHighLow}}
+	global integer i_HpMistCoolantOn i_HpMistCoolantOff i_LpMistCoolantOn i_LpMistCoolantOff i_MpMistCoolantOn i_MpMistCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.floodIval}}
+	global integer i_FloodIvalCoolantOn i_FloodIvalCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.throughIval}}
+	global integer i_ThroughIvalCoolantOn i_ThroughIvalCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.mistIval}}
+	global integer i_MistIvalCoolantOn i_MistIvalCoolantOff
+{{-end-}}
+{{if vmid.spindles[0].coolants.minQuantity}}
+	global integer i_MinQuanityLCoolantOn i_MinQuanityLCoolantOff
+{{-end-}}
+{{if vmid.machCoolants.flood}}
+	global integer i_MachFloodCoolantOn i_MachFloodCoolantOff
+{{-end-}}
+{{if vmid.machCoolants.floodHighLow}}
+	global integer i_MachHpFloodCoolantOn i_MachHpFloodCoolantOff i_MachLpFloodCoolantOff i_MachLpFloodCoolantOn i_MachMpFloodCoolantOff i_MachMpFloodCoolantOn
+{{-end-}}
+{{if vmid.machCoolants.floodIval}}
+	global integer i_MachFloodIvalCoolantOff i_MachFloodIvalCoolantOn
+{{-end-}}
+{{if vmid.machCoolants.mist}}
+	global integer i_MachMistCoolantOff i_MachMistCoolantOn
+{{-end-}}
+{{if vmid.machCoolants.mistHighLow}}
+	global integer i_MachHpMistCoolantOn i_MachHpMistCoolantOff i_MachLpMistCoolantOn i_MachLpMistCoolantOff i_MachMpMistCoolantOn i_MachMpMistCoolantOff
+{{-end-}}
+{{if vmid.machCoolants.mistIval}}
+	global integer i_MachMistIvalCoolantOn i_MachMistIvalCoolantOff
+{{-end-}}
+{{if vmid.machCoolants.air}}
+	global integer i_MachActiveAirCoolantOn i_MachActiveAirCoolantOff
+{{-end-}}
+{{if vmid.machCoolants.machBedRinsing}}
+	global integer i_MachBedRinsingCoolantOn i_MachBedRinsingCoolantOff 
+{{-end-}}
+
+{{if vmid.anyCoolantActive}}
+	global integer i_RemoveCount iLookAheadCount iA_CoolCodeSave<<9999>> i_CoolantCount
+{{end~}}

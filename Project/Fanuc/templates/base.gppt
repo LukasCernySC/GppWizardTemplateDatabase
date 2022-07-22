@@ -1,0 +1,28 @@
+{{#Template Engine - Support Functions}}
+{{include "functions/functions.gppt"}}
+{{#add vmid options}}
+{{include "routines/add_vmid_options.gppt"}}
+
+{{#include "routines/gpp_head.gppt"}}
+{{#";-------------------"}}
+{{#include "routines/init_post.gppt"-}}
+{{#";#region |01|_1-Options"}}
+{{#";-------------------"}}
+{{#include "routines/usr_init_post.gppt"}}
+{{#";#endregion"}}
+{{#-include "routines/cooling.gppt"}}
+{{#-include "routines/drill.gppt"}}
+{{include "routines/print_comments.gppt"}}
+{{#";-------------------"}}
+{{#include "routines/end_of_job.gppt"}}
+{{#if usr.withParametricfeed
+	#include "routines/parametric_feed.gppt"
+#end}}
+
+{{if b_IsGmbH
+	#include "routines/german_trace.gppt"
+end}}
+{{#";-------------------"}}
+{{#include "routines/encryption.gppt"}}
+{{#";-------------------"}}
+{{#include "routines/start_of_job.gppt"}}

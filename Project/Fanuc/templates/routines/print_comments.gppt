@@ -1,0 +1,134 @@
+;#region |16-Other
+;-------------------
+
+@usr_PrintMessage(integer iL_MessageCounter, string sL_ToDo, string sL_CallRoutine)
+
+	local string sLA_Message<<61>> sL_RoutineMessage
+	sL_ToDo = upper(sL_ToDo)
+
+	if instr(sL_ToDo,'{{res.abort}}') eq 0 and instr(sL_ToDo,'{{res.hint}}') eq 0  and instr(sL_ToDo,'{{res.message}}') eq 0
+      {{if res.language == "de"-}}
+      sL_RoutineMessage = 'Im Fehlerroutinenaufruf #'+tostr(iL_MessageCounter)+' aus '+sL_CallRoutine+' ist der zweite Parameter falsch deklariert !'
+      {{else-}}
+      	{{if res.language == "en"-}}
+      	sL_RoutineMessage = 'For @usr_PrintMessage(('+tostr(iL_MessageCounter)+'),('+sL_ToDo+'),('+sL_CallRoutine+')) the 2nd parameter is wrong declared!'
+      	{{end-}}
+      {{end-}}
+      print sL_RoutineMessage
+      abort
+   endif
+ 
+   sLA_Message<<1>>  = '{{res.sLA_Message1}}' 
+   sLA_Message<<2>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message2_1}}'
+   sLA_Message<<3>>  = '' ;not used
+   sLA_Message<<4>>  = '{{res.sLA_Message4}}'
+   sLA_Message<<5>>  = '{{res.sLA_Message5}}'
+   sLA_Message<<6>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'{{res.sLA_Message6}}'
+   sLA_Message<<7>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): @drill_4x_pnt noch nicht getestet!'
+   sLA_Message<<8>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Abwicklung mit KopfKopf-Kinematik nicht mï¿½glich'
+   sLA_Message<<9>>  = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Die NP-Positionen dï¿½rfen bei 3X-Ausgabe nicht verwendet werden'
+   sLA_Message<<10>> = 'PP/CAM: Ein Wechsel der SUB-MASCHINE zwischen Jobs ist nicht erlaubt! Kann aber, wenn benï¿½tigt, mit "b_SubMachineChange" erlaubt werden.'
+   sLA_Message<<11>> = 'PP/VMID: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei Verwendung der Loops muss der VMID-Parameter "Unterprogramme" aktiviert werden'
+   sLA_Message<<12>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Fehlerhafter Adressraum angegeben fï¿½r G28'
+   sLA_Message<<13>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei Bohrzyklus "'+drill_cycle_name+'" sollte ein Gewindebohrer benutzt werden'
+   sLA_Message<<14>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Unter Verschiedene Job-Parameter "3D-Kompensation" muss definiert werden'
+   sLA_Message<<15>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Das Format beim Zyklus G84/G74 mit M29 sollte ï¿½berprï¿½ft werden'
+   sLA_Message<<16>> = job_name+': Sie kï¿½nnen optional auch unter Bewegungseingrenzung --> die 4.Achse ausschalten.'
+   sLA_Message<<17>> = 'PP: Error! Check VMID definition. Dummy device is wrong!'
+   sLA_Message<<18>> = 'PP: Schwenkreihenfole Kinematik-Achsen und 45-Grad Kinematik nicht mï¿½glich, auf Benutzerdefiniert wechseln!'
+   sLA_Message<<19>> = 'PP/VMID: HSC-Option (G05.1 oder G121 in den Maschinenoptionen nicht gesetzt!'
+   sLA_Message<<20>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): HSC-Stufe (P1 oder M3 usw) in den Joboptionen nicht gesetzt!'
+   sLA_Message<<21>> = 'Die Bruchkontrolle nicht integriert. Bitte wenden Sie sich an den SolidCAM Support'
+   sLA_Message<<22>> = '{{res.sLA_Message2}}'+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei der Spiegelung um nur einer Achse ist die Kreisbewegung und die Korrekturrichtung umgekehrt'
+   sLA_Message<<23>> = 'Die maximale programmierbare Nullpunktnummer ï¿½berschritten. Bitte prï¿½fen Sie die GPP-Parameter "i_MRZPointSavedIn"'
+   sLA_Message<<24>> = 'Die maximale programmierbare Nullpunktnummer ï¿½berschritten. Bitte prï¿½fen Sie die GPP-Parameter "i_CalcHomeSavedIn"'
+   sLA_Message<<25>> = 'PP: Schwenkreihenfolge fï¿½r G68.2 nicht zulï¿½ssig'
+   
+   ;'\x09' = TAP
+   sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '\x0a' + ';.....Meldung Nr.'+tostr(iL_MessageCounter)+' Aufruf aus '+sL_CallRoutine
+
+   if instr(sL_ToDo,'{{res.message}}') ne 0
+      if sL_CallRoutine ne ''
+         print sL_RoutineMessage
+      else
+         print sLA_Message<<iL_MessageCounter>>
+         sL_RoutineMessage = sLA_Message<<iL_MessageCounter>>
+      endif 
+      
+      if sL_CallRoutine ne ''
+         sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '; Meldung Nr.'+tostr(iL_MessageCounter)+' Aufruf aus '+sL_CallRoutine ;TPL 4.0
+      endif
+   endif
+   
+   if instr(sL_ToDo,'{{res.abort}}') ne 0 or instr(sL_ToDo,'{{res.hint}}') ne 0
+      {nl,';--------------------------------------------'}
+      {nl,'; ' sL_RoutineMessage}
+      {nl,';--------------------------------------------'}
+      {nl}
+      if instr(sL_ToDo,'{{res.abort}}') ne 0
+         {nl,';--- Abbruch der NC-Erzeugung ---'}
+         abort
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@usr_InitPrintComments
+
+	local string  sL_StockFormat
+	sL_StockFormat = '5.1(p)'
+	sA_Comment<<1>> = s_FirstComment + '{{res.sA_Comment1}}' + s_LastComment
+	sA_Comment<<2>> = s_FirstComment + '{{res.sA_Comment2}}' + s_LastComment
+	sA_Comment<<3>> = s_FirstComment + '{{res.sA_Comment3}}' + s_LastComment
+	sA_Comment<<4>> = s_FirstComment + upper(home_user_name) +'{{res.sA_Comment4}}'+tostr(position:'5.0(n)')+s_LastComment
+	{{-if res.sA_Comment5 == "NP "}}
+		sA_Comment<<5>> = s_FirstComment + '{{res.sA_Comment5}}' + tostr(mac_number:'5.0(n)') + '{{res.sA_Comment5_1}}' + tostr(position:'5.0(n)') + s_LastComment
+	{{else}}
+		sA_Comment<<5>> = s_FirstComment + '{{res.sA_Comment5}}' + tostr(position) + '{{res.sA_Comment5_1}}' + tostr(mac_number) + s_LastComment
+	{{end-}}
+	sA_Comment<<6>> = s_FirstComment + '{{res.sA_Comment6}}' + s_LastComment
+	sA_Comment<<7>> = s_FirstComment + '{{res.sA_Comment7}}' + s_LastComment
+	sA_Comment<<8>> = s_FirstComment + '{{res.sA_Comment8}}' + s_LastComment
+	sA_Comment<<9>> = s_FirstComment + '{{res.sA_Comment9}}' + s_LastComment
+	sA_Comment<<10>> = s_FirstComment + '{{res.sA_Comment10}}' + s_LastComment
+	sA_Comment<<11>> = s_FirstComment + '{{res.sA_Comment11}}' + s_LastComment
+	sA_Comment<<12>> = s_FirstComment + '{{res.sA_Comment12}}' + s_LastComment
+	sA_Comment<<13>> = s_FirstComment + '{{res.sA_Comment13}}' + s_LastComment
+	sA_Comment<<14>> = s_FirstComment + '{{res.sA_Comment14}}' + s_LastComment
+	sA_Comment<<15>> = s_FirstComment + '{{res.sA_Comment15}}' + s_FirstRotAxisLetter + s_LastComment
+	sA_Comment<<16>> = s_FirstComment + '{{res.sA_Comment16}}' + s_SecondRotAxisLetter + s_LastComment
+	sA_Comment<<17>> = s_FirstComment + '{{res.sA_Comment17}}' + s_LastComment
+	sA_Comment<<18>> = s_FirstComment + '{{res.sA_Comment18}}' + s_LastComment
+	sA_Comment<<19>> = {{res.s_Add}}s_FirstComment + '{{res.sA_Comment19}}'
+	sA_Comment<<20>> = '{{res.sA_Comment20}}' + s_LastComment
+	sA_Comment<<21>> = s_FirstComment + '{{res.sA_Comment21}}' + s_LastComment
+	sA_Comment<<22>> = {{res.s_Add}}s_FirstComment + '{{res.sA_Comment22}}\x3d' + tostr(cutting_diameter) + s_LastComment
+	sA_Comment<<23>> = {{res.s_Add}}s_FirstComment + '{{res.sA_Comment23}}\x3d' + tostr(tool_diameter) + s_LastComment
+	sA_Comment<<24>> = ' ' + s_FirstComment + '{{res.sA_Comment24}}' + s_LastComment
+	sA_Comment<<25>> = ' ' + s_FirstComment + '{{res.sA_Comment25}}' + s_LastComment
+	sA_Comment<<26>> = ' ' + s_FirstComment + '{{res.sA_Comment26}}' + s_LastComment
+	sA_Comment<<27>> = ' ' + s_FirstComment + '{{res.sA_Comment27}}' + s_LastComment
+	sA_Comment<<28>> = ' ' + s_FirstComment + '{{res.sA_Comment28}}' + s_LastComment
+	sA_Comment<<29>> = ' ' + s_FirstComment + '{{res.sA_Comment29}}' + s_LastComment
+	sA_Comment<<30>> = ' ' + s_FirstComment + '{{res.sA_Comment30}}' + s_LastComment
+	sA_Comment<<31>> = ' ' + s_FirstComment + '{{res.sA_Comment31}}' + s_LastComment
+	sA_Comment<<32>> = ' ' + s_FirstComment + '{{res.sA_Comment32}}' + s_LastComment
+	sA_Comment<<33>> = s_FirstComment + '{{res.sA_Comment33}}' + s_LastComment
+	sA_Comment<<33>> = s_FirstComment+'PROGRAM STOP FROM EXTRA PARAMETER'+s_LastComment
+	;@usr_HeadOfFile:
+	sA_Comment<<34>> = s_FirstComment + '{{res.sA_Comment34}}' + upper(part_name) + s_LastComment
+	sA_Comment<<35>> = s_FirstComment + '{{res.sA_Comment35}}' + date + s_LastComment
+	sA_Comment<<36>> = s_FirstComment + '{{res.sA_Comment36}}' + s_LastComment
+	sA_Comment<<37>> = s_FirstComment + '{{res.sA_Comment37}}' + s_Revision + s_LastComment
+	sA_Comment<<38>> = s_FirstComment + '{{res.sA_Comment38}} X=' + tostr(stock_x:sL_StockFormat) + ' Y='+tostr(stock_y:sL_StockFormat) + ' Z=' + tostr(stock_z:sL_StockFormat) + s_LastComment
+	sA_Comment<<39>> = s_FirstComment + '{{res.sA_Comment39}}' + s_LastComment	
+	;@usr_HeadOfFile:
+	sA_Comment<<50>> = ' ' + s_FirstComment + '{{res.sA_Comment50}}' + s_LastComment
+	sA_Comment<<51>> = ' ' + s_FirstComment + '{{res.sA_Comment51}}' + s_LastComment
+    sA_Comment<<52>> = ' ' + s_FirstComment + '{{res.sA_Comment52}}' + s_LastComment
+    sA_Comment<<53>> = s_FirstComment + '{{res.sA_Comment53}}' + s_LastComment
+    sA_Comment<<54>> = s_FirstComment + '{{res.sA_Comment54}}' + s_LastComment
+	   
+endp

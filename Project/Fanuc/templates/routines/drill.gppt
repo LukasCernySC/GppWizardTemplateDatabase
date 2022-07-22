@@ -1,0 +1,406 @@
+;-------------------
+;#region |08-Drill
+;-------------------
+{{vmid_G81 = {
+   GppName:"G81",
+   GuiName:"G81",
+   Type:"DRILLING"
+}
+
+if usr.b_DC_G81
+	vmid_add_drill_m(vmid_G81)
+end
+
+vmid_G82 = {
+   GppName:"G82",
+   GuiName:"G82",
+   Type:"F_DRILL",
+   Parameters:[
+       {GppName:"nDelayVMID", GuiName:"Verweilzeit [P(s)]", Type:"NUMERIC", DefaultValue:"0.000000"}
+   ]
+}
+
+if usr.b_DC_G82
+	vmid_add_drill_m(vmid_G82)
+end
+
+vmid_G83 = {
+   GppName:"G83",
+   GuiName:"G83",
+   Type:"PECK",
+   Parameters:[
+       {GppName:"nDelayVMID", GuiName:"Verweilzeit [P(s)]", Type:"NUMERIC", DefaultValue:"0.000000"}
+   ]
+}
+
+if usr.b_DC_G83
+	vmid_add_drill_m(vmid_G83)
+end
+
+vmid_G73 = {
+   GppName:"G73",
+   GuiName:"G73",
+   Type:"PECK",
+   Parameters:[
+       {GppName:"nDelayVMID", GuiName:"Verweilzeit [P(s)]", Type:"NUMERIC", DefaultValue:"0.000000"}
+   ]
+}
+
+if usr.b_DC_G73
+	vmid_add_drill_m(vmid_G73)
+end
+
+vmid_G84_G74 = {
+   GppName:"G84_G74",
+   GuiName:"G84_G74",
+   Type:"TAPPING",
+   Parameters:[
+       {GppName:"bWithTappingChucks", GuiName:"Mit Ausgleichfutter", Type:"LOGICAL", DefaultValue:"0"}
+   ]
+}
+
+if usr.b_DC_G84
+	vmid_add_drill_m(vmid_G84_G74)
+end
+
+vmid_G85 = {
+   GppName:"G85",
+   GuiName:"G85",
+   Type:"BORING"
+}
+
+if usr.b_DC_G85
+	vmid_add_drill_m(vmid_G85)
+end
+
+vmid_G86 = {
+   GppName:"G86",
+   GuiName:"G86",
+   Type:"BORING"
+}
+
+if usr.b_DC_G86
+	vmid_add_drill_m(vmid_G86)
+end
+
+vmid_G87 = {
+   GppName:"G87",
+   GuiName:"G87",
+   Type:"BORING"
+}
+
+if usr.b_DC_G87
+	vmid_add_drill_m(vmid_G87)
+end
+
+vmid_G88 = {
+   GppName:"G88",
+   GuiName:"G88",
+   Type:"BORING",
+   Parameters:[
+       {GppName:"nDelayVMID", GuiName:"Verweilzeit [P(s)]", Type:"NUMERIC", DefaultValue:"0.000000"}
+   ]
+}
+
+if usr.b_DC_G88
+	vmid_add_drill_m(vmid_G88)
+end
+
+vmid_G89 = {
+   GppName:"G89",
+   GuiName:"G89",
+   Type:"BORING",
+   Parameters:[
+       {GppName:"nDelayVMID", GuiName:"Verweilzeit [P(s)]", Type:"NUMERIC", DefaultValue:"0.000000"}
+   ]
+}
+
+if usr.b_DC_G89
+	vmid_add_drill_m(vmid_G89)
+end
+}}
+
+{{if HasSecondAxis}}
+@drill_plane
+
+   if !rotate_plane_off
+      if !b_G49WithZ
+         if i_HOffset eq -1
+            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill_plane'))
+         else
+            {nb (43):gcode_f i_HOffset:h_offset_f}
+            b_G49Active=false
+         endif
+      endif
+
+      call @usr_TiltCycle(xhpos,yhpos,zhpos,euler_angle_z,euler_angle_x,euler_angle_dev_z,first_axis_angle,second_axis_angle,i_HomeGcode)
+      
+      if b_ClampingActiv
+         call @usr_Clamping
+      endif
+
+      {nb (0):gcode_f first_axis_angle second_axis_angle}
+      {nb (0):gcode_f (0):xlpos_f (0):ylpos_f}
+      b_FirstRapidMove=true
+      b_DrillPlane5X=false
+      n_SecondAxisAngleSave=second_axis_angle
+      n_FirstAxisAngleSave=first_axis_angle
+   else
+      if s_TiltCycle ne 'SC'
+         b_PrintAllAxes=true   ; Wrong movements after tilting
+         if b_TiltCycleActived
+            {nb,(69):gcode_f sA_Comment<<7>>} ;reset of the tilt cycle
+         endif
+      else
+         call @usr_TiltCycle((0),(0),(0),(0),(0),(0),(0),(0),i_HomeGcode)
+      endif
+
+      b_TiltCycleActived=false
+      {nb (49):gcode_f}
+      b_G49Active=true
+
+      if b_G49WithZ
+         skipline=false
+         call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+      else
+         if i_TCPType eq 1
+            {nb (43.4):gcode_f}
+         else
+            {nb (43.5):gcode_f}
+         endif
+         if i_HOffset eq -1
+            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill_plane'))
+         else
+            {i_HOffset:h_offset_f sA_Comment<<3>>}
+         endif
+         if b_ClampingActiv
+            call @usr_UnClamping
+         endif
+         b_G49Active=false
+      endif
+      b_DrillPlane5X=true
+   endif
+
+endp
+
+;-------------------
+{{end}}
+
+@drill
+
+   local string sL_DwellTimeDrill
+   sL_DwellTimeDrill='<P>5.3(p)< >' ;P==>watining in seconds
+   
+   if drill_cycle_name eq 'G84_G74'
+      if tool_type ne tap_mill
+         call @usr_PrintMessage((13),('meldung+abbruch'),('@drill'))
+      endif
+   endif
+
+{{if HasSecondAxis}}
+   if !x5_job
+      n_DrillUpperZ = drill_upper_zl
+      n_DrillLowerZ = drill_lower_zl
+      if rot_axis_type eq axis4_radial
+         call @move_5x
+      else
+         call @rapid_move
+      endif
+   else
+{{end}}
+      n_DrillUpperZ = 0
+      n_DrillLowerZ = (drill_depth*-1)
+      if b_G49WithZ
+         if i_HOffset eq -1
+            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill'))
+         else
+            {nb,(43):gcode_f,i_HOffset:h_offset_f (0):zhpos_f}
+            b_G49Active = false
+         endif
+      else
+         {nb,(0):gcode_f,(0):zhpos_f}
+      endif
+      if s_TiltCycle eq 'SC' and b_FirstRapidMove
+         call @usr_coolingOn
+         b_FirstRapidMove = false
+      endif
+{{if HasSecondAxis}}
+   endif
+{{end}}
+
+{{if usr.b_DC_G81}}
+	if drill_cycle_name eq 'G81'
+      	gcode = 81
+   	endif
+{{end
+if usr.b_DC_G82}}
+   if drill_cycle_name eq 'G82'
+      gcode = 82
+   endif
+{{end
+if usr.b_DC_G83}}
+   if drill_cycle_name eq 'G83'
+      gcode = 83
+   endif
+{{end
+if usr.b_DC_G73}}
+   if drill_cycle_name eq 'G73'
+      gcode = 73
+   endif
+{{end
+if usr.b_DC_G84}}
+   if drill_cycle_name eq 'G84_G74'
+      if spin_direction eq CW
+         gcode = 84
+      else
+         gcode = 74
+      endif
+   endif
+{{end
+if usr.b_DC_G85}}
+   if drill_cycle_name eq 'G85'
+      gcode = 85
+   endif
+{{end
+if usr.b_DC_G86}}
+   if drill_cycle_name eq 'G86'
+      gcode = 86
+   endif
+{{end
+if usr.b_DC_G87}}
+   if drill_cycle_name eq 'G87'
+      gcode = 87
+   endif
+{{end
+if usr.b_DC_G88}}
+   if drill_cycle_name eq 'G88'
+      gcode = 88
+   endif
+{{end
+if usr.b_DC_G89}}
+   if drill_cycle_name eq 'G89'
+      gcode = 89
+   endif
+{{end
+if usr.b_DC_G84}}
+   if drill_cycle_name eq 'G84_G74'
+      if b_TappingWithG95
+         {nb,(95):gcode_f s_FirstComment'VORSCHUB/UMDREHUNG's_LastComment}
+      endif
+      
+      if b_TappingWithM29
+         call @usr_PrintMessage((15),('meldung+abbruch'),('@drill'))
+         {nb,(29):mcode_f,spin}
+      else
+         {nb,(80):mcode_f,spin}
+      endif
+         
+      if !b_TappingWithG95 and !b_TappingWithM29
+         {(spin*tool_drill_lead):feed_f}
+      endif
+   endif
+{{end}}
+   {nb,(98):gcode_f,gcode,n_DrillLowerZ:zlpos_f'R'n_DrillUpperZ,' '}
+
+   if 
+{{-if usr.b_DC_G83 && usr.b_DC_G73-}}
+   {{"\x20\x28"}}
+{{-else}}
+   {{"\x20"}}
+{{-end-}}
+{{if usr.b_DC_G83-}}
+	drill_cycle_name eq 'G83'
+{{-end-}}
+{{-if usr.b_DC_G83 && usr.b_DC_G73-}}
+{{"\x20"}}or{{"\x20"}}
+{{-else-}}
+{{"\x20"}}
+{{-end-}}
+{{if usr.b_DC_G73-}}
+drill_cycle_name eq 'G73'
+{{-end-}}
+{{-if usr.b_DC_G83 && usr.b_DC_G73
+"\x29\x20"
+end-}}
+and down_step ne 0
+      {'Q'down_step,' '}
+   endif
+
+   if nDelayVMID ne 0
+      {nDelayVMID:sL_DwellTimeDrill}
+   endif
+  
+if drill_cycle_name ne 'G84_G74'
+{{if usr.withParametricfeed-}}      
+      if b_ParametricFeed
+         call @usr_ParametricFeedPrint
+      else
+{{end-}}
+	{feed}
+    {{-if usr.withParametricfeed}}     
+    	endif
+    {{-end}}
+endif
+
+{{if usr.b_DC_G84}}   
+	if drill_cycle_name eq 'G84_G74'
+    	if b_TappingWithG95
+        	{(tool_drill_lead):feed_f}
+      	else
+         	{(spin*tool_drill_lead):feed_f}
+      	endif
+   	endif
+{{end}}
+   
+endp
+
+;-------------------
+
+@drill_point
+
+   gcode=0
+
+{{if HasSecondAxis-}}
+if !x5_job
+{{end-}}
+      if !first_drill
+         {nl'    ',[xlpos],[ylpos],[zlpos]}
+         {{if HasFirstAxis-}}
+         if rot_axis_type ne axis4_none
+            {[apos]}
+         endif
+         {{end-}}
+      endif
+      {{if HasSecondAxis-}}
+   else
+      {nl'    '(0):xlpos_f (0):ylpos_f (0):zlpos_f}
+   endif
+   {{end}}
+
+endp
+
+;-------------------
+{{if HasFirstAxis}}
+@drill4x_pnt
+
+   call @usr_PrintMessage((7),('meldung+abbruch'),('@drill'))
+   gcode=0
+   {nb gcode[xopos:xlpos_f],[yopos:ylpos_f],[zopos:zlpos_f],(apos+angle):apos_f}
+
+endp
+
+;-------------------
+{{end}}
+@end_drill
+
+   {nb,(80):gcode_f}
+
+{{if usr.b_DC_G84}}
+	if b_TappingWithG95 and drill_cycle_name eq 'G84_G74' ;TPL 2.01
+      	{nb,(94):gcode_f s_FirstComment'VORSCHUB MM/UMDREHUNG's_LastComment}
+   	endif
+{{end}}
+endp
+
+;-------------------
+;#endregion

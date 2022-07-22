@@ -1,0 +1,31 @@
+{{func MyPrintSign(sL_Sign,iL_Length)
+	if iL_Length == 0
+		sL_Sign
+	else
+		for $i in 1..iL_Length
+			sL_Sign
+		end
+	end
+end}}
+
+{{func HasFirstAxis
+
+	for sub in vmid.submachines
+		if sub.hasFirstRotAxis
+			ret true
+		end
+	end
+	ret false
+	
+end}}
+
+{{func HasSecondAxis
+
+	for sub in vmid.submachines
+		if sub.hasSecondRotAxis
+			ret true
+		end
+	end
+	ret false
+	
+end}}

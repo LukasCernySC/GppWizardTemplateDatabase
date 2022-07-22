@@ -1,0 +1,150 @@
+@init_post
+{{s_FirstComment}}{{MyPrintSign("\x5f",90)}}
+global string  s_Revision s_FirstComment s_LastComment
+call @usr_Revision(s_Revision) 
+s_FirstComment='('
+s_LastComment=')'
+{{s_FirstComment}}{{MyPrintSign("\x5f",90)}}
+
+{{if usr.withParametricfeed-}}
+	global string s_ParaFeedValue ParametricFeed_f s_FeedTypeSave
+{{end-}}
+
+global string s_RealFileName s_RealPartPath s_Retreat s_CoordSetSim
+{{if HasFirstAxis}}
+	global string s_FirstRotAxisLetter s_FirstRotAbout
+{{end-}}
+
+{{if HasSecondAxis-}}
+	global string s_SecondRotAxisLetter s_SecondRotAbout
+	global string bpos_f
+{{end-}}
+
+global string s_MachineName s_UsrMsgTool
+global string s_Prefix s_Sufix sL_ReplaceCharacter s_ProgramNr_f tool_number_f 
+{{-if vmid.procedures || vmid.subprocedures}}
+	global string s_ProcWord
+{{end}}
+global string h_offset_f s_G28With
+global string xpos_normal_f ypos_normal_f zpos_normal_f i_Param_f radius_f spin_f sVector_f d_offset_f
+global string xlcenter_rel_f ylcenter_rel_f
+global string s_AxisLetterZ xcenter_rel_f ycenter_rel_f zcenter_rel_f zlcenter_rel_f s_RotationOrder
+global string s_AxisLetterX s_AxisLetterY 
+
+{{-if b_IsGmbH}}
+	global string{{"\x20"}}sA_SolidArray<<30,4>>
+{{else}}
+{{end-}}
+global string s_DwellTime sA_Comment<<100>> sA_JobName<<9999>> sPrintMessage<<99>>
+
+{{if HasFirstAxis || HasSecondAxis}}
+   global integer i_PartHomeSave
+{{end}}
+{{-if vmid.procedures || vmid.subprocedures}}
+	global integer i_JobCounterExternProcs i_ProcCall
+{{end-}}
+global integer i_SubmaschineIDSave i_MaxExtendedHomeNr
+{{-if HasSecondAxis}} 
+	global integer i_UnClampSecondRotAxis i_ClampSecondRotAxis
+{{end}}
+{{-if HasFirstAxis-}}
+	global integer i_ClampFirstRotAxis i_UnClampFirstRotAxis i_SaveAnglePair i_CalcHomeSavedIn i_MRZPointSavedIn i_StartParamPos i_CalcMacroNumber i_ClampFirstAndSecond i_UnClampFirstAndSecond
+{{end-}}
+global integer i_ToolWearCompDiam i_MonitoringSpin i_SaveProbeHomeNumber i_DOffset i_IndexJobSaved i_GeometryLabelCounter
+{{if usr.withParametricfeed-}}
+	global integer i_StartParamFeed			;Parametric feed output
+{{end-}}
+global integer i_G10_L i_HomeGcode i_HOffset
+global integer i_SpinDirSave i_TraceMode i_TraceCount i_SaveToolNumber i_BaseSave
+{{-if vmid.procedures || vmid.subprocedures}}
+	global integer iA_ProgramNumberSave<<9999>>
+{{end}}
+global integer iA_ToolNumberSave<<999>> iA_GeometryLabelCounter<<999>> i_ToolCallRepeatIndex<<999>>
+{{if usr.bVMID_MO_FineShiftAfterRot}}
+	global integer iA_FineShiftParameter<<99,3>>
+{{end}}
+global numeric n_SpinSave n_SaveZFeed n_ZRetreatValue n_YRetreatValue n_XRetreatValue n_SecondAxisAngleSave n_FirstAxisAngleSave n_DrillUpperZ
+   global numeric n_DrillLowerZ
+   global numeric nXhposSaved<<999>> nYhposSaved<<999>> nZhposSaved<<999>> nA_DrillSafetySave<<9999>> nA_DrillUpperZSave<<9999>>
+   global numeric nA_XHome<<9999>> nA_YHome<<9999>> nA_ZHome<<9999>> nA_DrillLowerZSave<<9999>>
+
+{{if vmid.procedures || vmid.subprocedures}}
+	global logical b_Main
+{{end}}
+global logical b_FirstAbsoluteCode b_FirstRapidMove b_3DComp b_CoolantOnCode b_PrintHomeNr b_FirstEntryMark 
+global logical b_G49WithZ b_G49Active b_DrillPlane5X b_FeedSpinInEachJob b_M5beforToolChange b_T0callEndPrg b_M1AfterToolChange
+{{if usr.withParametricfeed-}}
+	global logical b_ParametricFeed
+{{end}}
+global logical b_ToolPreselect b_Is5xJob b_SubProgramG65 b_ToolCorrG10 b_PrintOnlyOnes b_TiltCycleActived b_NotFirsLine5x
+{{if vmid.procedures || vmid.subprocedures}}
+	global logical b_NotFirstProc
+{{end}}
+global logical b_LoopTransform b_InsideJob b_ChangeRef b_Rotate b_FourthAxisUsed b_PrintAllAxes b_ChangeTool
+{{if b_IsGmbH}}
+	global logical b_IsPPTeam
+{{end}}	
+   global logical b_MCOJob b_G53 b_HighSpeed b_GCodeFileWithNr b_FileOpenClose b_M98 bDelay b_Mirror b_Is3XMachine
+   global logical b_DummyDetected  b_SpinOn b_SubMachineChange b_PlaneData b_M1beforToolChange b_WithClamping b_ClampingActiv b_CalcMacroTest b_TurretINRefPos
+{{-if HasFirstAxis}}
+   	global logical b_Is4XMachine 
+   	{{-if HasSecondAxis-}}
+   		{{"\x20"}}b_Is5XMachine
+   {{end~}}
+{{end~}}
+global logical b_PrintHomeNumber b_HomeNumberAtEachJob b_StraightKinematics b_WithoutSpeedMonitoring
+   global logical b_TappingWithG95 b_IsHeadHead b_IsHeadTable b_UseVMIDRetreatLimits b_FineToolCorr b_CallFromMCO b_RetreatToToolZLevel
+   global logical b_RetreatToToolZLevel b_ToolWearWithG10 b_SmoothinAvailable b_TappingWithM29 b_TCwithPlaceNumber b_PlaneData2
+   global logical bA_GeometryLabelNrPrinted<<999>> bA_ProcGeometry<<9999>> bA_ProcInLoop<<9999>> bA_InsideJobFourtAxis<<999>> b_InsideJob<<999>>
+   global logical bA_FineToolCorr<<999>> bA_PlaneDataSaved<<999>> bA_PlaneDataSaved2<<6,99>>
+
+;coolant and mco
+   
+{{-include "routines/coolant_definition.gppt"~}}
+   
+   global integer i_ChipConveyCW i_ChipConveyCCW i_ChipConveyOff i_MistCollectorOn i_MistCollectorOff i_OilSkimmerOn i_OilSkimmerOff i_RecordMachiningOn i_RecordMachiningOff i_OpenDoorOn i_OpenDoorOff
+   global integer i_MachineLightOn i_MachineLightOff i_MachinePowerOn i_MachinePowerOff i_VacuumPumpOn i_VacuumPumpOff i_TCPType iGeometryLabelNr
+   
+
+   ;new Variables by PP creation
+   global logical {{sL_VmidBoolName}}
+
+	if i_TraceCount eq 0 
+		{{-if b_IsGmbH}}
+			call @usr_FillSolidCamArray
+			call @usr_UserAccount(b_IsPPTeam)
+		{{else}}		
+		{{end-}}
+		i_TraceCount=i_TraceCount+1
+		{{-if b_IsGmbH}}
+			if b_IsPPTeam
+		{{else}}
+		{{end-}}
+         input 'trace 0=no ... trace 5=all:' i_TraceMode
+         trace"all": i_TraceMode
+         {{-if b_IsGmbH}}
+      		endif
+		{{end}}
+   endif
+   {{#end}}
+
+   blknum_f               = '8.0(p)'
+   blknum_gen             = false
+   blknum_exist           = true
+   blknum_delta           = 1
+   blknum                 = 1
+   blknum_max             = 1000000
+   
+endp
+
+{{if usr.b_WithProbe}}
+;-------------------
+   inc "
+   {{-if usr.s_IncFileProbeNameCustom != ""
+   		usr.s_IncFileProbeNameCustom | string.replace(".gpp","")
+   	else
+   		usr.s_IncFileProbeName
+   	end-}}
+   	"  ;for probe-cycles
+;-------------------
+{{end}}

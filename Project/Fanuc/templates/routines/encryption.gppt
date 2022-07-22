@@ -1,0 +1,21 @@
+{{if b_WithEncryption && !(usr.keyid == "")}}
+	;#region |18-encryption
+	{{s_FirstComment}}Key_ID={{usr.keyid}}
+	{{if !(usr.keyid_1 == "")
+		s_FirstComment}}Key_ID={{usr.keyid_1
+	end}}
+	{{if !(usr.keyid_2 == "")
+		s_FirstComment}}Key_ID={{usr.keyid_2
+	end}}
+	{{if !(usr.keyid_3 == "")
+		s_FirstComment}}Key_ID={{usr.keyid_3
+	end}}
+	{{s_FirstComment}}Sticker_Num=
+	{{s_FirstComment}}Expired_date=
+	{{-if usr.expiredate == "0000/00/00"
+		usr.expiredate
+	else
+		date.parse usr.expiredate | date.to_string '%m-%d-%Y'
+	end}}
+	;#endregion
+{{end}}
