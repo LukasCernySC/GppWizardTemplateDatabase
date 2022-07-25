@@ -1,22 +1,113 @@
-{{#Template Engine - Support Functions}}
-{{include "functions/functions.gppt"}}
-{{#add vmid options}}
-{{include "routines/_1_VMID/add_vmid_options.gppt"}}
+{{#-----------------Include Section----------------------
 
-{{#include "routines/gpp_head.gppt"}}
+		#Template Engine - Support Functions
+	functions 				= include "functions/functions.gppt"
+	
+	#----VMID----
+	add_vmid_options 		= include "routines/_1_VMID/add_vmid_options.gppt"
+	
+	addvmid = {add_vmid_options: add_vmid_options}
+	
+	#----Init Post----
+	gpp_head 				= include "routines/gpp_head.gppt"
+	print_comments 			= include "routines/print_comments.gppt"
 
-{{#";-------------------"}}
-{{#include "routines/init_post.gppt"-}}
-{{#";#region |01|_1-Options"}}
-{{#";-------------------"}}
+		#----Trace----
+	if res.language == de
+		trace = include "routines/_2_Trace/german_trace.gppt"
+	else if res.language == en
+		trace = include "routines/_2_Trace/usa_trace.gppt"
+	end
+	
+	#----System Commands----
+						#----Common----
+	common = {}		
+		common.absoluteMode = include "routines/_3_System_commands/_1_Common/Absolute_Mode/absolute_mode.gppt"
+		common.endOfFile = include "routines/_3_System_commands/_1_Common/End_of_File/end_of_file.gppt"
+		common.endOfJob = include "routines/_3_System_commands/_1_Common/End_of_Job/end_of_job.gppt"
+		common.endProgram = include "routines/_3_System_commands/_1_Common/End_Program/end_program.gppt"
+		common.feedSpin = include "routines/_3_System_commands/_1_Common/Feed_Spin/feed_spin.gppt"
+		common.homeData = include "routines/_3_System_commands/_1_Common/Home_data/home_data.gppt"
+		common.homeNumber = include "routines/_3_System_commands/_1_Common/Home_Number/home_number.gppt"
+		common.machinePlane = include "routines/_3_System_commands/_1_Common/Machine_Plane/machine_plane.gppt"
+		common.message = include "routines/_3_System_commands/_1_Common/Message/message.gppt"
+		common.mFeedSpin = include "routines/_3_System_commands/_1_Common/M_Feed_Spin/m_feed_spin.gppt"
+		common.relativeMode = include "routines/_3_System_commands/_1_Common/Relative_Mode/relative_mode.gppt"
+		common.setup = include "routines/_3_System_commands/_1_Common/Setup/setup.gppt"
+		common.startOfFile = include "routines/_3_System_commands/_1_Common/Start_of_File/start_of_file.gppt"
+		common.startOfJob = include "routines/_3_System_commands/_1_Common/Start_of_Job/start_of_job.gppt"
+		common.startProgram = include "routines/_3_System_commands/_1_Common/Start_Program/start_program.gppt"
+		common.vmidInfo = include "routines/_3_System_commands/_1_Common/VMID_Info/vmid_info.gppt"
 
-{{#include "routines/usr_init_post.gppt"}}
-{{#";#endregion"}}
+						#----Tool Path----
+	toolPath = {}
+		toolPath.arc = include "routines/_3_System_commands/_2_Tool_Path/Arc/arc.gppt"
+		toolPath.arc4xCartesian = include "routines/_3_System_commands/_2_Tool_Path/Arc4x_Cartesian/arc_4x_cartesian.gppt"
+		toolPath.arc4xPolar = include "routines/_3_System_commands/_2_Tool_Path/Arc4x_Polar/arc_4x_polar.gppt"
+		toolPath.arc5x = include "routines/_3_System_commands/_2_Tool_Path/Arc5x/arc_5x.gppt"
+		toolPath.comp = include "routines/_3_System_commands/_2_Tool_Path/Compensation/compensation.gppt"
+		toolPath.compH = include "routines/_3_System_commands/_2_Tool_Path/Compensation_h/compensation_h.gppt"
+		toolPath.drill = include "routines/_3_System_commands/_2_Tool_Path/Drill/drill.gppt"
+		toolPath.drill4xCartesian = include "routines/_3_System_commands/_2_Tool_Path/Drill4x_Cartesian/drill4x_cartesian.gppt"
+		toolPath.drill4xPnt = include "routines/_3_System_commands/_2_Tool_Path/Drill4x_Pnt/drill4x_pnt.gppt"
+		toolPath.drill4xPolar = include "routines/_3_System_commands/_2_Tool_Path/Drill4x_Polar/drill4x_polar.gppt"
+		toolPath.drillPoint = include "routines/_3_System_commands/_2_Tool_Path/Drill_Point/drill_point.gppt"
+		toolPath.drillEnd = include "routines/_3_System_commands/_2_Tool_Path/End_Drill/end_drill.gppt"
+		toolPath.initCpos = include "routines/_3_System_commands/_2_Tool_Path/Init_Cpos/init_cpos.gppt"
+		toolPath.line = include "routines/_3_System_commands/_2_Tool_Path/Line/line.gppt"
+		toolPath.line5x = include "routines/_3_System_commands/_2_Tool_Path/Line_5x/line_5x.gppt"
+		toolPath.lineOn = include "routines/_3_System_commands/_2_Tool_Path/Line_On/line_on.gppt"
+		toolPath.line4x = include "routines/_3_System_commands/_2_Tool_Path/Line4x/line_4x.gppt"
+		toolPath.line4xCartesian = include "routines/_3_System_commands/_2_Tool_Path/Line4x_Cartesian/line4x_cartesian.gppt"
+		toolPath.line4xDir = include "routines/_3_System_commands/_2_Tool_Path/Line4x_Dir/line4x_dir.gppt"
+		toolPath.line4xPolar = include "routines/_3_System_commands/_2_Tool_Path/Line4x_Polar/line4x_polar.gppt"
+		toolPath.move4x = include "routines/_3_System_commands/_2_Tool_Path/Move4x/move_4x.gppt"
+		toolPath.move4xCartesian = include "routines/_3_System_commands/_2_Tool_Path/Move4x_Cartesian/move4x_cartesian.gppt"
+		toolPath.move4xDir = include "routines/_3_System_commands/_2_Tool_Path/Move4x_Dir/move4x_dir.gppt"
+		toolPath.move4xPolar = include "routines/_3_System_commands/_2_Tool_Path/Move4x_Polar/move4x_polar.gppt"
+		toolPath.move5x = include "routines/_3_System_commands/_2_Tool_Path/Move5x/move_5x.gppt"
+		toolPath.moveRapid = include "routines/_3_System_commands/_2_Tool_Path/Rapid_Move/rapid_move.gppt"
+		toolPath.info = include "routines/_3_System_commands/_2_Tool_Path/Tool_Path_Info/tool_path_info.gppt"
+	
+	toolPathXform = {}
+		toolPathXform.chngRefPoint = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Change_Ref_Point\\change_ref_point.gppt"
+		toolPathXform.chngToolCnxt = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Chng_Tool_Cnext\\chng_tool_cnext.gppt"
+		toolPathXform.fourthAxis = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Fourth_Axis\\fourth_axis.gppt"
+		toolPathXform.mirror = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Mirror\\mirror.gppt"
+		toolPathXform.rotaryInfo = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Rotary_Info\\rotary_info.gppt"
+		toolPathXform.rotate = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Rotate\\rotate.gppt"
+		toolPathXform.xformInfo = include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Transform_Info\\transform_info.gppt"
+	
+	mco = {}
+		mco.mco = include "routines\\_3_System_commands\\_4_MCO\\mco.gppt"
+		mco.delay = include "routines\\_3_System_commands\\_4_MCO\\Delay\\delay.gppt"
+		mco.moveObj = include "routines\\_3_System_commands\\_4_MCO\\Move_Object\\move_object.gppt"
+		mco.spindlesSync = include "routines\\_3_System_commands\\_4_MCO\\Spindles_Sync\\spindles_sync.gppt"
+		mco.startMachCtrl = include "routines\\_3_System_commands\\_4_MCO\\Start_Mach_Ctrl\\start_mach_ctrl.gppt"
+		mco.startObjAct = include "routines\\_3_System_commands\\_4_MCO\\Start_Object_Act\\start_obj_act.gppt"
+		mco.startTool = include "routines\\_3_System_commands\\_4_MCO\\Start_Tool\\start_tool.gppt"
+		mco.stopTool = include "routines\\_3_System_commands\\_4_MCO\\Stop_Tool\\stop_tool.gppt"
+	
+	
+
+#--------------------------------------------------------
+}}
+
+{{
+	#Template Engine - Support Functions
+	functions
+	add_vmid_options
+	#gpp_head
+	
+	print_comments
+}}
+
 
 {{#-include "routines/cooling.gppt"}}
 
 {{#-include "routines/drill.gppt"}}
-{{include "routines/print_comments.gppt"}}
+
+
 {{#";-------------------"}}
 {{#include "routines/end_of_job.gppt"}}
 {{#if usr.withParametricfeed
@@ -32,9 +123,8 @@ end}}
 {{#include "routines/start_of_job.gppt"}}
 
 
-
-{{#CE: Test commit/push}}
-
+	
+{{#-include "routines/init_post.gppt"}}
 @init_post
 ;#region 1. Global Variables
 	
@@ -190,19 +280,23 @@ endp
 
 ;#region 2.SC.a------ | Common
 
+{{#include "routines\_3_System_commands\_1_Common\Absolute_Mode"}}
 @absolute_mode
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @relative_mode
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @feed_spin
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @start_of_job
-
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @start_of_file
 
 	;Post revision, Time/Date, Program name/number, first call to ChannelID
@@ -213,30 +307,38 @@ endp
 	
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @vmid_info
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @setup
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @start_program
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @message
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @machine_plane
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @m_feed_spin
 endp
 
 @home_data
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @home_number
 endp
 
+{{#include "routines/_2_Trace/german_trace.gppt"}}
 @end_of_job
 endp
 
