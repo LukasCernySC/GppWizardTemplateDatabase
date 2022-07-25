@@ -1,16 +1,20 @@
 {{#Template Engine - Support Functions}}
 {{include "functions/functions.gppt"}}
 {{#add vmid options}}
-{{include "routines/add_vmid_options.gppt"}}
+{{include "routines/_1_VMID/add_vmid_options.gppt"}}
 
 {{#include "routines/gpp_head.gppt"}}
+
 {{#";-------------------"}}
 {{#include "routines/init_post.gppt"-}}
 {{#";#region |01|_1-Options"}}
 {{#";-------------------"}}
+
 {{#include "routines/usr_init_post.gppt"}}
 {{#";#endregion"}}
+
 {{#-include "routines/cooling.gppt"}}
+
 {{#-include "routines/drill.gppt"}}
 {{include "routines/print_comments.gppt"}}
 {{#";-------------------"}}
@@ -20,11 +24,1380 @@
 #end}}
 
 {{if b_IsGmbH
-	#include "routines/german_trace.gppt"
+	#include "routines/_2_Trace/german_trace.gppt"
 end}}
 {{#";-------------------"}}
 {{#include "routines/encryption.gppt"}}
 {{#";-------------------"}}
 {{#include "routines/start_of_job.gppt"}}
 
+
+
 {{#CE: Test commit/push}}
+
+@init_post
+;#region 1. Global Variables
+	
+	;Variables for controller stuff---------------------------------------------------------------------------------------------------------
+	global string sA_ControllerType<<100,10>>									;Selection list for different controls
+	global string s_TypeOfController											;Selected controller
+	global string s_ProgramNumber												;Program number output based on controller
+	;Variables for turret stuff-------------------------------------------------------------------------------------------------------------
+	global logical b_HalfIndex													;Half indexing turret 
+
+	;----------------Variables for tool stuff-----------------------------------------------------------------------------------------------
+	
+	;		----Messages----
+	global string s_OpenComment, s_CloseComment									;String used for open and close comments
+	;		----Message formatting----
+	global integer i_ToolDescriptionLen											;Set how many characters are allowed on one line
+	global integer i_ToolDescriptionMaxLines									;Set max amount of lines allowed for tool Description
+	global logical l_DefaultMessageFormat										;True = Default message format. See @usr_MessageFormat
+	;																			False = @cus_MessageFormat. See @cus_MessageFormat
+	;		----Tool Change/Operation Messages----
+	global logical b_OutputToolMessage											;True = Tool Message at tool change
+	global logical b_DefaultOpMessage											;True = Generates a default operation message ex: TURN OD
+	
+	
+	;Variables for job stuff ---------------------------------------------------------------------------------------------------------------
+	global integer iA_SaveNumberOfChannels<<4>>									;Used in start_of_file to grab # of channels
+	;																			;If single channel we can skip logic for quicker post
+    ;		----Homing----
+	global logical l_EndProgram													;Used for homing. Posting one operation vs multiple
+	
+	
+	;Variables for C-axis stuff ------------------------------------------------------------------------------------------------------------
+	
+	
+	;Variables for position stuff ----------------------------------------------------------------------------------------------------------
+	global numeric nA_SaveLast_opos<<2,3>>										;Save the last axis position |X|Y|Z|
+	global numeric nA_SaveLast_hpos<<2,3>>										;Save the last axis position |X|Y|Z|
+	global numeric nA_SaveLast_apos<<2>>										;Save the last apos value
+	global numeric nA_SaveLast_bpos<<2>>										;Save the last bpos value
+	;Variables for interpolation stuff -----------------------------------------------------------------------------------------------------
+	global logical bA_CylindricalInterpolation<<2>>                             ;"true" if G12.1 + G16 active
+	global numeric nA_CylindricalCartesianY<<2>>								;Save the calculated cartesian Y value for output
+	global numeric nA_CylindricalCartesianY_RAW<<2>>							;Save the calculated cartesian Y value without rounding
+	global numeric nA_SaveLast_CylindricalCartesianY<<2>>						;Save the last cartesian Y value for G12.1 + G16
+
+	;Variables for synchronization ---------------------------------------------------------------------------------------------------------
+	global integer iA_Z_MasterChannel<<2>>										;Contains the channel which have Z-Axis control
+	global integer iA_C_MasterChannel<<2>>										;Contains the channel which have C-Axis control
+	
+	;Variables for format string -----------------------------------------------------------------------------------------------------------
+	global string  toolNumber_f                                                 ;Format style of tool call output
+	global string  wearNumber_f                                                 ;Format style of tool wear number output
+	global string  spin_TT1_f spin_TT2_f spin_TT3_f spin_TT4_f					;Format style of turning tool spin output
+	global string  spin_MT1_f spin_MT2_f spin_MT3_f spin_MT4_f					;Format style of milling tool spin output
+	global string  radius_f                                                     ;Format style of radius output
+	global string  anext_f                                                      ;Format style of C-Axis output
+	global string  dapos_f                                                      ;Format style of C-Axis incremental output
+	global string  bpos_f bnext_f                                               ;Format style of B-Axis output
+	global string  xonext_f yonext_f zonext_f                                   ;Format style of onext coordinates
+	global string  xhnext_f yhnext_f zhnext_f                                   ;Format style of hnext coordinates
+	global string  xocenter_rel_f yocenter_rel_f zocenter_rel_f                 ;Format style of ocenter_rel
+	global string  xhcenter_rel_f yhcenter_rel_f zhcenter_rel_f                 ;Format style of hcenter_rel
+	global string  xlcenter_rel_f ylcenter_rel_f zlcenter_rel_f                 ;Format style of lcenter_rel
+	global string  shift_x_after_rot_f                                          ;Format style of shift_#_after_rot
+	global string  shift_y_after_rot_f                                          ;Format style of shift_#_after_rot
+	global string  shift_z_after_rot_f                                          ;Format style of shift_#_after_rot
+	global string  Drill_Retract_f                                                    ;Format style of G8x R-value
+	global string  Drill_Peck_f                                                    ;Format style of G8x Q-value
+	global string  Drill_Dwell_f                                                    ;Format style of G8x P-value
+	
+	 ;#region 3.-- Controller Selection
+	;List of controls ----------------------------------------------------------------------------------------------------------------------
+	;	Haas
+	sA_ControllerType<<1,1>> = 'HaasNGC'
+	;	Fanuc
+	sA_ControllerType<<1,2>> = 'System_A'
+	sA_ControllerType<<2,2>> = 'System_B'
+	sA_ControllerType<<3,2>> = 'System_C'
+	;	Okuma
+	sA_ControllerType<<1,3>> = 'OSP300'
+	sA_ControllerType<<2,3>> = 'OSP200'
+	sA_ControllerType<<3,3>> = '5070'
+	;	Mazatrol
+	sA_ControllerType<<1,4>> = 'SmoothX'
+	sA_ControllerType<<2,4>> = 'SmoothG'
+	;	Mitsubishi 
+	sA_ControllerType<<1,5>> = 'M7'
+	
+ ;endregion
+	
+	;------------Post processor preparation stuff-------------------------------------------------------------------------------------------
+	;	----Controller Selection----
+	s_TypeOfController				= sA_ControllerType<<1,1>>
+	;---------------------------------------------------------------------------------------------------------------------------------------
+	numeric_def_f					= '5.3(r)'
+	integer_def_f					= '8.0(p)'
+	wearNumber_f					= '<T>z2.0(p)< >'
+	dapos_f							= '<H>5.3(r)< >'
+	; radius_f						= '<R>5.4(r)< >'
+	
+	;------------Turrent--------------------------------------------------------------------------------------------------------------------
+	b_HalfIndex						= true										;True = Machine has half indexing turret
+	;------------Messages-------------------------------------------------------------------------------------------------------------------
+	;	----Tool Messages/Comments----
+	l_DefaultMessageFormat			= true										;True = Default Message formatting
+	i_ToolDescriptionLen			= 32										;Tool Description: Max characters per line
+	i_ToolDescriptionMaxLines		= 5											;Tool Description: Max lines 
+	;	----Operation Messages/Comments----
+	
+	;---------------------------------------------------------------------------------------------------------------------------------------
+
+ 
+
+ ;#region Block Numbering
+	blknum_letter         = 'N'
+	blknum_f              = '5.0(p)'
+	blknum_gen            = true
+	blknum_exist          = true
+	blknum                = 1
+	blknum_delta          = 1
+	blknum_max            = 99999
+ ;#endregion
+
+
+
+ ;#region Trace
+    ;Variables for trace -------------------------------------------------------------------------------------------------------------------
+    local integer iTraceMode iTraceCount
+	local integer i
+	local string sUsr_Account<<10>>
+
+
+	sUsr_Account<<1>> = 'CodyEstes'
+
+	while i < 10
+		i = i + 1
+		if user_account eq sUsr_Account<<i>>
+			if iTraceCount == 0
+				iTraceCount = iTraceCount + 1
+				input 'trace 0 = no ... trace 5 = all:' iTraceMode
+				trace"all": iTraceMode
+			endif
+		endif
+	endw
+ ;# endregion
+;# endregion
+endp
+
+
+;#region 2. System Commands
+;GPP Tool Help
+;# endregion
+
+;#region 2.SC.a------ | Common
+
+@absolute_mode
+endp
+
+@relative_mode
+endp
+
+@feed_spin
+endp
+
+@start_of_job
+
+endp
+
+@start_of_file
+
+	;Post revision, Time/Date, Program name/number, first call to ChannelID
+	;% sign or whatever is needed at the very start of program.
+	
+	; User proceedure to reset logic
+	; call @usr_InitMachineStatus (not currently defined)
+	
+endp
+
+@vmid_info
+endp
+
+@setup
+endp
+
+@start_program
+endp
+
+@message
+endp
+
+@machine_plane
+endp
+
+@m_feed_spin
+endp
+
+@home_data
+endp
+
+@home_number
+endp
+
+@end_of_job
+endp
+
+@end_program
+endp
+
+@end_of_file
+endp
+;# endregion
+;#region 2.SC.a.1--- | Usr_Common
+;User created procs
+
+@usr_MessageFormat(string sMessage)
+	; CE 06.22.2022: tool_message 100% working
+	; 	need to test other messages such as MCO
+	; This function will take a message and convert it to either:
+	; a.)Limited Char count per line and max amount of line (set globally) ex: 32 char by 5 lines
+	; b.)If message is output on multi lines ex: 'Tool Description' in toolkit
+	;	and the user types x amount of chars, hits enter, and continues to type
+	local integer iL_To iL_From iL_CharCount iL_Count1 iL_MCount
+	local string sL_ReplacedToolMsg sLA_ToolDescription<<50>> sL_Temp
+
+	; i_ToolDescriptionMaxLines = 5 | Max allowed lines set global
+	; i_ToolDescriptionLen = 32 | Max allowed characters per line set global
+
+	sL_ReplacedToolMsg = sMessage
+	call @usr_ReplacedString(sL_ReplacedToolMsg) ; Account for any funky chars like degree (Alt + 0176)
+
+	if strlen(sL_ReplacedToolMsg) <> 0
+		if l_DefaultMessageFormat == true
+			if !instr(sL_ReplacedToolMsg, '\n'); Message typed out on one line
+				iL_To = i_ToolDescriptionLen
+				iL_Count1 = 1
+				iL_MCount = 1
+				iL_CharCount = strlen(sL_ReplacedToolMsg)
+
+				while iL_Count1 < i_ToolDescriptionMaxLines
+					if iL_CharCount == strlen(sL_ReplacedToolMsg) 
+						sLA_ToolDescription<<iL_MCount>> = substr(trim(sL_ReplacedToolMsg), 1, iL_To)
+						{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
+						iL_CharCount = iL_CharCount - strlen(sLA_ToolDescription<<iL_MCount>>)
+						iL_From = i_ToolDescriptionLen
+					elseif iL_CharCount >= i_ToolDescriptionLen
+						sL_Temp = sLA_ToolDescription<<iL_MCount - 1>>
+						sLA_ToolDescription<<iL_MCount>> = substr(trim(sL_ReplacedToolMsg), iL_From, iL_To)
+						
+						if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
+							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+						endif 
+						if right(sL_Temp, 1) == left(sLA_ToolDescription<<iL_MCount>>, 1)
+							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
+						else
+							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
+						endif
+						
+						iL_CharCount = iL_CharCount - strlen(sLA_ToolDescription<<iL_MCount>>)
+						iL_From = iL_From + i_ToolDescriptionLen
+					elseif iL_CharCount == 0
+						break
+					else
+						iL_From = strlen(sL_ReplacedToolMsg) - iL_CharCount
+						sL_Temp = sLA_ToolDescription<<iL_MCount - 1>>
+						sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg, iL_From, iL_To)
+
+						if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
+							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+						endif
+						if right(sL_Temp, 1) == left(sLA_ToolDescription<<iL_MCount>>, 1)
+							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
+						else
+							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
+						endif
+						
+						break
+					endif
+					iL_MCount = iL_MCount + 1
+					iL_Count1 = iL_Count1 + 1
+				endw
+				{nb}
+			else ; Message typed out on multiple lines
+				local integer iL_NewLinePos iL_MessageCount
+				
+				sL_ReplacedToolMsg = replace(sL_ReplacedToolMsg,'\r','')
+				if strlen(sL_ReplacedToolMsg) <> 0
+					iL_Count1 = 0
+					iL_MCount = 1
+					iL_MessageCount = iL_MCount
+					while iL_Count1 <= strlen(sL_ReplacedToolMsg)
+						iL_Count1 = iL_Count1 + 1
+						iL_NewLinePos = instr(sL_ReplacedToolMsg,'\n',iL_Count1)
+						if iL_NewLinePos <> 0
+							sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg,iL_Count1,(iL_NewLinePos-iL_Count1))
+							iL_MCount = iL_MCount + 1
+							iL_MessageCount = iL_MCount
+							iL_Count1 = iL_NewLinePos
+						else
+							sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg,iL_Count1,(strlen(sL_ReplacedToolMsg)-iL_Count1+1))
+							iL_Count1 = (strlen(sL_ReplacedToolMsg)+1)
+						endif
+					endw
+					iL_MCount = 1
+					while iL_MCount <= iL_MessageCount
+						if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
+							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+						endif
+						{nb,s_OpenComment,trim(sLA_ToolDescription<<iL_MCount>>),s_CloseComment}
+						iL_MCount = iL_MCount + 1
+					endw
+					{nb}
+				endif
+			endif
+		else
+			call @cus_MessageFormat(sL_ReplacedToolMsg)
+		endif
+	endif
+endp
+
+;# endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.a.1.1 | Cus_Common
+;Customer specific procs
+
+@cus_MessageFormat(string sMessage)
+ ; Customer specific message styling/format. @usr_MessageFormat should not be altered.
+ ; sL_ReplacedToolMsg gets passed in from @usr_MessageFormat and has already ran through special char cleaner
+	{nb, '(************************************)'}
+	{nb, upper('(!!!cus_MessageFormat not complete!!!)')}
+	{nb, '(************************************)'}
+	{nb}
+	{nb}
+	{nb, s_OpenComment + sMessage + s_CloseComment}
+endp
+
+
+;# endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.b------ | Tool-Path
+
+@arc
+endp
+
+@arc_5x
+endp
+
+@arc_4x_cartesian
+endp
+
+@arc_4x_polar
+endp
+
+@tool_path_info
+endp
+
+@rapid_move
+endp
+
+@move_5x
+endp
+
+@move_4x
+endp
+
+@move4x_polar
+endp
+
+@move4x_dir
+endp
+
+@move4x_cartesian
+endp
+
+@drill_point
+endp
+
+@drill
+endp
+
+@drill4x_cartesian
+endp
+
+@end_drill
+endp
+
+@compensation
+endp
+
+@compensation_h
+endp
+
+@line
+endp
+
+@line_4x
+endp
+
+@line4x_cartesian
+endp
+
+@line4x_dir
+endp
+
+@line4x_polar
+endp
+
+@line_5x
+endp
+
+@line_on
+endp
+
+@drill4x_polar
+endp
+
+@drill4x_pnt
+endp
+
+@init_cpos
+endp
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.b.1--- | Usr_Tool-Path
+;User created procs
+
+@usr_SaveLastAxisPosition
+	if current_command eq '@rapid_move'
+		nA_SaveLast_opos<<ChannelID,1>> = xopos ;|X| | |
+		nA_SaveLast_opos<<ChannelID,2>> = yopos ;| |Y| |
+		nA_SaveLast_opos<<ChannelID,3>> = zopos ;| | |Z|
+		if iA_C_MasterChannel<<spindle+1>> eq ChannelID
+			nA_SaveLast_apos<<spindle+1>> = anext ;|C|
+		endif
+	endif
+	if current_command eq '@line' or current_command eq '@arc'
+		nA_SaveLast_opos<<ChannelID,1>> = xopos ;|X| | |
+		nA_SaveLast_opos<<ChannelID,2>> = yopos ;| |Y| |
+		nA_SaveLast_opos<<ChannelID,3>> = zopos ;| | |Z|
+	endif
+	if current_command eq '@move_5x' or current_command eq '@arc_5x' or current_command eq '@line_5x' or current_command eq '@drill'
+		nA_SaveLast_opos<<ChannelID,1>> = xopos ;|X| | |
+		nA_SaveLast_opos<<ChannelID,2>> = yopos ;| |Y| |
+		nA_SaveLast_opos<<ChannelID,3>> = zopos ;| | |Z|
+		nA_SaveLast_hpos<<ChannelID,1>> = xhpos ;|X| | |
+		nA_SaveLast_hpos<<ChannelID,2>> = yhpos ;| |Y| |
+		nA_SaveLast_hpos<<ChannelID,3>> = zhpos ;| | |Z|
+		if iA_C_MasterChannel<<spindle+1>> eq ChannelID
+			nA_SaveLast_apos<<spindle+1>> = apos ;|C|
+		endif
+		nA_SaveLast_bpos<<ChannelID>>   = bpos  ;|B|
+	endif
+	if current_command eq '@arc_5x' or current_command eq '@line_5x'
+		if bA_CylindricalInterpolation<<ChannelID>> eq true
+			nA_SaveLast_CylindricalCartesianY<<ChannelID>> = nA_CylindricalCartesianY_RAW<<ChannelID>>
+		endif
+	endif
+endp
+
+
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.b.1.1 | Cus_Tool-Path
+;Customer specific procs
+
+
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.c------ | Tool-Path Transform
+
+@fourth_axis
+endp
+
+@rotate
+endp
+
+@rotary_info
+endp
+
+@transform_info
+endp
+
+@mirror
+endp
+
+@change_ref_point
+endp
+
+@chng_tool_cnext
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.c.1--- | Usr_Tool-Path Transform
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.c.1.1 | Cus_Tool-Path Transform
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.d------ | MCO
+
+@mco_cycle
+
+endp
+
+@stop_tool
+endp
+
+@start_obj_act
+endp
+
+@start_mach_ctrl
+endp
+
+@spindles_sync
+endp
+
+@move_object
+endp
+
+@start_tool
+endp
+
+@delay
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.d.1--- | Usr_MCO
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.d.1.1 | Cus_MCO
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.e------ | Plane Rotations
+
+@tmatrix
+endp
+
+@plane_data
+;Not used in Mill Turn (yet)
+endp
+
+@rotate_to_plane
+endp
+
+@drill_plane
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.e.1--- | Usr_Plane Rotations
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.e.1.1 | Cus_Plane Rotations
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.f------ | Proc
+
+@proc
+endp
+
+@loop
+endp
+
+@end_proc
+endp
+
+@call_proc
+endp
+
+@call_prms
+endp
+
+@end_loop
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.f.1--- | Usr_Proc
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.f.1.1 | Cus_Proc
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.g------ | Tool
+
+@tool_breakage
+endp
+
+@turn_change_tool
+endp
+
+@turn_chng_offset
+endp
+
+@change_tool
+endp
+
+@offset_change
+endp
+
+@def_tool
+
+endp
+
+@def_turn_tool
+
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.g.1--- | Usr_Tool
+;User created procs
+
+@usr_ToolCall(logical b_HalfIndex)
+	local integer  iL_MessageLen ; Tool output section below
+	
+
+	if b_HalfIndex
+		local numeric nL_HalfIndexDegree, nL_NegDeg, nL_PosDeg
+		local integer lI_StationIndexDirection, iL_IndexADelta, iL_IndexBDelta
+		local integer iL_NegDegOffset, iL_PosDegOffset, iL_ToolNumber1
+
+		nL_HalfIndexDegree				= 15.0 ;Always positive		
+		lI_StationIndexDirection		= 3    ;3 = CW | 4 = CCW
+		iL_IndexADelta 					= 11   ;Always positive		
+		iL_IndexBDelta 					= 12   ;Always positive
+
+	
+		if lI_StationIndexDirection == 4 ; CCW
+			;Original logic
+			nL_NegDeg = (nL_HalfIndexDegree * -1) ; Negitive value
+			nL_PosDeg = nL_HalfIndexDegree ; Pos value
+			iL_NegDegOffset = (tool_number + iL_IndexADelta); 11
+			iL_PosDegOffset = (tool_number + iL_IndexBDelta); 12
+		elseif lI_StationIndexDirection == 3 ; CW
+			;Modified logic for CW turret rotation
+			nL_NegDeg = nL_HalfIndexDegree ; Flip To Pos
+			nL_PosDeg = (nL_HalfIndexDegree * -1) ; Flip to Neg
+			iL_NegDegOffset = (tool_number + iL_IndexBDelta); 12
+			iL_PosDegOffset = (tool_number + iL_IndexADelta); 11
+		endif
+	endif
+	
+ ;-------------------------ERROR LOGIC---------------------------------
+
+		; Turning
+	if job_machine_type	== turning
+		if b_HalfIndex
+			if tool_number <> tool_position_in_turret or tool_number <> tool_offset_number
+				if tool_number <> tool_offset_number
+					; Handle orientation
+					if abs(measure_orientation) <> abs(nL_HalfIndexDegree); User Error
+						{nl, '(Cutting Point Data set incorrect)'}
+						print 'Turning: Measure Orientation Not In Range'
+						print '!!!GCODE ABORTED!!!'
+						abort
+					endif
+				endif
+			elseif tool_number == tool_position_in_turret or tool_number == tool_offset_number
+				if tool_number == tool_offset_number	
+				; Handle no orientation
+					if measure_orientation <> 0 
+						print 'Turning: Measure Orientation Not Zero'
+						print '!!!GCODE ABORTED!!!'
+						abort
+					endif
+				endif
+			endif
+		endif
+	endif
+		; Milling 
+	if job_machine_type == milling
+		if b_HalfIndex
+			if tool_number <> tool_position_in_turret or tool_number <> h_offset
+				if tool_number <> h_offset
+					; Handle orientation
+					if abs(measure_orientation) <> abs(nL_HalfIndexDegree); User Error
+						print 'Milling: Measure Orientation Not In Range'
+						print '!!!GCODE ABORTED!!!'
+						abort
+					endif
+				endif
+			elseif tool_number == tool_position_in_turret or tool_number == h_offset
+				if tool_number == h_offset
+					; Handle no orientation
+					if measure_orientation <> 0
+						print 'Milling: Measure Orientation Not Zero'
+						print '!!!GCODE ABORTED!!!'
+						abort
+					endif
+				endif
+			endif
+		endif
+	endif
+
+ ; -------------------------TOOL OUTPUT---------------------------------
+
+	iL_MessageLen = strlen(tool_message)
+
+	if job_machine_type == turning
+		if b_HalfIndex
+			; Tool and Offset call for half index
+			if tool_number <> 1
+				if measure_orientation == nL_NegDeg
+					{nb, iL_NegDegOffset: '<T>2/2.0(p)<>', iL_NegDegOffset: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				elseif measure_orientation == nL_PosDeg
+					{nb, iL_PosDegOffset: '<T>2/2.0(p)<>', iL_PosDegOffset: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				else
+					{nb, tool_number: '<T>2/2.0(p)<>', tool_offset_number: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				endif
+			elseif tool_number == 1 ;Handle T1
+				if measure_orientation == nL_NegDeg
+					iL_ToolNumber1 = (tool_number + 23)
+					{nb, iL_ToolNumber1: '<T>2/2.0(p)<>', iL_ToolNumber1: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				elseif measure_orientation == nL_PosDeg
+					iL_ToolNumber1 = (tool_number + 12)
+					{nb, iL_ToolNumber1: '<T>2/2.0(p)<>', iL_ToolNumber1: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				else
+					{nb, tool_number: '<T>2/2.0(p)<>', tool_offset_number: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				endif
+			endif
+		else
+			{nl, '!!!TURN TOOL CALL FOR NON HALF INDEX!!!'}
+		endif
+	endif
+
+	if job_machine_type == milling
+		if b_HalfIndex
+			; Tool and Offset call for half index milling
+			if tool_number <> 1
+				if measure_orientation == nL_NegDeg
+					{nb, iL_NegDegOffset: '<T>2/2.0(p)<>', iL_NegDegOffset: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				elseif measure_orientation == nL_PosDeg
+					{nb, iL_PosDegOffset: '<T>2/2.0(p)<>', iL_PosDegOffset: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				else
+					{nb, tool_number: '<T>2/2.0(p)<>', h_offset: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				endif
+			elseif tool_number == 1 ;Handle T1
+				if measure_orientation == nL_NegDeg
+					iL_ToolNumber1 = (tool_number + 23)
+					{nb, iL_ToolNumber1: '<T>2/2.0(p)<>', iL_ToolNumber1: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				elseif measure_orientation == nL_PosDeg
+					iL_ToolNumber1 = (tool_number + 12)
+					{nb, iL_ToolNumber1: '<T>2/2.0(p)<>', iL_ToolNumber1: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				else
+					{nb, tool_number: '<T>2/2.0(p)<>', h_offset: '<>2/2.0(p)<>'}
+					if b_OutputToolMessage 
+						if iL_MessageLen <> 0
+							{'(',tool_message,')'}
+						else
+							if b_DefaultOpMessage
+								call @usr_ToolTypeName
+							endif
+						endif
+					endif
+				endif
+			endif
+		else
+			{nl, '!!!MILL TOOL CALL FOR NON HALF INDEX'}
+		endif
+	endif
+endp
+
+@usr_ReplacedString(string sL_String)
+	; Windows-1252
+	sL_String = replace(sL_String,'\xc4','Ae',0)         ;�
+	sL_String = replace(sL_String,'\xe4','ae',0)         ;�
+	sL_String = replace(sL_String,'\xd6','Oe',0)         ;�
+	sL_String = replace(sL_String,'\xf6','oe',0)         ;�
+	sL_String = replace(sL_String,'\xdc','Ue',0)         ;�
+	sL_String = replace(sL_String,'\xfc','ue',0)         ;�
+	sL_String = replace(sL_String,'\xdf','ss',0)         ;�
+	sL_String = replace(sL_String,'\xc9','E',0)          ;�
+	sL_String = replace(sL_String,'\xe9','e',0)          ;�
+	sL_String = replace(sL_String,'\xc8','E',0)          ;�
+	sL_String = replace(sL_String,'\xe8','e',0)          ;�
+	sL_String = replace(sL_String,'\xc1','A',0)          ;�
+	sL_String = replace(sL_String,'\xe1','a',0)          ;�
+	sL_String = replace(sL_String,'\xc0','A',0)          ;�
+	sL_String = replace(sL_String,'\xe0','a',0)          ;�
+	sL_String = replace(sL_String,'\xc2','A',0)          ;�
+	sL_String = replace(sL_String,'\xe2','a',0)          ;�
+	sL_String = replace(sL_String,'\xca','E',0)          ;�
+	sL_String = replace(sL_String,'\xea','e',0)          ;�
+	sL_String = replace(sL_String,'\x80','-Euro',0)      ;�
+	sL_String = replace(sL_String,'\xf8','D',0)          ;�
+	sL_String = replace(sL_String,'\x7b','-',0)          ;{
+	sL_String = replace(sL_String,'\x7d','-',0)          ;}
+	sL_String = replace(sL_String,'\x24','-Dollar',0)    ;$
+	sL_String = replace(sL_String,'\x25','-Percent',0)   ;%
+	sL_String = replace(sL_String,'\xb0','-Grad',0)      ;�
+	sL_String = replace(sL_String,'\x7e','-',0)          ;~
+	sL_String = replace(sL_String,'\x2f','-',0)          ;/
+	sL_String = replace(sL_String,'\x5c','-',0)          ;\
+	sL_String = replace(sL_String,'\x7c','I',0)          ;|
+	sL_String = replace(sL_String,'\xb4','-',0)          ;�
+	sL_String = replace(sL_String,'\x22','-',0)          ;"
+	sL_String = replace(sL_String,'\x22','-',0)          ;"
+	sL_String = replace(sL_String,'\xb2','2',0)          ;�
+	sL_String = replace(sL_String,'\xb3','3',0)          ;�
+	sL_String = replace(sL_String,'\x5f','-',0)          ;_
+	sL_String = replace(sL_String,'\x2c','.',0)          ;,
+	sL_String = replace(sL_String,'\x5b','(',0)          ;[
+	sL_String = replace(sL_String,'\x5d',')',0)          ;]
+	sL_String = upper(sL_String)
+endp
+
+
+
+
+@usr_ToolTypeName
+	;Software limits - there is no "tool_user_type" at turning operations and it is on english
+	local string lS_UserToolType lS_ToolType lS_ToolTypeMill<<100>> lS_ToolTypeTurn<<100>>
+	local integer lI_ToolTypeTemp
+	
+	lS_ToolTypeMill<<1>> = 'BULL NOSE'
+	lS_ToolTypeMill<<2>> = 'END MILL'
+	lS_ToolTypeMill<<7>> = 'SLOT MILL'
+	lS_ToolTypeMill<<8>> = 'LOLLIPOP MILL'
+	lS_ToolTypeMill<<9>> = 'TAPER MILL D'
+	lS_ToolTypeMill<<10>> = 'CHAMFER DRILL'
+	lS_ToolTypeMill<<11>> = 'DOVE MILL'
+	lS_ToolTypeMill<<12>> = 'TAP MILL'
+	lS_ToolTypeMill<<13>> = 'THREAD'
+	
+	lS_ToolTypeMill<<15>> = 'BALL NOSE'
+	lS_ToolTypeMill<<16>> = 'REAMER'
+	lS_ToolTypeMill<<17>> = 'BORE'
+	lS_ToolTypeMill<<18>> = 'CENTER DRILL'
+	lS_ToolTypeMill<<19>> = 'ENGRAVING MILL'
+	lS_ToolTypeMill<<20>> = 'FACE MILL'
+	lS_ToolTypeMill<<21>> = 'SPOT DRILL'
+	lS_ToolTypeMill<<22>> = 'TOOL PROBE'
+	lS_ToolTypeMill<<23>> = 'BROACHING'
+	lS_ToolTypeMill<<24>> = 'SAW'
+	lS_ToolTypeMill<<25>> = 'TAPER BALL NOSE'
+	lS_ToolTypeMill<<26>> = 'BARELL MILL'
+	lS_ToolTypeMill<<27>> = 'BARELL MILL'
+	lS_ToolTypeMill<<30>> = 'DRILL'
+	
+	lS_ToolTypeTurn<<1>> = 'OD TURNING'
+	lS_ToolTypeTurn<<2>> = 'OD GROOVE'
+	lS_ToolTypeTurn<<3>> = 'OD CONTOUR'
+	lS_ToolTypeTurn<<4>> = 'OD THREAD'
+	lS_ToolTypeTurn<<5>> = 'ID TURNING'
+	lS_ToolTypeTurn<<6>> = 'ID GROOVE'
+	lS_ToolTypeTurn<<7>> = 'OD THREAD'
+	lS_ToolTypeTurn<<8>> = 'ID FACE BACK'
+	lS_ToolTypeTurn<<9>> = 'ID CONTOUR'
+	lS_ToolTypeTurn<<30>> = 'DRILL'
+
+	if tool_type eq 0 ;drill
+		lI_ToolTypeTemp = 30
+	else
+		lI_ToolTypeTemp = tool_type
+	endif
+	
+	if job_machine_type eq turning
+		lS_ToolType = 'turning'
+		if lS_ToolType eq 'turning' or (next_tool_machine_type eq turning)
+			if (lI_ToolTypeTemp eq TURN_GENERAL_EXT or lI_ToolTypeTemp eq Ext_ROUGH)
+				lS_UserToolType = lS_ToolTypeTurn<<1>>
+			elseif lI_ToolTypeTemp eq TURN_GROOVING_EXT or lI_ToolTypeTemp eq Ext_GROOVE
+				lS_UserToolType = lS_ToolTypeTurn<<2>>
+			elseif lI_ToolTypeTemp eq Ext_CONTOUR
+				lS_UserToolType = lS_ToolTypeTurn<<3>>
+			elseif lI_ToolTypeTemp eq TURN_THREADING_EXT or lI_ToolTypeTemp eq Ext_THREAD
+				lS_UserToolType = lS_ToolTypeTurn<<4>>
+			elseif lI_ToolTypeTemp eq 13 or lI_ToolTypeTemp eq 9
+				lS_UserToolType = lS_ToolTypeTurn<<5>>
+			elseif lI_ToolTypeTemp eq 14 or lI_ToolTypeTemp eq 7
+				lS_UserToolType = lS_ToolTypeTurn<<6>>
+			elseif lI_ToolTypeTemp eq 15 or lI_ToolTypeTemp eq 6
+				lS_UserToolType = lS_ToolTypeTurn<<7>>
+			elseif lI_ToolTypeTemp eq Int_FACE_BACK
+				lS_UserToolType = lS_ToolTypeTurn<<8>>
+			elseif lI_ToolTypeTemp eq Int_CONTOUR
+				lS_UserToolType = lS_ToolTypeTurn<<9>>
+			elseif lI_ToolTypeTemp == 30
+				lS_UserToolType = lS_ToolTypeTurn<<30>>
+			elseif lI_ToolTypeTemp eq drill
+				lS_UserToolType = lS_ToolTypeMill<<30>>
+			elseif lI_ToolTypeTemp eq end_mill
+				lS_UserToolType = lS_ToolTypeMill<<2>>
+			elseif lI_ToolTypeTemp eq tap_mill
+				lS_UserToolType = lS_ToolTypeMill<<12>>
+			elseif lI_ToolTypeTemp eq ball_nose
+				lS_UserToolType = lS_ToolTypeMill<<15>>
+			elseif lI_ToolTypeTemp eq reamer_mill
+				lS_UserToolType = lS_ToolTypeMill<<16>>
+			elseif lI_ToolTypeTemp eq center_drill
+				lS_UserToolType = lS_ToolTypeMill<<18>>
+			else
+				lS_UserToolType = 'NOT DEFINED'
+			endif
+		endif
+	else
+		lS_ToolType = 'milling'
+		lS_UserToolType = lS_ToolTypeMill<<lI_ToolTypeTemp>>
+	endif
+
+	lS_UserToolType=lS_UserToolType;+' D'+tostr(tool_diameter:'5.2(p)')
+	
+	{'('upper(lS_UserToolType)')'}
+endp
+
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.g.1.1 | Cus_Tool
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.h------ | Channel Synchronization
+
+@sync_process
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.h.1--- | Usr_Channel Synchronization
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.h.1.1 | Cus_Channel Synchronization
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.i------ | Turning Cycles
+
+@turn_endproc
+endp
+
+@turn_opt_parms
+endp
+
+@turn_proc
+endp
+
+@turn_drill
+
+endp
+
+@thread
+
+endp
+
+@turning
+
+endp
+
+@groove
+
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.i.1--- | Usr_Turning Cycles
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.i.1.1 | Cus_Turning Cycles
+;Customer specific procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.j------ | Probe
+
+@start_probe
+endp
+
+@end_probe
+endp
+
+@move_probe
+endp
+
+@line_probe
+endp
+
+@prb_cyc_xyz_plan
+endp
+
+@prb_cyc_angle
+endp
+
+@prb_cyc_hol_cyl
+endp
+
+@prb_cyc_bos_pckt
+endp
+
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.j.1--- | Usr_Probe
+;User created procs
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 2.SC.j.1.1 | Cus_Probe
+;Customer specific procs
+
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+;#region 3.a Controller Formatting
+
+;	Haas
+@usr_control_HaasNGC
+	if current_command == '@start_of_file'
+	 ;Formating for Haas NGC
+
+		;------------Program Number format--------------------------------------
+		s_ProgramNumber = tostr(program_number: '<O>z4.0(n)')
+		;-----------------------------------------------------------------------
+		
+		;------------Comment Formatting-----------------------------------------
+		s_OpenComment = '('
+		s_CloseComment = ')'
+		;-----------------------------------------------------------------------
+		
+		;------------G Code-----------------------------------------------------
+		gcode_f 	= '<G>2/3.2(p)< >'    
+		mcode_f 	= '<M>2/3.0(n)< >'
+		;	----Feed----
+		feed_f		= '<F>5.4(p)< >'
+
+		;	----Tool----
+		toolNumber_f	= '<T>z4.0()< >'
+
+		;	----Spin----
+		if total_channels <= 1
+			spin_MT1_f = '<P>5.0(p)< >'
+			spin_TT1_f = '<S>5.0(p)< >'
+		elseif total_channels > 1
+			; Channel 1
+			spin_MT1_f = '<P>5.0(p)< >'
+			spin_TT1_f = '<S>5.0(p)< >'
+
+			; Channel 2
+			spin_MT2_f = '<P>5.0(p)< >'
+			spin_TT2_f = '<S>5.0(p)< >'
+			; Channel 3
+
+			spin_MT3_f = '<P>5.0(p)< >'
+			spin_TT3_f = '<S>5.0(p)< >'
+			; Channel 4
+
+			spin_MT4_f = '<P>5.0(p)< >'
+			spin_TT4_f = '<S>5.0(p)< >'
+		endif
+		
+		;	----Arcs----
+		radius_f 	= '<R>5.4(r)< >'
+
+		;	----Drill | Tap----
+		Drill_Dwell_f	= '< P>5.4< >'			;Dwell
+		Drill_Peck_f	= '< Q>5.4< >'			;Peck
+		Drill_Retract_f	= '< R>5.4< >'			;R Plane
+
+	elseif current_command == '@start_of_job'
+		;	----Axis----
+		if omachine_plane == xy;G17
+			if rot_axis_type == axis4_none
+				; X
+				xopos_f		= '<X>5.4(*2)< >'
+				xonext_f 	= xopos_f
+				; Y
+				yopos_f 	= '<Y>5.4< >'
+				yonext_f 	= yopos_f
+				; Z
+				zopos_f 	= '<Z>5.4< >'
+				zonext_f 	= zopos_f
+				; A
+				apos_f		= '<C>5.4< >'
+				anext_f 	= apos_f
+				; B
+				bpos_f 		= '<B>5.4< >'
+				bnext_f 	= bpos_f
+			elseif rot_axis_type == axis4_face
+			elseif rot_axis_type == axis4_radial
+			endif
+		elseif omachine_plane == zx;G18
+			if rot_axis_type == axis4_none
+				; X
+				xopos_f		= '<X>5.4(*2)< >'
+				xonext_f 	= xopos_f
+				; Y
+				yopos_f 	= '<Y>5.4< >'
+				yonext_f 	= yopos_f
+				; Z
+				zopos_f 	= '<Z>5.4< >'
+				zonext_f 	= zopos_f
+				; A
+				apos_f		= '<C>5.4< >'
+				anext_f 	= apos_f
+				; B
+				bpos_f 		= '<B>5.4< >'
+				bnext_f 	= bpos_f
+			elseif rot_axis_type == axis4_face
+			elseif rot_axis_type == axis4_radial
+			endif
+		elseif omachine_plane == yz;G19
+			if rot_axis_type == axis4_none
+				; X
+				xopos_f		= '<X>5.4< >'
+				xonext_f 	= xopos_f
+				; Y
+				yopos_f 	= '<Y>5.4< >'
+				yonext_f 	= yopos_f
+				; Z
+				zopos_f 	= '<Z>5.4< >'
+				zonext_f 	= zopos_f
+				; A
+				apos_f		= '<C>5.4< >'
+				anext_f 	= apos_f
+				; B
+				bpos_f 		= '<B>5.4< >'
+				bnext_f 	= bpos_f
+			elseif rot_axis_type == axis4_face
+			elseif rot_axis_type == axis4_radial
+			endif
+		endif
+
+	endif
+
+endp
+
+@cus_control_HaasNGC
+	local logical bL_ToolList
+	local string sL_ToolList
+	local logical bL_ToolDescription
+	local logical bL_OutputToolMessage, bL_DefaultOpMessage
+
+	bL_OutputToolMessage	= b_OutputToolMessage	;Set to control locally
+	bL_DefaultOpMessage		= b_DefaultOpMessage	;Set to control locally
+
+	;--------Tool Related Message Output----------------------------------------
+	
+	;		----@def(_turn_)tool----
+	bL_ToolList				= true ;True = Output Toollist @def_(turn_)tool sections
+	bL_ToolDescription		= true ;True = Output Tool Description in Tool List
+	
+	;		----@(turning_)change_tool----
+	bL_OutputToolMessage	= true ;True = Outputs Tool Message 
+	bL_DefaultOpMessage		= false;True = Generates a default operation message ex: TURN OD
+	
+	if current_command == '@def_turn_tool' or current_command == '@def_tool'
+		local string lS_TMtoolnumber lS_TMoffset 
+		if current_command == '@def_turn_tool'
+			; Turn Tool Message Format
+			if bL_ToolList 
+				lS_TMtoolnumber = tostr(tool_position_in_turret:'<(TOOL: >8.0(p)< >')
+				lS_TMoffset = tostr(tool_offset_number:'<OFFSET: >z2.0(p)<)>')
+				sL_ToolList = lS_TMtoolnumber + lS_TMoffset
+				{nb, sL_ToolList}
+			endif
+			if bL_ToolDescription
+				call @usr_MessageFormat(tool_message)
+			endif
+		else
+			; Mill Tool Message Format
+			if bL_ToolList 
+				lS_TMtoolnumber = tostr(tool_position_in_turret:'<(TOOL: >8.0(p)< >')
+				lS_TMoffset = tostr(h_offset:'<OFFSET: >z2.0(p)<)>')
+				sL_ToolList = lS_TMtoolnumber + lS_TMoffset; Message output variable
+				{nb, sL_ToolList}
+			endif
+			if bL_ToolDescription
+				call @usr_MessageFormat(tool_message)
+			endif
+		endif
+	endif
+	;---------------------------------------------------------------------------
+
+
+
+endp
+
+;	Fanuc
+@usr_control_SystemA
+endp
+
+@cus_control_SystemA
+endp
+
+@usr_control_SystemB
+endp
+
+@cus_control_SystemB
+endp
+
+@usr_control_SystemC
+endp
+
+@cus_control_SystemC
+endp
+
+;	Okuma
+@usr_control_OSP300
+endp
+
+@cus_control_OSP300
+endp
+
+@usr_control_OSP200
+endp
+
+@cus_control_OSP200
+endp
+
+@usr_control_5070
+endp
+
+@cus_control_5070
+endp
+
+;	Mazatrol
+@usr_control_SmoothX
+endp
+
+@cus_control_SmoothX
+endp
+
+@usr_control_SmoothG
+endp
+
+@cus_control_SmoothG
+endp
+
+;	Mitsubishi
+@usr_control_M7
+endp
+
+@cus_control_M7
+endp
+
+;#endregion
+;-------------------------------------------------------------------------------------------------------------------------------------------
+
+
