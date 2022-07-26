@@ -1,6 +1,6 @@
 
-
-;-------------------
+ ;#region Trace
+	;-------------------
 
 @usr_FillSolidCamArray
 
@@ -116,3 +116,4 @@ endp
 	endw
 	
 endp
+ ;# endregion
