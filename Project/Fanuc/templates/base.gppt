@@ -1,5 +1,7 @@
 {{#-----------------Include Section----------------------
 
+#Test
+
 		#Template Engine - Support Functions
 	functions 				= include "functions/functions.gppt"
 	
