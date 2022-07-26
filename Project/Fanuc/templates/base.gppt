@@ -1,7 +1,5 @@
 {{#-----------------Include Section----------------------
 
-#Test
-
 		#Template Engine - Support Functions
 	functions 				= include "functions/functions.gppt"
 	
@@ -98,7 +96,7 @@
 						#----Plane Rotations
 	planeRotations = {}
 		planeRotations.drillPlane 		= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Drill_Plane\\drill_plane.gppt"
-		planeRotations.drillData 		= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Plane_Data\\plane_data.gppt"
+		planeRotations.planeData 		= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Plane_Data\\plane_data.gppt"
 		planeRotations.rotateToPlane 	= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Rotate_to_Plane\\rotate_to_plane.gppt"
 		planeRotations.tmatrix 			= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Tmatrix\\tmatrix.gppt"
 	
@@ -340,42 +338,72 @@ endp
 }}
 
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@setup
-endp
+{{
+#@setup
+	common.setup
+#endp
+}}
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@start_program
-endp
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@message
-endp
+{{
+#@start_program
+	common.startProgram
+#endp
+}}
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@machine_plane
-endp
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@m_feed_spin
-endp
+{{
+#@message
+	common.message
+#endp
+}}
 
-@home_data
-endp
+{{
+#@machine_plane
+	common.machinePlane
+#endp
+}}
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@home_number
-endp
 
-{{#include "routines/_2_Trace/german_trace.gppt"}}
-@end_of_job
-endp
+{{
+#@m_feed_spin
+	common.mFeedSpin
+#endp
+}}
 
-@end_program
-endp
 
-@end_of_file
-endp
+{{
+#@home_data
+	common.homeData
+#endp
+}}
+
+
+{{
+#@home_number
+	common.homeNumber
+#endp
+}}
+
+{{
+#@end_of_job
+	common.endOfJob
+#endp
+}}
+
+{{
+#@end_program
+	common.endProgram
+#endp
+}}
+
+{{
+#@end_of_file
+	common.endOfFile
+#endp
+}}
+
+
 ;# endregion
 ;#region 2.SC.a.1--- | Usr_Common
 ;User created procs
@@ -508,86 +536,175 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.b------ | Tool-Path
 
-@arc
-endp
+{{
+#@arc
+	toolPath.arc
+#endp
+}}
 
-@arc_5x
-endp
 
-@arc_4x_cartesian
-endp
+{{
+#@arc_5x
+	toolPath.arc5x
+#endp
+}}
 
-@arc_4x_polar
-endp
 
-@tool_path_info
-endp
+{{
+#@arc_4x_cartesian
+	toolPath.arc4xCartesian
+#endp
+}}
 
-@rapid_move
-endp
+{{
+#@arc_4x_polar
+	toolPath.arc4xPolar
+#endp
+}}
 
-@move_5x
-endp
 
-@move_4x
-endp
+{{
+#@tool_path_info
+	toolPath.info
+#endp
+}}
 
-@move4x_polar
-endp
 
-@move4x_dir
-endp
+{{
+#@rapid_move
+	toolPath.moveRapid
+#endp
+}}
 
-@move4x_cartesian
-endp
 
-@drill_point
-endp
+{{
+#@move_5x
+	toolPath.move5x
+#endp
+}}
 
-@drill
-endp
 
-@drill4x_cartesian
-endp
+{{
+#@move_4x
+	toolPath.move4x
+#endp
+}}
 
-@end_drill
-endp
 
-@compensation
-endp
+{{
+#@move4x_polar
+	toolPath.move4xPolar
+#endp
+}}
 
-@compensation_h
-endp
+{{
+#@move4x_dir
+	toolPath.move4xDir
+#endp
+}}
 
-@line
-endp
+{{
+#@move4x_cartesian
+	toolPath.move4xCartesian
+#endp
+}}
 
-@line_4x
-endp
+{{
+#@drill_point
+	toolPath.drillPoint
+#endp
+}}
 
-@line4x_cartesian
-endp
+{{
+#@drill
+	toolPath.drill
+#endp
+}}
 
-@line4x_dir
-endp
+{{
+#@drill4x_cartesian
+	toolPath.drill4xCartesian
+#endp
+}}
 
-@line4x_polar
-endp
+{{
+#@end_drill
+	toolPath.drillEnd
+#endp
+}}
 
-@line_5x
-endp
+{{
+#@compensation
+	toolPath.comp
+#endp
+}}
 
-@line_on
-endp
+{{
+#@compensation_h
+	toolPath.compH
+#endp
+}}
 
-@drill4x_polar
-endp
+{{
+#@line
+	toolPath.line
+#endp
+}}
 
-@drill4x_pnt
-endp
+{{
+#@line_4x
+	toolPath.line4x
+#endp
+}}
 
-@init_cpos
-endp
+{{
+#@line4x_cartesian
+	toolPath.line4xCartesian
+#endp
+}}
+
+{{
+#@line4x_dir
+	toolPath.line4xDir
+#endp
+}}
+
+{{
+#@line4x_polar
+	toolPath.line4xPolar
+#endp
+}}
+
+{{
+#@line_5x
+	toolPath.line5x
+#endp
+}}
+
+{{
+#@line_on
+	toolPath.lineOn
+#endp
+}}
+
+{{
+#@drill4x_polar
+	toolPath.drill4xPolar
+#endp
+}}
+
+{{
+#@drill4x_pnt
+	toolPath.drill4xPnt
+#endp
+}}
+
+{{
+#@init_cpos
+	toolPath.initCpos
+#endp
+}}
+
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.b.1--- | Usr_Tool-Path
@@ -639,26 +756,49 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.c------ | Tool-Path Transform
 
-@fourth_axis
-endp
 
-@rotate
-endp
+{{
+#@fourth_axis
+	toolPathXform.fourthAxis
+#endp
+}}
 
-@rotary_info
-endp
+{{
+#@rotate
+	toolPathXform.rotate
+#endp
+}}
 
-@transform_info
-endp
+{{
+#@rotary_info
+	toolPathXform.rotaryInfo
+#endp
+}}
 
-@mirror
-endp
+{{
+#@transform_info
+	toolPathXform.xformInfo
+#endp
+}}
 
-@change_ref_point
-endp
+{{
+#@mirror
+	toolPathXform.mirror
+#endp
+}}
 
-@chng_tool_cnext
-endp
+{{
+#@change_ref_point
+	toolPathXform.chngRefPoint
+#endp
+}}
+
+{{
+#@chng_tool_cnext
+	toolPathXform.chngToolCnxt
+#endp
+}}
+
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -674,30 +814,55 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.d------ | MCO
 
-@mco_cycle
 
-endp
+{{
+#@mco_cycle
+	mco.mco
+#endp
+}}
 
-@stop_tool
-endp
+{{
+#@stop_tool
+	mco.stopTool
+#endp
+}}
 
-@start_obj_act
-endp
+{{
+#@start_obj_act
+	mco.startObjAct
+#endp
+}}
 
-@start_mach_ctrl
-endp
+{{
+#@start_mach_ctrl
+	mco.startMachCtrl
+#endp
+}}
 
-@spindles_sync
-endp
+{{
+#@spindles_sync
+	mco.spindlesSync
+#endp
+}}
 
-@move_object
-endp
+{{
+#@move_object
+	mco.moveObj
+#endp
+}}
 
-@start_tool
-endp
+{{
+#@start_tool
+	mco.startTool
+#endp
+}}
 
-@delay
-endp
+{{
+#@delay
+	mco.delay
+#endp
+}}
+
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -713,18 +878,29 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.e------ | Plane Rotations
 
-@tmatrix
-endp
+{{
+#@tmatrix
+	planeRotations.tmatrix
+#endp
+}}
 
-@plane_data
-;Not used in Mill Turn (yet)
-endp
+{{
+#@plane_data
+	planeRotations.planeData
+#endp
+}}
 
-@rotate_to_plane
-endp
+{{
+#@rotate_to_plane
+	planeRotations.rotateToPlane
+#endp
+}}
 
-@drill_plane
-endp
+{{
+#@drill_plane
+	planeRotations.drillPlane
+#endp
+}}
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -740,23 +916,41 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.f------ | Proc
 
-@proc
-endp
+{{
+#@proc
+	proc.proc
+#endp
+}}
 
-@loop
-endp
+{{
+#@loop
+	proc.loop
+#endp
+}}
 
-@end_proc
-endp
+{{
+#@end_proc
+	proc.endLoop
+#endp
+}}
 
-@call_proc
-endp
+{{
+#@call_proc
+	proc.callProc
+#endp
+}}
 
-@call_prms
-endp
+{{
+#@call_prms
+	proc.callPrms
+#endp
+}}
 
-@end_loop
-endp
+{{
+#@end_loop
+	proc.endLoop
+#endp
+}}
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -772,28 +966,54 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.g------ | Tool
 
-@tool_breakage
-endp
 
-@turn_change_tool
-endp
+{{
+#@tool_breakage
+	tool.toolBreakage
+#endp
+}}
 
-@turn_chng_offset
-endp
 
-@change_tool
-endp
+{{
+#@turn_change_tool
+	tool.turnChangeTool
+#endp
+}}
 
-@offset_change
-endp
 
-@def_tool
+{{
+#@turn_chng_offset
+	tool.turnChangeOffset
+#endp
+}}
 
-endp
 
-@def_turn_tool
+{{
+#@change_tool
+	tool.changeTool
+#endp
+}}
 
-endp
+
+{{
+#@offset_change
+	tool.offsetChange
+#endp
+}}
+
+
+{{
+#@def_tool
+	tool.defTool
+#endp
+}}
+
+
+{{
+#@def_turn_tool
+	tool.defTurnTool
+#endp
+}}
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1202,8 +1422,11 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.h------ | Channel Synchronization
 
-@sync_process
-endp
+{{
+#@sync_process
+	channelSync.syncProc
+#endp
+}}
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1219,30 +1442,53 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.i------ | Turning Cycles
 
-@turn_endproc
-endp
+{{
+#@turn_endproc
+	turningCycles.turnEndProc
+#endp
+}}
 
-@turn_opt_parms
-endp
 
-@turn_proc
-endp
+{{
+#@turn_opt_parms
+	turningCycles.turnOptParms
+#endp
+}}
 
-@turn_drill
 
-endp
+{{
+#@turn_proc
+	turningCycles.turnProc
+#endp
+}}
 
-@thread
 
-endp
+{{
+#@turn_drill
+	turningCycles.turnDrill
+#endp
+}}
 
-@turning
 
-endp
+{{
+#@thread
+	turningCycles.thread
+#endp
+}}
 
-@groove
 
-endp
+{{
+#@turning
+	turningCycles.turning
+#endp
+}}
+
+
+{{
+#@groove
+	turningCycles.groove
+#endp
+}}
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -1258,29 +1504,60 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.j------ | Probe
 
-@start_probe
-endp
+{{
+#@start_probe
+	probe.start
+#endp
+}}
 
-@end_probe
-endp
 
-@move_probe
-endp
+{{
+#@end_probe
+	probe.endProbe
+#endp
+}}
 
-@line_probe
-endp
 
-@prb_cyc_xyz_plan
-endp
+{{
+#@move_probe
+	probe.move
+#endp
+}}
 
-@prb_cyc_angle
-endp
 
-@prb_cyc_hol_cyl
-endp
+{{
+#@line_probe
+	probe.line
+#endp
+}}
 
-@prb_cyc_bos_pckt
-endp
+
+{{
+#@prb_cyc_xyz_plan
+	probe.point
+#endp
+}}
+
+
+{{
+#@prb_cyc_angle
+	probe.angle
+#endp
+}}
+
+
+{{
+#@prb_cyc_hol_cyl
+	probe.cylinder
+#endp
+}}
+
+
+{{
+#@prb_cyc_bos_pckt
+	probe.boss
+#endp
+}}
 
 
 ;#endregion
