@@ -6,8 +6,6 @@
 	#----VMID----
 	add_vmid_options 		= include "routines/_1_VMID/add_vmid_options.gppt"
 	
-	addvmid = {add_vmid_options: add_vmid_options}
-	
 	#----Init Post----
 	gpp_head 				= include "routines/gpp_head.gppt"
 	print_comments 			= include "routines/print_comments.gppt"
