@@ -12,7 +12,7 @@
 	sUsr_Account<<5>> = ''
 	sUsr_Account<<6>> = ''
 
-	while i < 10
+	while i < alen(sUsr_Account,1) ;10
 		i = i + 1
 		if user_account == sUsr_Account<<i>>
 			if iTraceCount == 0
