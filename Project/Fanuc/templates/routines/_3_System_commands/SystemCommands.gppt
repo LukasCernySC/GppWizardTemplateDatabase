@@ -1,0 +1,125 @@
+{{
+	Common = {		
+		absoluteMode 	:include "routines\\_3_System_commands\\_1_Common\\absolute_mode.gppt",
+		endOfFile 		:include "routines\\_3_System_commands\\_1_Common\\end_of_file.gppt",
+		endOfJob 		:include "routines\\_3_System_commands\\_1_Common\\end_of_job.gppt",
+		endProgram 		:include "routines\\_3_System_commands\\_1_Common\\end_program.gppt",
+		feedSpin 		:include "routines\\_3_System_commands\\_1_Common\\feed_spin.gppt",
+		homeData 		:include "routines\\_3_System_commands\\_1_Common\\home_data.gppt",
+		homeNumber 		:include "routines\\_3_System_commands\\_1_Common\\home_number.gppt",
+		machinePlane 	:include "routines\\_3_System_commands\\_1_Common\\machine_plane.gppt",
+		message 		:include "routines\\_3_System_commands\\_1_Common\\message.gppt",
+		mFeedSpin 		:include "routines\\_3_System_commands\\_1_Common\\m_feed_spin.gppt",
+		relativeMode 	:include "routines\\_3_System_commands\\_1_Common\\relative_mode.gppt",
+		setup 			:include "routines\\_3_System_commands\\_1_Common\\setup.gppt",
+		startOfFile 	:include "routines\\_3_System_commands\\_1_Common\\start_of_file.gppt",
+		startOfJob 		:include "routines\\_3_System_commands\\_1_Common\\start_of_job.gppt",
+		startProgram 	:include "routines\\_3_System_commands\\_1_Common\\start_program.gppt",
+		vmidInfo 		:include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt"
+	}
+
+						#----Tool Path----
+	ToolPath = {
+		arc 				:include "routines\\_3_System_commands\\_2_Tool_Path\\arc.gppt",
+		arc4xCartesian 		:include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_cartesian.gppt",
+		arc4xPolar 			:include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_polar.gppt",
+		arc5x 				:include "routines\\_3_System_commands\\_2_Tool_Path\\arc_5x.gppt",
+		comp 				:include "routines\\_3_System_commands\\_2_Tool_Path\\compensation.gppt",
+		compH 				:include "routines\\_3_System_commands\\_2_Tool_Path\\compensation_h.gppt",
+		drill 				:include "routines\\_3_System_commands\\_2_Tool_Path\\drill.gppt",
+		drill4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_cartesian.gppt",
+		drill4xPnt 		 	:include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_pnt.gppt",
+		drill4xPolar 	 	:include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_polar.gppt",
+		drillPoint 		 	:include "routines\\_3_System_commands\\_2_Tool_Path\\drill_point.gppt",
+		drillEnd 			:include "routines\\_3_System_commands\\_2_Tool_Path\\end_drill.gppt",
+		initCpos 			:include "routines\\_3_System_commands\\_2_Tool_Path\\init_cpos.gppt",
+		line 				:include "routines\\_3_System_commands\\_2_Tool_Path\\line.gppt",
+		line5x 				:include "routines\\_3_System_commands\\_2_Tool_Path\\line_5x.gppt",
+		lineOn 				:include "routines\\_3_System_commands\\_2_Tool_Path\\line_on.gppt",
+		line4x				:include "routines\\_3_System_commands\\_2_Tool_Path\\line_4x.gppt",
+		line4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_cartesian.gppt",
+		line4xDir 			:include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_dir.gppt",
+		line4xPolar 		:include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_polar.gppt",
+		move4x 				:include "routines\\_3_System_commands\\_2_Tool_Path\\move_4x.gppt",
+		move4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_cartesian.gppt",
+		move4xDir 			:include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_dir.gppt",
+		move4xPolar 		:include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_polar.gppt",
+		move5x 				:include "routines\\_3_System_commands\\_2_Tool_Path\\move_5x.gppt",
+		moveRapid 			:include "routines\\_3_System_commands\\_2_Tool_Path\\rapid_move.gppt",
+		info 				:include "routines\\_3_System_commands\\_2_Tool_Path\\tool_path_info.gppt"
+	}
+	
+						#----Tool Path Transform----
+	ToolPathXform = {
+		chngRefPoint 	:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\change_ref_point.gppt",
+		chngToolCnxt 	:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\chng_tool_cnext.gppt",
+		fourthAxis		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\fourth_axis.gppt",
+		mirror 			:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\mirror.gppt",
+		rotaryInfo 		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotary_info.gppt",
+		rotate 			:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotate.gppt",
+		xformInfo 		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\transform_info.gppt"
+	}
+						#----MCO----
+	Mco = {
+		mco 			:include "routines\\_3_System_commands\\_4_MCO\\mco.gppt",
+		delay 			:include "routines\\_3_System_commands\\_4_MCO\\delay.gppt",
+		moveObj 		:include "routines\\_3_System_commands\\_4_MCO\\move_object.gppt",
+		spindlesSync 	:include "routines\\_3_System_commands\\_4_MCO\\spindles_sync.gppt",
+		startMachCtrl 	:include "routines\\_3_System_commands\\_4_MCO\\start_mach_ctrl.gppt",
+		startObjAct 	:include "routines\\_3_System_commands\\_4_MCO\\start_obj_act.gppt",
+		startTool 		:include "routines\\_3_System_commands\\_4_MCO\\start_tool.gppt",
+		stopTool 		:include "routines\\_3_System_commands\\_4_MCO\\stop_tool.gppt"
+	}					
+						#----Plane Rotations
+	PlaneRotations = {
+		drillPlane 		:include "routines\\_3_System_commands\\_5_Plane_Rotations\\drill_plane.gppt",
+		planeData 		:include "routines\\_3_System_commands\\_5_Plane_Rotations\\plane_data.gppt",
+		rotateToPlane 	:include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt",
+		tmatrix 		:include "routines\\_3_System_commands\\_5_Plane_Rotations\\tmatrix.gppt"
+	}
+						#----Proc----
+	Proc = {
+		callPrms 	:include "routines\\_3_System_commands\\_6_Proc\\call_prms.gppt",
+		callProc 	:include "routines\\_3_System_commands\\_6_Proc\\call_proc.gppt",
+		endLoop 	:include "routines\\_3_System_commands\\_6_Proc\\end_loop.gppt",
+		endProc 	:include "routines\\_3_System_commands\\_6_Proc\\end_proc.gppt",
+		loop 		:include "routines\\_3_System_commands\\_6_Proc\\loop.gppt",
+		proc 		:include "routines\\_3_System_commands\\_6_Proc\\proc.gppt"
+	}
+						#----Tool----
+	Tool = {
+		changeTool 			:include "routines\\_3_System_commands\\_7_Tool\\change_tool.gppt",
+		defTool 			:include "routines\\_3_System_commands\\_7_Tool\\def_tool.gppt",
+		defTurnTool 		:include "routines\\_3_System_commands\\_7_Tool\\def_turn_tool.gppt",
+		offsetChange 		:include "routines\\_3_System_commands\\_7_Tool\\offset_change.gppt",
+		toolBreakage 		:include "routines\\_3_System_commands\\_7_Tool\\tool_breakage.gppt",
+		turnChangeOffset	:include "routines\\_3_System_commands\\_7_Tool\\turn_chng_offset.gppt",
+		turnChangeTool 		:include "routines\\_3_System_commands\\_7_Tool\\turn_change_tool.gppt"
+	}
+						#----Channel Sync----
+	ChannelSync = {
+		syncProc :include "routines\\_3_System_commands\\_8_Channel_Synchronization\\sync_process.gppt"
+	}
+						#----Turning Cycles----
+	TurningCycles = { 
+		groove: include "routines\\_3_System_commands\\_9_Turning_Cycles\\groove.gppt",
+		thread: include "routines\\_3_System_commands\\_9_Turning_Cycles\\thread.gppt",
+		turning: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turning.gppt",
+		turnDrill: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_drill.gppt",
+		turnEndproc: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_endproc.gppt",
+		turnOptParms: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_opt_parms.gppt",
+		turnProc: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_proc.gppt"
+	}
+
+							#----Probe----
+	Probe = {
+		angle		:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_angle.gppt",
+		cornerBoss	:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_bos_pckt.gppt",
+		cylinder	:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_hol_cyl.gppt",
+		endProbe	:include "routines\\_3_System_commands\\_10_Probe\\end_probe.gppt",
+		line		:include "routines\\_3_System_commands\\_10_Probe\\line_probe.gppt",
+		move		:include "routines\\_3_System_commands\\_10_Probe\\move_probe.gppt",
+		point		:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_xyz_plan.gppt",
+		start		:include "routines\\_3_System_commands\\_10_Probe\\start_probe.gppt"
+	}
+}}
