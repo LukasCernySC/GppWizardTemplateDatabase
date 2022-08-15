@@ -1,0 +1,12 @@
+{{  
+    _mco = {
+		_mCo 			:include "routines\\_3_System_commands\\_4_MCO\\mco.gppt",
+		_delay 			:include "routines\\_3_System_commands\\_4_MCO\\delay.gppt",
+		_moveObj 		:include "routines\\_3_System_commands\\_4_MCO\\move_object.gppt",
+		_spindlesSync 	:include "routines\\_3_System_commands\\_4_MCO\\spindles_sync.gppt",
+		_startMachCtrl 	:include "routines\\_3_System_commands\\_4_MCO\\start_mach_ctrl.gppt",
+		_startObjAct 	:include "routines\\_3_System_commands\\_4_MCO\\start_obj_act.gppt",
+		_startTool 		:include "routines\\_3_System_commands\\_4_MCO\\start_tool.gppt",
+		_stopTool 		:include "routines\\_3_System_commands\\_4_MCO\\stop_tool.gppt"
+	}
+}}

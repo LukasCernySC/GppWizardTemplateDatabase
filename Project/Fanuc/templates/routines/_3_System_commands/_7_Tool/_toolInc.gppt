@@ -1,0 +1,11 @@
+{{
+    _tool = {
+		_changeTool 		:include "routines\\_3_System_commands\\_7_Tool\\change_tool.gppt",
+		_defTool 			:include "routines\\_3_System_commands\\_7_Tool\\def_tool.gppt",
+		_defTurnTool 		:include "routines\\_3_System_commands\\_7_Tool\\def_turn_tool.gppt",
+		_offsetChange 		:include "routines\\_3_System_commands\\_7_Tool\\offset_change.gppt",
+		_toolBreakage 		:include "routines\\_3_System_commands\\_7_Tool\\tool_breakage.gppt",
+		_turnChangeOffset	:include "routines\\_3_System_commands\\_7_Tool\\turn_chng_offset.gppt",
+		_turnChangeTool 	:include "routines\\_3_System_commands\\_7_Tool\\turn_change_tool.gppt"
+	}
+}}

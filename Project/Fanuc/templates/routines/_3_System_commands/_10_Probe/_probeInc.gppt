@@ -1,0 +1,12 @@
+{{
+    _probe = {
+		_angle		:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_angle.gppt",
+		_cornerBoss	:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_bos_pckt.gppt",
+		_cylinder	:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_hol_cyl.gppt",
+		_endProbe	:include "routines\\_3_System_commands\\_10_Probe\\end_probe.gppt",
+		_line		:include "routines\\_3_System_commands\\_10_Probe\\line_probe.gppt",
+		_move		:include "routines\\_3_System_commands\\_10_Probe\\move_probe.gppt",
+		_point		:include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_xyz_plan.gppt",
+		_start		:include "routines\\_3_System_commands\\_10_Probe\\start_probe.gppt"
+	}
+}}

@@ -1,0 +1,20 @@
+{{
+    _common = {		
+        _absoluteMode 	:include "routines\\_3_System_commands\\_1_Common\\absolute_mode.gppt",
+        _endOfFile 		:include "routines\\_3_System_commands\\_1_Common\\end_of_file.gppt",
+        _endOfJob 		:include "routines\\_3_System_commands\\_1_Common\\end_of_job.gppt",
+        _endProgram 	:include "routines\\_3_System_commands\\_1_Common\\end_program.gppt",
+        _feedSpin 		:include "routines\\_3_System_commands\\_1_Common\\feed_spin.gppt",
+        _homeData 		:include "routines\\_3_System_commands\\_1_Common\\home_data.gppt",
+        _homeNumber 	:include "routines\\_3_System_commands\\_1_Common\\home_number.gppt",
+        _machinePlane 	:include "routines\\_3_System_commands\\_1_Common\\machine_plane.gppt",
+        _message 		:include "routines\\_3_System_commands\\_1_Common\\message.gppt",
+        _mFeedSpin 		:include "routines\\_3_System_commands\\_1_Common\\m_feed_spin.gppt",
+        _relativeMode 	:include "routines\\_3_System_commands\\_1_Common\\relative_mode.gppt",
+        _setup 			:include "routines\\_3_System_commands\\_1_Common\\setup.gppt",
+        _startOfFile 	:include "routines\\_3_System_commands\\_1_Common\\start_of_file.gppt",
+        _startOfJob 	:include "routines\\_3_System_commands\\_1_Common\\start_of_job.gppt",
+        _startProgram 	:include "routines\\_3_System_commands\\_1_Common\\start_program.gppt",
+        _vmidInfo 		:include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt"
+    }
+}}

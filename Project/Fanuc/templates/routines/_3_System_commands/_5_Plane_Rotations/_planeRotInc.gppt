@@ -1,0 +1,8 @@
+{{
+    _planeRotations = {
+		_drillPlane		:include "routines\\_3_System_commands\\_5_Plane_Rotations\\drill_plane.gppt",
+		_planeData 		:include "routines\\_3_System_commands\\_5_Plane_Rotations\\plane_data.gppt",
+		_rotateToPlane 	:include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt",
+		_tmatrix 		:include "routines\\_3_System_commands\\_5_Plane_Rotations\\tmatrix.gppt"
+	}
+}}

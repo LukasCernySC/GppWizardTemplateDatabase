@@ -1,9 +1,0 @@
-{{
-
-func sub(a,b)
-   ret a - b
-end
-
-}}
-
-"Hello"

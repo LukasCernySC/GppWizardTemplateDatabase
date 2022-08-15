@@ -1,0 +1,11 @@
+{{
+    _turningCycles = { 
+		_groove: include "routines\\_3_System_commands\\_9_Turning_Cycles\\groove.gppt",
+		_thread: include "routines\\_3_System_commands\\_9_Turning_Cycles\\thread.gppt",
+		_turning: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turning.gppt",
+		_turnDrill: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_drill.gppt",
+		_turnEndproc: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_endproc.gppt",
+		_turnOptParms: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_opt_parms.gppt",
+		_turnProc: include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_proc.gppt"
+    }
+}}

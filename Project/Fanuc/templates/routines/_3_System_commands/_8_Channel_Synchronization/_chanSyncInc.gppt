@@ -1,0 +1,5 @@
+{{ 
+    _channelSync = {
+		_syncProc :include "routines\\_3_System_commands\\_8_Channel_Synchronization\\sync_process.gppt"
+	}
+}}
