@@ -1,7 +1,7 @@
-@start_of_file
+{{
 	;Post revision, Time/Date, Program name/number, first call to ChannelID
 	;% sign or whatever is needed at the very start of program.
 	
 	; User proceedure to reset logic
 	; call @usr_InitMachineStatus (not currently defined)
-endp
+}}

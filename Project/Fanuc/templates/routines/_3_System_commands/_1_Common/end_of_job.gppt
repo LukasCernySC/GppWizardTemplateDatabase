@@ -1,5 +1,4 @@
-@end_of_job
-
+{{#end_of_job
 {{if usr.bVMID_MI_G61_On-}}
 if bVMID_MI_G61_On ne 0
       {nb,'G64'}
@@ -66,4 +65,4 @@ if rot_axis_type ne axis4_none or X5_job
    b_ChangeTool = false
    b_InsideJob = false
 
-endp
+}}

@@ -15,6 +15,10 @@
         _startOfFile 	:include "routines\\_3_System_commands\\_1_Common\\start_of_file.gppt",
         _startOfJob 	:include "routines\\_3_System_commands\\_1_Common\\start_of_job.gppt",
         _startProgram 	:include "routines\\_3_System_commands\\_1_Common\\start_program.gppt",
-        _vmidInfo 		:include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt"
+        _vmidInfo 		:include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt",
     }
 }}
+
+    
+
+    

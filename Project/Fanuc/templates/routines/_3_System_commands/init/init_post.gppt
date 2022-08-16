@@ -1,5 +1,7 @@
 @init_post
+
 {{s_FirstComment}}{{MyPrintSign("\x5f",90)}}
+
 global string  s_Revision s_FirstComment s_LastComment
 call @usr_Revision(s_Revision) 
 s_FirstComment='('
