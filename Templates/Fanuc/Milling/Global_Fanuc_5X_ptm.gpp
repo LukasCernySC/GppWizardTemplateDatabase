@@ -1,0 +1,4660 @@
+; Key_ID=693317700115156161
+; Sticker_Num=SolidCAM GmbH
+; Expired_date=00-00-0000
+;--------------------------
+; Key_ID=
+; Sticker_Num=
+; Expired_date=00-00-0000
+; ------------------------------------------------------------------------------
+; Status               : closed
+; ------------------------------------------------------------------------------
+; customer             : 
+; machine              : 
+; type                 : XYZAC machine plane XY
+; control unit         : Fanuc 
+; CAM Version          : SC2021
+; Nummer               : PP-
+; ------------------------------------------------------------------------------
+; specials             : deep drill
+;                      : zero point setup
+;                      : jump marks
+; ------------------------------------------------------------------------------
+; part_options         : Berechnungsmakro       (bCalcMacroVMID)     | in case of SC calculation macro, otherwise could be deleted
+;                      : G93(Inversenvorschub)  (bVMID_MO_G93)       | should be added in VMID if G93 is nedeed in @line_5x (Settings 34 and 79)
+;                      : HSC-Option             (sVMID_MO_HSCoption) | Command for HSC Operation
+; ------------------------------------------------------------------------------
+; job_options          : PROGR_STOP                (bVMID_MI_PRGStop)         | program stopp @misc_act
+;                      : HSC Ausgabe in allen Jobs (bVMID_MI_HSCbyAllJobs)    | Activate overgrinding even with 2.5D Jobs 
+;                      : HSC Zusatz                (sVMID_MI_HSCaditional)    | Addition for HSC Command
+;                      : G61_GENAUHALT_AN          (bVMID_MI_G61_On)          | Exact stop / G64 cancels this command
+;                      : 3D-Kompensationseite      (iVMID_MI_3DCompSide)      | Compensation side in @compensation_3d (not possible because ZigZag Strategy in Operation)
+;                      : Ausgabe am Job Start      (sVMID_MI_UserInputStart)  | additional optional output at job start
+;                      : Ausgabe am Job Ende       (sVMID_MI_UserInputEnd)    | additional optional output at job end
+; ------------------------------------------------------------------------------
+; 22.01.2015 TPL 1.0   : Start Template for all Fanuc i-Serie (3X, 4X, 5X) (SolidCAM GmbH, GDU)
+; 06.10.2021 TPL 2.0   : up to SC2021
+; 06.12.2021 TPL 2.01  : minor corrections from VWA
+; 22.12.2021 TPL 2.02  : extends tool wear adaption
+; 24.03.2022 TPL 3.0   : various improvements introduced (JWA)
+; 24.03.2022 TPL 3.01  : adaption in @usr_PrintHomeNumber (JWA)
+; ------------------------------------------------------------------------------
+
+; ----VMIDs used-----
+;| Mazak_FH6800_640M_4X_Y_ptm.vmid | b_IsBitteAnpassen | PP-
+;|
+
+@usr_Revision(string sL_RevLocal)
+
+   sL_RevLocal = 'REV 1.0-21 21/03/22' ;JWA | new for 
+
+endp
+
+;-------------------
+
+@init_post
+;___________________________________________________________________________________________
+
+   global string  s_Revision s_FirstComment s_LastComment
+   call @usr_Revision(s_Revision) 
+   s_FirstComment='('
+   s_LastComment=')'  
+;__________________________________________________________________________________________
+
+   global string s_ParaFeedValue s_RealFileName s_RealPartPath s_FeedTypeSave s_Retreat s_CoordSetSim s_FirstRotAxisLetter
+   global string s_SecondRotAxisLetter s_FirstRotAbout s_SecondRotAbout s_GPPLanguage s_MachineName s_UsrMsgTool s_SplitHomeNumber
+   global string s_Prefix s_Sufix ParametricFeed_f sL_ReplaceCharacter s_ProgramNr_f tool_number_f s_ProcWord  h_offset_f s_G28With
+   global string xpos_normal_f ypos_normal_f zpos_normal_f bpos_f i_Param_f radius_f spin_f sVector_f d_offset_f s_TiltCycle
+   global string xlcenter_rel_f ylcenter_rel_f bpos_f s_AxisLetterZ xcenter_rel_f ycenter_rel_f zcenter_rel_f zlcenter_rel_f s_RotationOrder
+   global string s_AxisLetterX s_AxisLetterY 
+   global string sA_SolidArray<<30,4>> s_DwellTime sA_Comment<<100>> sA_JobName<<9999>> sPrintMessage<<99>>
+
+   global integer i_PartHomeSave i_JobCounterExternProcs i_SubmaschineIDSave i_MaxExtendedHomeNr i_UnClampSecondRotAxis
+   global integer i_ClampSecondRotAxis i_ToolWearCompDiam i_MonitoringSpin i_SaveProbeHomeNumber i_DOffset i_IndexJobSaved i_GeometryLabelCounter
+   global integer i_SaveAnglePair i_StartParamFeed i_ProcCall i_G10_L iTracMode i_ClampFirstRotAxis i_UnClampFirstRotAxis
+   global integer i_CalcHomeSavedIn i_MRZPointSavedIn i_StartParamPos i_CalcMacroNumber i_CounterForTransformation i_HomeGcode i_HOffset
+   global integer iDayExpireGlobal iMonthExpireGlobal iYearExpireGlobal i_SpinDirSave i_TraceMode i_TraceCount i_SaveToolNumber
+   global integer i_BaseSave
+   global integer iA_ProgramNumberSave<<9999>> iA_ToolNumberSave<<999>> iA_GeometryLabelCounter<<999>> i_ToolCallRepeatIndex<<999>>
+   global integer iA_FineShiftParameter<<99,3>>
+
+   global numeric n_SpinSave n_SaveZFeed n_ZRetreatValue n_YRetreatValue n_XRetreatValue n_SecondAxisAngleSave n_FirstAxisAngleSave n_DrillUpperZ
+   global numeric n_DrillLowerZ
+   global numeric nXhposSaved<<999>> nYhposSaved<<999>> nZhposSaved<<999>> nA_DrillSafetySave<<9999>> nA_DrillUpperZSave<<9999>>
+   global numeric nA_XHome<<9999>> nA_YHome<<9999>> nA_ZHome<<9999>> nA_DrillLowerZSave<<9999>>
+
+   global logical b_Main b_FirstAbsoluteCode b_FirstRapidMove b_3DComp b_CoolantOnCode b_PrintHomeNr b_FirstEntryMark 
+   global logical b_G49WithZ b_G49Active b_DrillPlane5X b_FeedSpinInEachJob b_M5beforToolChange b_T0callEndPrg b_M1AfterToolChange
+   global logical b_ParametricFeed b_ToolPreselect b_Is5xJob b_SubProgramG65 b_ToolCorrG10 b_PrintOnlyOnes b_TiltCycleActived b_NotFirsLine5x
+   global logical b_NotFirstProc b_LoopTransform b_InsideJob b_ChangeRef b_Rotate b_FourthAxisUsed b_PrintAllAxes b_IsPPTeam b_ChangeTool
+   global logical b_MCOJob b_G53 b_HighSpeed b_GCodeFileWithNr b_FileOpenClose b_M98 bDelay b_Mirror b_Is3XMachine
+   global logical b_DummyDetected  b_SpinOn b_SubMachineChange b_PlaneData b_M1beforToolChange b_WithClamping b_ClampingActiv b_CalcMacroTest b_TurretINRefPos
+   global logical b_Is4XMachine b_Is5XMachine b_PrintHomeNumber b_HomeNumberAtEachJob b_StraightKinematics b_WithoutSpeedMonitoring
+   global logical b_TappingWithG95 b_IsHeadHead b_IsHeadTable b_UseVMIDRetreatLimits b_FineToolCorr b_CallFromMCO b_RetreatToToolZLevel
+   global logical b_RetreatToToolZLevel b_ToolWearWithG10 b_SmoothinAvailable b_TappingWithM29 b_TCwithPlaceNumber b_PlaneData2
+   global logical bA_GeometryLabelNrPrinted<<999>> bA_ProcGeometry<<9999>> bA_ProcInLoop<<9999>> bA_InsideJobFourtAxis<<999>> b_InsideJob<<999>>
+   global logical bA_FineToolCorr<<999>> bA_PlaneDataSaved<<999>> bA_PlaneDataSaved2<<6,99>>
+
+   ;coolant and mco
+   global integer i_FloodCoolantOn i_FloodCoolantOff i_ThroughCoolantOn i_ThroughCoolantoff i_AirBlastCoolantOn i_AirBlastCoolantOff
+   global integer i_MistCoolantOn i_MistCoolantOff i_AirThroughCoolantOn i_AirThroughCoolantOff i_HpFloodCoolantOn i_HpFloodCoolantOff i_LpFloodCoolantOn i_LpFloodCoolantOff
+   global integer i_FloodIvalCoolantOn i_FloodIvalCoolantOff i_HpThroughCoolantOn i_HpThroughCoolantOff i_LpThroughCoolantOff i_LpThroughCoolantOn i_ThroughIvalCoolantOn i_ThroughIvalCoolantOff
+   global integer i_HpMistCoolantOn i_HpMistCoolantOff i_LpMistCoolantOn i_LpMistCoolantOff i_MistIvalCoolantOn i_MistIvalCoolantOff i_MinQuanityLCoolantOn i_MinQuanityLCoolantOff
+   global integer i_MachFloodCoolantOn i_MachFloodCoolantOff i_MachHpFloodCoolantOn i_MachHpFloodCoolantOff i_MachLpFloodCoolantOff i_MachLpFloodCoolantOn i_MachFloodIvalCoolantOff i_MachFloodIvalCoolantOn
+   global integer i_MachMistCoolantOff i_MachMistCoolantOn i_MachHpMistCoolantOn i_MachHpMistCoolantOff i_MachLpMistCoolantOn i_MachLpMistCoolantOff i_MachMistIvalCoolantOn i_MachMistIvalCoolantOff
+   global integer i_MachActiveAirCoolantOn i_MachActiveAirCoolantOff i_MachBedRinsingCoolantOn i_MachBedRinsingCoolantOff i_RemoveCount iLookAheadCount iA_CoolCodeSave<<9999>> i_CoolantCount
+   global integer i_ChipConveyCW i_ChipConveyCCW i_ChipConveyOff i_MistCollectorOn i_MistCollectorOff i_OilSkimmerOn i_OilSkimmerOff i_RecordMachiningOn i_RecordMachiningOff i_OpenDoorOn i_OpenDoorOff
+   global integer i_MachineLightOn i_MachineLightOff i_MachinePowerOn i_MachinePowerOff i_VacuumPumpOn i_VacuumPumpOff i_TCPType iGeometryLabelNr
+   global integer i_ClampFirstAndSecond i_UnClampFirstAndSecond
+
+   ;new Variables by PP creation
+   global logical b_IsBitteAnpassen
+
+
+   if i_TraceCount eq 0 
+      call @usr_FillSolidCamArray
+      call @usr_UserAccount(b_IsPPTeam)
+      i_TraceCount=i_TraceCount+1
+      if b_IsPPTeam
+         input 'trace 0=no ... trace 5=all:' i_TraceMode
+         trace"all": i_TraceMode
+      endif
+   endif
+
+   blknum_f               = '8.0(p)'
+   blknum_gen             = false
+   blknum_exist           = true
+   blknum_delta           = 1
+   blknum                 = 1
+   blknum_max             = 1000000
+   
+endp
+
+;-------------------
+
+   ; inc "Probe_Renishaw_Fanuc"  ;for renishaw probe-cycles
+
+;-------------------
+;#region |01|_1-Options
+;-------------------
+
+@usr_InitPost
+
+   s_AxisLetterX               = get_axis_name(submachine_ID,1) ; first axis letter
+	s_AxisLetterY               = get_axis_name(submachine_ID,2) ; secound axis letter
+	s_AxisLetterZ               = get_axis_name(submachine_ID,3) ; third axis letter
+   s_FirstRotAxisLetter        = get_axis_name(submachine_ID,4) ; letter of first rotation axis
+   s_SecondRotAxisLetter       = get_axis_name(submachine_ID,5) ; letter of second rotation axis
+   s_RotationOrder             = get_plane_rotation_order(submachine_ID)
+
+   ;---CNC-Software version and parametric feed
+   ;----File
+   s_Prefix                 = 'O'
+   s_Sufix                  = '.NC'
+   s_ProgramNr_f            = 'z4.0(n)'
+   b_GCodeFileWithNr        = false    ;true = open/close files with program_number, false = open/close files with the name from Software
+   ;----Basic options
+   s_GPPLanguage            = 'de'     ;de = German, eng = English, or add any other
+   i_MaxExtendedHomeNr      = 6        ;6 = G54-59, 48 = G54.1 P1-P48, 300 = G54.1 P1-P300 (rule should be checked in @usr_PrintHomeNumber)
+   b_TappingWithM29         = false    ;true = Tapping with M29 bevor G84
+   b_TappingWithG95         = true     ;true = Tapping with G95/pitch, false = with feed
+   b_WithClamping           = false    ;true = M-Codes in @start_of_job and in @end_of_job | For x5_job in @usr_RotateToPlane, @drill_plane
+   b_G49WithZ               = false    ;true = G49 G53/G91 G28 Z0. ; false = G49 (MP5006#6=0 ==> with Z-movement / MP5006#6=1 coord. without Z-movement just system new positioning)
+   b_UseVMIDRetreatLimits   = false    ;true = used VMID Limits instead of fixed limits
+   b_SmoothinAvailable      = false    ;true = activated HSC/Smoothing function
+   ;-> !! Assign HSC option in the machine options !! and see @usr_ResetHSC <-
+   ;----Feed/Parametric Feed
+   b_ParametricFeed         = false    ;shoud be checked which # parameters are free
+   i_StartParamFeed         = 601      ;First # parameter free for parametric feed
+   b_FeedSpinInEachJob      = false    ;true = feed&spin codes at each @start_of_job
+   ;---Spin
+   b_WithoutSpeedMonitoring = false    ;true = use M203/M204 spin without monitoring, false = M3/M4
+   ;---Tool
+   b_T0callEndPrg           = false    ;true = call T0 tool by end programm
+   b_ToolPreselect          = false    ;true = preselection of the next tool in @change_tool
+   b_TCwithPlaceNumber      = false    ;true = tool change with place number in tool ID
+   b_M1beforToolChange      = false    ;true = M1 befor change tool
+   b_M1AfterToolChange      = false    ;true = M1 after change tool
+   b_M5beforToolChange      = false    ;true = M5  befor change tool
+   i_HOffset                = 0        ;-1 = no output / 0 = h_offset from SolidCAM-Job / -2 = from tool position,index_table (always H01) / 4120 ==> H#4120
+   i_DOffset                = 0        ;-1 = no output / 0 = d_offset from SolidCAM-Job / -2 = from tool position,index_table (always D01) / 4120 ==> D#4120
+   b_FineToolCorr           = false    ;true = tool fine correction in tool table H and D
+   b_ToolWearWithG10        = false    ;true = tool wear with G10 ; false = tool wear direct over machine address
+   i_ToolWearCompDiam       = 13       ;11 = System B (G10 L11 P), 13 = System C (G10 L13 P), 10 = System A (G10 L11 P) can not tool wear correction
+   ;---Subprograms and Loops
+   b_M98                    = false    ;true = subprograms in external files (M98), false = subprograms in main program (M97)
+   b_SubProgramG65          = false    ;true = calling of subprograms with the G65 (macro)
+   ;---Kinematic / Approach & Retreat
+   s_Retreat                = 'G28'    ;G28, G30 or G53
+   s_G28With                = 'ZXY'    ;Address space WUV or ZXY for G28
+   ;---Tilting
+   s_TiltCycle              = 'G68.2'  ;G68.2 or Mxxx = TiltCycles; SC = SolidCAM calculation macro (@usr_NewCalcHomeData|iL_MultiplierFirstRotAxis and iL_MultiplierSecondRotAxis must be correct defined)
+   b_HomeNumberAtEachJob    = false    ;true = HomeNumber by each Job
+   ;----Calc Marcro
+   b_CalcMacroTest          = false    ;true = print the values of new or MAC-Positions (@usr_NewCalcHomeData)
+   i_CalcMacroNumber        = 8889     ;Number of Subprogram of SoliDCAM calculation macro (@usr_NewCalcHomeData)
+   i_StartParamPos          = 650      ;First free # parameter for SoliDCAM calculation macro (@usr_NewCalcHomeData)
+   i_CalcHomeSavedIn        = 5        ;305(299) = G54.1 P299 / 47 = G54.1 P47 / 5 = G58 (active home number with new position after calculation macro)
+   i_MRZPointSavedIn        = 48       ;306(300) = G54.1 P300 / 48 = G54.1 P48 / 6 = G59 (home number of the M.R.Z. Point for calculation macro)
+   ;---Simultan
+   s_CoordSetSim            = ''       ;for simultaneus without RTCP (RPOS;MPOS;TPOS;TOPOS or nothing for HPOS)
+   i_TCPType                = 2        ;1=G43.4 with angles / 2=G43.5 with vectors (MP11776 defines the tolerance in mm)
+   
+
+   if !b_SubProgramG65
+      if b_M98
+         i_ProcCall=98
+         s_ProcWord='P'
+      else
+         i_ProcCall=97
+         s_ProcWord='P'
+      endif
+   else
+      i_ProcCall=65
+      s_ProcWord='P'
+   endif
+
+   ;Machinetype 3x 4x or 5x
+   if s_SecondRotAxisLetter eq '' and s_FirstRotAxisLetter eq '' ;3x
+      b_Is3XMachine = true
+      b_Is4XMachine = false
+      b_Is5XMachine = false
+   elseif s_SecondRotAxisLetter eq '' and s_FirstRotAxisLetter ne '' ;4x
+      b_Is3XMachine = false
+      b_Is4XMachine = true
+      b_Is5XMachine = false
+   else ;5x
+      b_Is3XMachine = false
+      b_Is4XMachine = false
+      b_Is5XMachine = true
+   endif
+
+   call @usr_TestHeadHead((1)) ;enter here the submachine ID which contains the original axes
+   call @usr_TestToStraightKinematics
+
+   if s_RotationOrder eq 'KINEMATIC'
+      if !b_StraightKinematics
+         call @usr_PrintMessage((18),('meldung+abbruch'),('@usr_InitPost'))
+      endif
+   elseif instr(s_RotationOrder,'Z1') ne 0 or instr(s_RotationOrder,'Y1') ne 0 or instr(s_RotationOrder,'X1') ne 0 
+      call @usr_PrintMessage((25),('meldung+abbruch'),('@usr_InitPost'))
+   elseif s_RotationOrder eq 'CYCLE19'
+      call @usr_PrintMessage((19),('meldung+abbruch'),('@usr_InitPost'))
+   endif
+
+;-------------------
+;#endregion
+;-------------------
+;#region |01|_2-Clamping/Coolant
+;-------------------
+
+   ;Set all not existing options to 0 !!!
+   i_ClampFirstAndSecond    = 0      ;M-Code for first and second rot axis clamping on (131)
+   i_UnClampFirstAndSecond  = 0      ;M-Code for first and second rot axis clamping off (132)
+   i_ClampFirstRotAxis      = 0      ;M-Code for first rot axis clamping on (21) 
+   i_UnClampFirstRotAxis    = 0      ;M-Code for first rot axis clamping on (22)
+   i_ClampSecondRotAxis     = 0      ;M-Code for second rot axis clamping on (23)
+   i_UnClampSecondRotAxis   = 0      ;M-Code for second rot axis clamping off (24)
+
+   ;Set all not existing options to 0 !!!
+   i_FloodCoolantOn  = 8
+   i_FloodCoolantOff = 9
+
+   i_LpFloodCoolantOn    = 0
+   i_LpFloodCoolantOff   = 0
+   i_HpFloodCoolantOn    = 0
+   i_HpFloodCoolantOff   = 0
+   i_FloodIvalCoolantOn  = 0
+   i_FloodIvalCoolantOff = 0
+
+   i_ThroughCoolantOn  = 0
+   i_ThroughCoolantoff = 0
+
+   i_HpThroughCoolantOn    = 0
+   i_HpThroughCoolantOff   = 0
+   i_LpThroughCoolantOn    = 0
+   i_LpThroughCoolantOff   = 0
+   i_ThroughIvalCoolantOn  = 0
+   i_ThroughIvalCoolantOff = 0
+
+   i_MistCoolantOn      = 0
+   i_MistCoolantOff     = 0
+   i_LpMistCoolantOn    = 0
+   i_LpMistCoolantOff   = 0
+   i_HpMistCoolantOn    = 0
+   i_HpMistCoolantOff   = 0
+   i_MistIvalCoolantOn  = 0
+   i_MistIvalCoolantOff = 0
+
+   i_AirBlastCoolantOn  = 0
+   i_AirBlastCoolantOff = 0
+
+   i_AirThroughCoolantOn  = 0
+   i_AirThroughCoolantOff = 0
+
+   i_MinQuanityLCoolantOn  = 0
+   i_MinQuanityLCoolantOff = 0
+
+   i_MachFloodCoolantOn      = 0
+   i_MachFloodCoolantOff     = 0
+   i_MachLpFloodCoolantOn    = 0
+   i_MachLpFloodCoolantOff   = 0
+   i_MachHpFloodCoolantOn    = 0
+   i_MachHpFloodCoolantOff   = 0
+   i_MachFloodIvalCoolantOn  = 0
+   i_MachFloodIvalCoolantOff = 0
+
+   i_MachMistCoolantOn      = 0
+   i_MachMistCoolantOff     = 0
+   i_MachLpMistCoolantOn    = 0
+   i_MachLpMistCoolantOff   = 0
+   i_MachHpMistCoolantOn    = 0
+   i_MachHpMistCoolantOff   = 0
+   i_MachMistIvalCoolantOn  = 0
+   i_MachMistIvalCoolantOff = 0
+
+   i_MachActiveAirCoolantOn  = 0
+   i_MachActiveAirCoolantOff = 0
+
+   i_MachBedRinsingCoolantOn  = 0
+   i_MachBedRinsingCoolantOff = 0
+
+   i_ChipConveyCW  = 0
+   i_ChipConveyCCW = 0
+   i_ChipConveyOff = 0
+
+   i_MistCollectorOn    = 0
+   i_MistCollectorOff   = 0
+   i_OilSkimmerOn       = 0
+   i_OilSkimmerOff      = 0
+   i_RecordMachiningOn  = 0
+   i_RecordMachiningOff = 0
+   i_OpenDoorOn         = 0
+   i_OpenDoorOff        = 0
+   i_MachineLightOn     = 0
+   i_MachineLightOff    = 0
+   i_MachinePowerOn     = 0
+   i_MachinePowerOff    = 0
+   i_VacuumPumpOn       = 0
+   i_VacuumPumpOff      = 0
+
+;-------------------
+;#endregion
+;-------------------
+;#region |01|_3-Format define
+;-------------------
+
+   integer_def_f     = '6.0(p)'
+   numeric_def_f     = '5.' + tostr(get_machine_precision("movement"):integer_def_f) ;+ '/' + tostr(get_machine_precision("movement"):integer_def_f) + '(p)';+ '(p)'
+
+   feed_f            = '<F>6.0(p)< >'
+   gcode_f           = '<G>4/2.1(p)< >'
+   mcode_f           = '<M>4/2.0(p)< >'
+
+   ParametricFeed_f  = '6.0(p)< >'   ;same as feed_f but wihtout <F>
+
+   spin_f            = '<S>6.0(p)< >'
+   tool_number_f     = '<T>6.0(n)< >'
+   h_offset_f        = '<H>4/2.0(n)< >'
+   d_offset_f        = '<D>4/2.0(n)< >'
+   sVector_f         = '5.7'
+   s_DwellTime       = '<P>5.3(p)< >' ;P==>watining in seconds | X=Waiting in revolutions
+   xpos_normal_f     = '<I>' + sVector_f + '< >'
+   ypos_normal_f     = '<J>' + sVector_f + '< >'
+   zpos_normal_f     = '<K>' + sVector_f + '< >'
+
+   xpos_f            = '<' + s_AxisLetterX + '>' + numeric_def_f + '< >'
+   ypos_f            = '<' + s_AxisLetterY + '>' + numeric_def_f + '< >'
+   zpos_f            = '<' + s_AxisLetterZ + '>' + numeric_def_f + '< >'
+
+   xlpos_f           = xpos_f
+   ylpos_f           = ypos_f
+   zlpos_f           = zpos_f
+
+   xopos_f           = xpos_f
+   yopos_f           = ypos_f
+   zopos_f           = zpos_f
+
+   xhpos_f           = xpos_f
+   yhpos_f           = ypos_f
+   zhpos_f           = zpos_f
+
+   xcenter_rel_f     = '<I>' + numeric_def_f + '< >'
+   ycenter_rel_f     = '<J>' + numeric_def_f + '< >'
+   zcenter_rel_f     = '<K>' + numeric_def_f + '< >'
+
+   xlcenter_rel_f    = xcenter_rel_f
+   ylcenter_rel_f    = ycenter_rel_f
+   zlcenter_rel_f    = zcenter_rel_f
+
+   radius_f          = '<R>' + numeric_def_f + '< >'
+
+   apos_f            = '<' + s_FirstRotAxisLetter + '>' + numeric_def_f + '< >'
+   bpos_f            = '<' + s_SecondRotAxisLetter + '>' + numeric_def_f + '< >'
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |01|_4-Machine define
+;-------------------
+
+@usr_DefineMachineType
+
+   if vmid_item_type eq 'GENERAL_DEVICE'
+      if vmid_origin_x eq 0.001 and vmid_origin_y eq 0.001 and vmid_origin_z eq 0.001 ; to identify the dummy device
+         if vmid_item_name eq 'Maschine'
+            s_MachineName       = vmid_item_name
+            b_DummyDetected     = true
+            b_IsBitteAnpassen   = true
+            b_SubMachineChange  = false ; true = allow submachine change
+
+            n_XRetreatValue     = 0    ;X-value for retreat concerning the maching referent point (G53,G28)
+            n_YRetreatValue     = 0    ;Y-value for retreat concerning the maching referent point (G53,G28)
+            n_ZRetreatValue     = 0    ;Z-value for retreat concerning the maching referent point (G53,G28)
+         elseif vmid_item_name eq 'Machine2'
+            ; s_MachineName       = vmid_item_name
+            ; b_IsMachine2        = true   
+            ; b_SubMachineChange  = false  ; true = allow submachine change
+
+            ; n_XRetreatValue     = 0 
+            ; n_YRetreatValue     = 0 
+            ; n_ZRetreatValue     = 0 
+         elseif vmid_item_name eq 'Machine3' ;TPL 3.8
+            ; s_MachineName       = vmid_item_name
+            ; b_IsMachine3        = true   
+            ; b_SubMachineChange  = false  ; true = allow submachine change
+
+            ; n_XRetreatValue     = 0 
+            ; n_YRetreatValue     = 0 
+            ; n_ZRetreatValue     = 0 
+         else
+            b_SubMachineChange  = false  ; true = allow submachine change
+            b_DummyDetected     = false
+         endif
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@usr_TestToStraightKinematics
+
+   local numeric nL_VectorX nL_VectorY nL_VectorZ
+   if b_Is5XMachine ;TPL 2.01
+      call @usr_GetAxisVector(nL_VectorX, nL_VectorY, nL_VectorZ,(submachine_ID),(5))
+   elseif b_Is4XMachine ;TPL 2.01
+      call @usr_GetAxisVector(nL_VectorX, nL_VectorY, nL_VectorZ,(submachine_ID),(4))
+   endif
+
+   if b_Is3XMachine ;TPL 2.01
+      b_StraightKinematics = true
+   else
+      if (nL_VectorX ne -1 and nL_VectorX ne 1 and nL_VectorX ne 0) or (nL_VectorY ne -1 and nL_VectorY ne 1 and nL_VectorY ne 0) or (nL_VectorZ ne -1 and nL_VectorZ ne 1 and nL_VectorZ ne 0)
+         b_StraightKinematics = false
+      else
+         b_StraightKinematics = true
+      endif
+   endif
+
+   if s_TiltCycle eq 'SC'
+      if b_Is5XMachine
+         if (nL_VectorZ eq 1 or nL_VectorZ eq -1)
+            s_SecondRotAbout = 'Z' ;second rotation about axis (for calculation macro in @usr_NewCalcHomeData)
+         elseif (nL_VectorY eq 1 or nL_VectorY eq -1)
+            s_SecondRotAbout = 'Y' ;second rotation about axis (for calculation macro in @usr_NewCalcHomeData)
+         elseif (nL_VectorX eq 1 or nL_VectorX eq -1)
+            s_SecondRotAbout = 'X' ;second rotation about axis (for calculation macro in @usr_NewCalcHomeData)
+         endif
+      endif
+
+      call @usr_GetAxisVector(nL_VectorX, nL_VectorY, nL_VectorZ,(submachine_ID),(4))
+
+      ; if s_FirstRotAxisLetter eq 'C' 
+         if (nL_VectorZ eq 1 or nL_VectorZ eq -1)
+            s_FirstRotAbout  = 'Z' ;first rotation about axis (for calculation macro in @usr_NewCalcHomeData)
+         elseif (nL_VectorY eq 1 or nL_VectorY eq -1)
+            s_FirstRotAbout  = 'Y' ;first rotation about axis (for calculation macro in @usr_NewCalcHomeData)
+         elseif (nL_VectorX eq 1 or nL_VectorX eq -1)
+            s_FirstRotAbout  = 'X' ;first rotation about axis (for calculation macro in @usr_NewCalcHomeData)
+         endif
+      ; endif
+   endif
+
+endp
+
+;-------------------
+
+@usr_GetAxisVector(numeric nL_X, numeric nL_Y, numeric nL_Z, integer iL_Sub, integer iL_axis)
+   
+   local integer iL_Result
+	
+   iL_Result = get_axis_vector(iL_Sub, iL_axis, nL_X, nL_Y, nL_Z)
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |02-Start File/Program
+;-------------------
+
+@usr_start_of_file
+
+   call @usr_InitPost
+   call @usr_InitPrintComments
+   call @usr_PathOfCamPart
+
+   if bVMID_MO_WithJumpMarks or bVMID_MO_WithZeroPointSeting or bVMID_MO_FineShiftAfterRot ;TPL 3.0
+      call @usr_OperateWithFiles(s_Prefix,('.Head'),('open'))
+      {nl}
+   else
+      call @usr_OperateWithFiles(s_Prefix,s_Sufix,('open'))
+      {nl}
+   endif
+
+   {nl,'%'}
+   {nl,s_Prefix,program_number:s_ProgramNr_f}
+   
+   {s_FirstComment,s_RealFileName,s_LastComment}
+   call @usr_HeadOfFile
+
+   i_SubmaschineIDSave  = submachine_ID
+   label                = 1 ;in case of without procedures
+   bA_ProcInLoop<<label>> = false ;in case of gcode without labels would be warning from Software printed
+   b_ClampingActiv      = true ;init state for first operation
+   i_BaseSave           = iVMID_MO_StartParamFineShift
+
+endp
+
+;-------------------
+
+@start_program
+
+   if !b_DummyDetected
+      call @usr_PrintMessage((17),('meldung+abbruch'),('@start_program'))
+   endif
+
+   if b_UseVMIDRetreatLimits
+      call @usr_GetAxisLimits
+   endif
+
+   {nb,(21):gcode_f (40):gcode_f (52):gcode_f}
+   {nb,(80):gcode_f}
+   {nb,(49):gcode_f}
+   {nb,(69):gcode_f}
+   {nb,(49):gcode_f (17):gcode_f}
+   
+   call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+   
+   if bVMID_MO_WithJumpMarks or bVMID_MO_WithZeroPointSeting or bVMID_MO_FineShiftAfterRot ;TPL 3.0
+      if bVMID_MO_WithJumpMarks
+         call @home_number
+         b_PrintHomeNumber = true
+      endif
+
+      call @usr_OperateWithFiles(s_Prefix,('.StartBlock'),('close'))
+      call @usr_OperateWithFiles(s_Prefix,('.Main'),('open'))
+   endif
+
+   if !b_FineToolCorr ;TPL 2.01, otherwise we get an Error in @change_tool
+      i_SaveToolNumber = 1
+   endif
+
+   b_Main = true
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |05-End File/Program
+;-------------------
+
+@end_program
+
+   if bA_FineToolCorr<<i_SaveToolNumber>> ;TPL 2.02
+      {nl}
+
+      if !b_ToolWearWithG10
+         {nb,'#[10000 + #4120] = 0 (VERSCHLEISS LAENGE RESETEN)'}
+         {nb,'#[12000 + #4120] = 0 (VERSCHLEISS RADIUS RESETEN)'}
+      else
+         if i_ToolWearCompDiam eq 10 or i_ToolWearCompDiam eq 11 ;system A/system B
+            call @usr_PrintMessage((6),('meldung+abbruch'),('@change_tool'))
+         elseif i_ToolWearCompDiam eq 13 ;system C
+            {nb,(10):gcode_f'L11 P'i_SaveToolNumber' R0 (VERSCHLEISS LAENGE RESETEN)'}
+            {nb,(10):gcode_f'L13 P'i_SaveToolNumber' R0 (VERSCHLEISS RADIUS RESETEN)'}
+         endif
+      endif 
+   endif
+
+   {nl}
+   call @usr_CoolingOff
+   
+   if b_WithoutSpeedMonitoring
+      {nb,(219):mcode_f}
+   else
+      {nb,(5):mcode_f}
+   endif
+   
+   call @usr_retreat(('Z_XY'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue)
+
+   if !b_Is3XMachine
+      if s_TiltCycle ne 'SC'  ;must be programed at program start because of M30 cancels not it
+         {nb,(69):gcode_f} ;reset of the tilt cycle
+         b_TiltCycleActived=false
+      endif
+
+      ; call @usr_ResetHSC((false))
+   
+      if n_FirstAxisAngleSave ne 0 or n_SecondAxisAngleSave ne 0
+         call @usr_UnClamping
+      endif
+
+      {nb(0):gcode_f (0):apos_f}
+
+      if s_SecondRotAxisLetter ne ''
+         {(0):bpos_f}
+      endif
+
+      call @usr_Clamping
+   endif
+
+   if b_T0callEndPrg
+      {nb,(0):tool_number_f,(6):mcode_f}
+   endif
+
+   {nb,(30):mcode_f}
+
+   b_Main = false
+
+endp
+
+;------------------
+
+@end_of_file
+
+   if bVMID_MO_WithJumpMarks or bVMID_MO_WithZeroPointSeting or bVMID_MO_FineShiftAfterRot ;TPL 3.0
+      call @usr_OperateWithFiles(s_Prefix,('.Main'),('close'))
+      call @usr_OperateWithFiles(s_Prefix,s_Sufix,('open'))
+      call @usr_OperateWithFiles(s_Prefix,('.Head'),('copy'))
+      if bVMID_MO_WithZeroPointSeting
+         call @usr_OperateWithFiles(s_Prefix,('.Zero'),('copy'))
+      endif
+      if bVMID_MO_FineShiftAfterRot
+         call @usr_OperateWithFiles(s_Prefix,('.Fine'),('copy'))
+      endif
+      call @usr_OperateWithFiles(s_Prefix,('.StartBlock'),('copy'))
+      if bVMID_MO_WithJumpMarks
+         call @usr_OperateWithFiles(s_Prefix,('.Marks'),('copy'))
+      endif
+      call @usr_OperateWithFiles(s_Prefix,('.Main'),('copy'))
+      call @usr_OperateWithFiles(s_Prefix,s_Sufix,('close'))
+      call @usr_OperateWithFiles(s_Prefix,('.Head'),('delete'))
+      call @usr_OperateWithFiles(s_Prefix,('.StartBlock'),('delete'))
+      call @usr_OperateWithFiles(s_Prefix,('.Zero'),('delete'))
+      call @usr_OperateWithFiles(s_Prefix,('.Fine'),('delete'))
+      call @usr_OperateWithFiles(s_Prefix,('.Marks'),('delete'))
+      call @usr_OperateWithFiles(s_Prefix,('.Main'),('delete'))
+   else
+      call @usr_OperateWithFiles(s_Prefix,s_Sufix,('close'))
+   endif
+
+   if s_TiltCycle eq 'SC' and !b_Is3XMachine and bCalcMacroVMID
+      if index_split_file eq 1   ;because of posible spilting of g-code
+         call @usr_NewCalcHomeData
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@vmid_info
+  
+   call @usr_DefineMachineType
+
+   if next_command eq '@def_tool'
+      call @usr_start_of_file
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |12-Main-Prog
+;-------------------
+
+@relative_mode
+
+   {nb(91):gcode_f}
+
+endp
+
+;-------------------
+
+@absolute_mode
+
+   if !b_FirstAbsoluteCode
+      {nl''}
+   endif
+
+   {nb(90):gcode_f}
+   b_FirstAbsoluteCode = true ;for @start_program
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |11-Proc
+;-------------------
+
+@call_proc
+
+   call @usr_InitPrintComments
+
+   if b_Main
+      if !b_SubProgramG65 and !b_M98 and !b_NotFirstProc
+         i_JobCounterExternProcs=i_JobCounterExternProcs + 1
+         b_NotFirstProc = true
+      endif
+
+      if !b_LoopTransform ;with loops print @change_ref_point from @end_proc
+         b_InsideJob = true
+      endif
+
+      if !b_Is3XMachine
+         call @usr_RotateToPlane
+      endif
+
+      bA_InsideJobFourtAxis<<index_job>> = true ;for @fourth_axis
+      b_FeedSpinInEachJob = true ;spin&feed schould be printed in every operation in case of gen_proc=yes
+   endif
+
+;   if !b_Main ;@call_proc of the geometry (if the VMID Parameter "Sub-Procedures" is only actived)
+;      if !bA_GeometryLabelNrPrinted<<label>>
+;         i_GeometryLabelCounter = i_GeometryLabelCounter+1 ;becaue of more geomtries in one operation
+;         iA_GeometryLabelCounter<<label>> = i_GeometryLabelCounter ;because of order of machining
+;      else
+;         i_GeometryLabelCounter = iA_GeometryLabelCounter<<label>>
+;      endif
+
+;      iA_ProgramNumberSave<<label>>=iGeometryLabelNr+i_GeometryLabelCounter
+;      if bA_GeometryLabelNrPrinted<<label>> and i_IndexJobSaved ne index_job
+;         call @usr_PrintErrorMessage((15)) ;operations with the same geometry
+;      endif
+;      bA_GeometryLabelNrPrinted<<label>>=true
+;      i_IndexJobSaved=index_job
+;   endif
+
+   if iA_ProgramNumberSave<<label>> eq 0
+      i_JobCounterExternProcs = i_JobCounterExternProcs + 1
+      {nb,i_ProcCall:mcode_f,s_ProcWord,(program_number+i_JobCounterExternProcs):s_ProgramNr_f}
+      iA_ProgramNumberSave<<label>> = (program_number+i_JobCounterExternProcs)
+   else
+      {nb,i_ProcCall:mcode_f,s_ProcWord,iA_ProgramNumberSave<<label>>:s_ProgramNr_f}
+   endif
+
+   call @usr_ReplaceString(job_name)
+   sA_JobName<<label>>=job_name ;there is no job_name in @proc
+   
+   if !b_Main ;@call_proc of the geometry (if the VMID Parameter "Sub-Procedures" is only actived)
+      bA_ProcGeometry<<label>>=true
+      {s_FirstComment'GEOMETRIE VOM: '}
+      {upper(sA_JobName<<label>>),s_LastComment} ;there is no job_name in @proc
+   else
+      {s_FirstComment'JOB NR:'index_job}
+      {'| JOB NAME: 'upper(sA_JobName<<label>>),s_LastComment}
+   endif
+
+   if b_LoopTransform
+      {' L'loop_count}
+      bA_ProcInLoop<<label>>=true
+   endif
+
+   if b_Main
+      if b_ChangeRef
+         b_ChangeRef = false
+         call @usr_ChangeRef
+      endif
+      if b_Mirror
+         b_Mirror = false
+         call @usr_Mirror
+      endif
+      if b_Rotate
+         b_Rotate = false
+         call @usr_Rotate
+      endif
+   endif
+
+   call @usr_CallProcToProc((0)) ;0=Start | 1=End (because of sub-procedures and procedures in drill)
+   b_TurretINRefPos = false
+   b_ChangeTool = false
+   b_G49Active = false
+
+endp
+
+;-------------------
+
+@proc
+
+   call @usr_CallProcToProc((1)) ;0=Start | 1=End (because of sub-procedures and procedures in drill)
+   
+   if !b_M98 and !b_SubProgramG65
+      {nl}
+      {nl'N'iA_ProgramNumberSave<<label>>:s_ProgramNr_f' '}
+   else
+      blknum=1
+      {nl,'!!open file=',s_RealPartPath,s_Prefix,iA_ProgramNumberSave<<label>>:s_ProgramNr_f'!!'}
+      {nl'%'}
+      {nl,s_Prefix,iA_ProgramNumberSave<<label>>:s_ProgramNr_f}
+   endif
+
+   if bA_ProcGeometry<<label>>
+      {s_FirstComment'GEOMETRIE VOM '}
+   else
+      {s_FirstComment}
+   endif
+
+   {upper(sA_JobName<<label>>),s_LastComment} ;there is no job_name in @proc
+
+endp
+
+;-------------------
+
+@end_proc
+
+   if bA_ProcInLoop<<label>>  ;with loops in subprograms
+      {nb,(10):gcode_f'L'i_G10_L' P'i_HomeGcode' '(91):gcode_f,nA_XHome<<label>>:xlpos_f,nA_YHome<<label>>:ylpos_f,nA_ZHome<<label>>:zpos_f}
+      {nb,(90):gcode_f}
+   endif
+
+   {nb,(99):mcode_f}  ;ends a sub-program and returns back to the next line in the main program after the M98 sub-program call
+   
+   if b_M98
+      {nb'%'}
+      {nl}
+      {nl,'!!close file=',s_RealPartPath,s_Prefix,iA_ProgramNumberSave<<label>>:s_ProgramNr_f'!!'}
+   endif
+
+   bA_ProcInLoop<<label>> = false
+
+endp
+
+;----------------
+
+@loop
+
+   b_LoopTransform = true
+   b_InsideJob     = false  ;shifts would be printed in @end_proc in case of loops
+
+endp
+
+;----------------
+
+@end_loop
+
+   b_LoopTransform = false
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |06-Tool
+;-------------------
+
+@def_tool
+
+   s_UsrMsgTool = ''
+	s_UsrMsgTool = s_UsrMsgTool + '- T' + tostr(tool_number:integer_def_f) + ' ' + '- '
+   
+   call @usr_ToolText
+	call @usr_ReplaceString(s_UsrMsgTool)
+	call @usr_MultiLineMessage(s_UsrMsgTool,(2),(2),(false))
+   call @usr_msg_tool((true))
+
+endp
+
+;-------------------
+
+@change_tool
+
+   call @usr_InitPrintComments
+
+   if !first_tool
+      if bA_FineToolCorr<<i_SaveToolNumber>>
+         {nl}
+
+         if !b_ToolWearWithG10
+            {nb,'#[10000 + #4120] = 0 (VERSCHLEISS LAENGE RESETEN)'}
+            {nb,'#[12000 + #4120] = 0 (VERSCHLEISS RADIUS RESETEN)'}
+         else
+            if i_ToolWearCompDiam eq 10 or i_ToolWearCompDiam eq 11 ;system A/system B
+               call @usr_PrintMessage((6),('meldung+abbruch'),('@change_tool'))
+            elseif i_ToolWearCompDiam eq 13 ;system C
+               {nb,(10):gcode_f'L11 P'i_SaveToolNumber' R0 (VERSCHLEISS LAENGE RESETEN)'}
+               {nb,(10):gcode_f'L13 P'i_SaveToolNumber' R0 (VERSCHLEISS RADIUS RESETEN)'}
+            endif
+         endif 
+      endif
+
+      if bVMID_MO_FineShiftAfterRot ;TPL 3.0
+         {nb,(52):gcode_f (0):xlpos_f (0):ylpos_f (0):zlpos_f}
+      endif
+
+      {nl}
+
+      if bVMID_MO_WithJumpMarks
+         local integer iL_EntryPoint
+         call @usr_OperateWithFiles(s_Prefix,('.Main'),('close'))
+         call @usr_OperateWithFiles(s_Prefix,('.Marks'),('open'))
+
+         if !b_FirstEntryMark ;TPL 3.0
+            {nl}
+            {nl'(----MARKEN FUER WIEDEREINSTIEG---)'}
+            b_FirstEntryMark = true
+         endif
+
+         i_ToolCallRepeatIndex<<tool_number>> = i_ToolCallRepeatIndex<<tool_number>> + 10
+         iL_EntryPoint = (tool_number*100) + i_ToolCallRepeatIndex<<tool_number>>
+         {nl, s_FirstComment'GOTO ' iL_EntryPoint, ' (WIEDEREINSTIEG BEI 'tool_number:tool_number_f '|JOB:'index_job ' -'job_name s_LastComment}
+
+         call @usr_OperateWithFiles(s_Prefix,('.Marks'),('close'))
+         call @usr_OperateWithFiles(s_Prefix,('.Main'),('open'))
+         
+         {nb,'N'iL_EntryPoint' '}
+         blknum = blknum + blknum_delta
+         Skipline = false
+      endif
+
+      call @usr_CoolingOff
+
+      if b_M5beforToolChange
+         if b_WithoutSpeedMonitoring
+            {nb,(219):mcode_f}
+         else
+            {nb,(5):mcode_f}
+         endif
+      endif
+
+      if !b_Is3XMachine
+         if s_TiltCycle ne 'SC'
+            {nb,(69):gcode_f sA_Comment<<1>>} ;reset of the tilt cycle
+            b_TiltCycleActived=false
+         endif
+      endif
+
+      call @usr_ResetHSC((false))
+      local logical bL_RetreatToToolZLevel 
+      bL_RetreatToToolZLevel = b_RetreatToToolZLevel
+      b_RetreatToToolZLevel = false
+      call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue)
+      b_RetreatToToolZLevel = bL_RetreatToToolZLevel
+
+      if b_M1beforToolChange
+         {nb,(1):mcode_f}
+      endif
+   else
+      {nl}
+   endif
+
+   if !bVMID_MO_WithJumpMarks
+      {nb,'N'blknum' '}
+      blknum = blknum + blknum_delta
+      ; Skipline = false
+   else
+      {nl}
+   endif
+
+   s_UsrMsgTool = ''
+   
+   if tool_id_number ne 0 and b_TCwithPlaceNumber
+      {tool_id_number:tool_number_f,(6):mcode_f} ;tool can only be changed with the place number in tool ID
+   else
+      {tool_number,(6):mcode_f} ;tool can only be changed with the tool number
+   endif
+   
+   ; {'('}
+   call @usr_ToolText
+   call @usr_ReplaceString(s_UsrMsgTool)
+	call @usr_MultiLineMessage(s_UsrMsgTool,(0),(2),(false))
+   call @usr_msg_tool((false))
+   n_SpinSave = 0
+   spin = tool_first_spin ;because of rough and finish spin - tool_first_spin ==> allways spin at folowing job
+   call @start_tool
+   
+   if b_ToolPreselect
+      if tool_number ne next_tool_number
+         {nb,next_tool_number:tool_number_f} ;without M6 machine look for the next tool in magazine
+      endif
+   endif
+
+   if b_M1AfterToolChange
+      {nb,(1):mcode_f}
+   endif
+
+   if b_FineToolCorr
+      bA_FineToolCorr<<tool_number>> = false
+   endif
+
+   i_PartHomeSave = 0
+   b_G49Active    = true
+   b_ChangeTool   = true
+
+endp
+
+;-------------
+
+@usr_ToolText
+
+	if tool_message ne ''
+		s_UsrMsgTool = s_UsrMsgTool + tool_message
+	else
+		s_UsrMsgTool = s_UsrMsgTool + tool_user_type + ' D' + tostr((tool_offset*2):numeric_def_f)
+		if corner_radius ne 0
+			s_UsrMsgTool = s_UsrMsgTool + ' R' + tostr(corner_radius:numeric_def_f)
+		endif
+	endif
+
+endp
+
+;-------------------
+
+@usr_MultiLineMessage(string sL_Msg, integer iL_NewBlock, integer iL_JobOrMCO, logical bL_MSG)
+
+	local string  sRemainMsg sSearchStr
+	local integer iSearchStrPos iLineLength
+   if instr(sL_Msg,'\x0d') ne 0
+      sSearchStr = '\x0d'
+   else
+      sSearchStr = '\x0a'
+   endif
+	sRemainMsg  = sL_Msg
+	iLineLength = strlen(sRemainMsg)
+	iSearchStrPos = instr(sRemainMsg,sSearchStr)
+	while iLineLength > 0
+		if iSearchStrPos ne 0
+			if iSearchStrPos ne 1
+				if iL_NewBlock eq 1
+					{nb}
+				elseif iL_NewBlock eq 2
+					{nl}
+				else
+					{' '}
+				endif
+				{s_FirstComment,left(sRemainMsg,(iSearchStrPos-iL_JobOrMCO)),s_LastComment}
+			endif
+			iLineLength = iLineLength - iSearchStrPos
+			sRemainMsg = right(sRemainMsg,iLineLength)
+			iSearchStrPos = instr(sRemainMsg,sSearchStr)
+		else
+			iLineLength = 0
+		endif
+	endw
+	if iL_NewBlock eq 1
+		{nb}
+	elseif iL_NewBlock eq 2
+		{nl}
+	else
+		{''}
+	endif
+	if bL_MSG
+		{'MSG("',sRemainMsg,'")'}
+	else
+		{s_FirstComment,sRemainMsg,s_LastComment}
+	endif
+
+endp
+
+;-------------
+
+@usr_msg_tool(logical bL_CallFromDefTool)
+
+	if msg_mill_tool1 ne '' and lower(tool_message) ne lower(msg_mill_tool1)
+      if bL_CallFromDefTool
+		   {nl,s_FirstComment'   'upper(msg_mill_tool1),s_LastComment}
+      else
+         {nl,s_FirstComment,upper(msg_mill_tool1),s_LastComment}
+      endif
+	endif
+	if msg_mill_tool2 ne ''
+      if bL_CallFromDefTool
+		   {nl,s_FirstComment'   'upper(msg_mill_tool2),s_LastComment}
+      else
+         {nl,s_FirstComment,upper(msg_mill_tool2),s_LastComment}
+      endif
+	endif
+	if msg_mill_tool3 ne ''
+      if bL_CallFromDefTool
+		   {nl,s_FirstComment'   'upper(msg_mill_tool3),s_LastComment}
+      else
+         {nl,s_FirstComment,upper(msg_mill_tool3),s_LastComment}
+      endif
+	endif
+	if msg_mill_tool4 ne ''
+      if bL_CallFromDefTool
+		   {nl,s_FirstComment'   'upper(msg_mill_tool4),s_LastComment}
+      else
+         {nl,s_FirstComment,upper(msg_mill_tool4),s_LastComment}
+      endif
+	endif
+	if msg_mill_tool5 ne ''
+      if bL_CallFromDefTool
+		   {nl,s_FirstComment'   'upper(msg_mill_tool5),s_LastComment}
+      else
+         {nl,s_FirstComment,upper(msg_mill_tool5),s_LastComment}
+      endif
+	endif
+
+endp
+
+;-------------------
+
+@usr_ToolOffset
+
+   call @usr_InitPost ;because of d/h_offset_f (i_DOffset/i_HOffset)
+
+   if user_tool_offset ne 0 and (i_HOffset eq 0 and i_DOffset eq 0) ;TPL 3.0
+      i_HOffset = h_offset
+      i_DOffset = d_offset
+   elseif i_HOffset eq -2 ;TPL 3.0
+      ;always D1 and H1
+      if i_HOffset ne -1 
+         i_HOffset = tool_position
+      endif
+      if i_DOffset ne -1
+         i_DOffset = tool_position
+      endif
+   else
+      if i_HOffset ne -1
+         if i_HOffset eq 0
+            ;from ToolNumber
+            i_HOffset = tool_number
+         else
+            ;with parameter
+            h_offset_f='<H#>4/2.0(n)< >'
+         endif
+      endif
+      if i_DOffset ne -1
+         if i_DOffset eq 0
+            ;from ToolNumber
+            i_DOffset = tool_number
+         else
+            ;with parameter
+            d_offset_f = '<D#>4/2.0(n)< >'
+         endif
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@tool_breakage
+
+   ;JWA 24/11/21
+   ; call @usr_PrintMessage((21),('meldung+abbruch'),('@tool_breakage'))
+   call @usr_CoolingOff
+   call @usr_retreat(('Z_XY'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+   local integer iL_PalletFunktion
+   
+   if b_CallFromMCO
+      iL_PalletFunktion = iVMID_MCO_PalletToolBreak
+      b_CallFromMCO = false
+   else
+      iL_PalletFunktion = 1
+   endif
+
+   {nb,(65):gcode_f 'P9303 #517 M'iL_PalletFunktion}
+   i_PartHomeSave = 0
+   n_SpinSave = 0
+
+endp
+
+;-------------------
+
+@start_tool
+
+   if b_WithoutSpeedMonitoring
+      mcode = 203 + spin_direction
+      i_MonitoringSpin = 3 + spin_direction
+   else
+      mcode = 3 + spin_direction
+   endif
+
+   if spin ne 0
+      if n_SpinSave <> spin
+         {nb,spin:spin_f}
+      endif
+
+      if job_type eq 'deep drill'
+         if !b_SpinOn or change(spin_direction)
+            {mcode}
+            b_SpinOn = true
+         endif
+      else
+         if drill_cycle_name ne 'G84_G74'
+            {mcode}
+            b_SpinOn = true
+         endif
+      endif
+   else
+      if job_type eq 'deep drill'
+         if b_WithoutSpeedMonitoring
+            {nb,(219):mcode_f}
+         else
+            {nb,(5):mcode_f}
+         endif
+         b_SpinOn = false
+      endif
+   endif
+     
+   n_SpinSave = spin
+   i_SpinDirSave  = spin_direction
+
+endp
+
+;-------------------
+
+@m_feed_spin
+
+   if !bA_ProcGeometry<<label>> and (b_FeedSpinInEachJob or (n_SpinSave <> spin or i_SpinDirSave ne spin_direction))
+      call @start_tool
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |04-Compensation
+;-------------------
+
+@compensation
+
+   if side eq COMP_LEFT
+      gcode = 41
+   endif
+   if side eq COMP_RIGHT
+      gcode = 42
+   endif
+   if side eq COMP_OFF
+      gcode = 40
+   endif
+
+   {nb,gcode}
+   skipline=false
+
+endp
+
+;-------------------
+
+@compensation_h
+
+   if offset_height ne tool_number
+      {nb,(43):gcode_f'H'offset_height}
+      b_G49Active = false
+   endif
+   
+endp
+
+;-------------------
+
+@compensation_3d
+
+   ;Type1:
+      ;MP19607 Bit1=0 ==> G41.2/G42.2 (without tool vectors)
+      ;MP19607 Bit1=1:
+         ;Table-Table kinematic ==> G41.4/G42.4 (without tool vectors)
+         ;Head-Table kinematic ==> G41.5/G42.5 (without tool vectors)
+   ;Type2:
+      ;G41.6 / G42.6 (with tool vectors)
+
+   if type_offset_3D ne 2  ; type_offset_3D=0 ==> tool_tip, type_offset_3D=1 ==> tool_center (coord. are the same-always from tool center point)
+      call @usr_ToolOffset ;@compensation_3d comes before @start_of_job at x5_job
+      if iVMID_MI_3DCompSide eq 1
+         if !x5_job
+            {nb,(41.1):gcode_f} ;without tool vectors
+         else
+            {nb,(41.6):gcode_f} ;with tool vectors
+         endif
+      elseif iVMID_MI_3DCompSide eq 2
+         if !x5_job
+            {nb,(42.1):gcode_f} ;without tool vectors
+         else
+            {nb,(42.6):gcode_f} ;with tool vectors
+         endif
+      else
+         call @usr_PrintMessage((14),('meldung+abbruch'),('@compensation_3d'))
+      endif
+      {i_DOffset:d_offset_f}
+   else
+      {nb,(40):gcode_f}
+   endif
+
+   if type_offset_3D eq 2
+      b_3DComp = false
+   else
+      b_3DComp = true
+   endif
+
+   call @usr_PrintMessage((2),('meldung+abbruch'),('@compensation_3d'))
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |03-Interpolation
+;-------------------
+
+@arc
+
+   gcode=2+arc_direction
+   {nb,gcode,xlpos,ylpos,[zlpos]}
+
+   if round(arc_size,0) eq 360 or change(zlpos)
+      {xlcenter_rel,ylcenter_rel}
+   else
+      if arc_size >= 180
+         radius=-radius
+      endif
+      {radius}
+   endif
+
+   if b_ParametricFeed and left(job_type,6) ne 'spiral' and job_type ne 'tool_box'
+      call @usr_ParametricFeedPrint
+   else
+      {[feed]}
+   endif
+
+endp
+
+;-------------------
+
+@rapid_move
+
+   gcode=0
+
+   if b_FirstRapidMove
+      if i_DOffset ne -1 and i_HOffset eq -1
+         if instr(job_type,'drill') eq 0 and !b_3DComp
+            {nb,i_DOffset:d_offset_f}
+         endif
+      endif
+
+      {nb,gcode,xlpos,ylpos}
+
+      {nb,(43):gcode_f} ;TPL 2.01
+
+      if i_HOffset ne -1
+         {i_HOffset:h_offset_f}
+      endif
+
+      if i_DOffset ne -1
+         if instr(job_type,'drill') eq 0 and !b_3DComp
+            {i_DOffset:d_offset_f}
+         endif
+      endif
+
+      {zlpos}
+
+      if b_WithoutSpeedMonitoring and job_type ne 'deep drill'
+         {i_MonitoringSpin:mcode_f}
+      endif
+
+      if job_type ne 'deep drill'
+         call @usr_coolingOn
+      endif
+
+      b_FirstRapidMove = false
+      b_G49Active = false
+   else
+      {nb,gcode,[xlpos],[ylpos],[zlpos]}
+   endif
+
+endp
+
+;-------------------
+
+@line
+
+   gcode=1
+
+   if b_FirstRapidMove
+      if i_DOffset ne -1 and i_HOffset eq -1
+         if instr(job_type,'drill') eq 0 and !b_3DComp
+            {nb,i_DOffset:d_offset_f}
+         endif
+      endif
+
+      {nb,gcode,xlpos,ylpos}
+
+      if b_ParametricFeed and left(job_type,6) ne 'spiral' and job_type ne 'tool_box'
+         call @usr_ParametricFeedPrint
+      else
+         {[feed]}
+      endif
+
+      {nb,(43):gcode_f} ;TPL 2.01
+
+      if i_HOffset ne -1
+         {i_HOffset:h_offset_f}
+      endif
+
+      if i_DOffset ne -1
+         if instr(job_type,'drill') eq 0 and !b_3DComp
+            {i_DOffset:d_offset_f}
+         endif
+      endif
+
+      {zlpos}
+
+      if b_WithoutSpeedMonitoring and job_type ne 'deep drill'
+         {i_MonitoringSpin:mcode_f}
+      endif
+
+      if job_type ne 'deep drill'
+         call @usr_coolingOn
+      endif
+
+      b_FirstRapidMove = false
+      b_G49Active = false
+   else
+      {nb,gcode,[xlpos],[ylpos],[zlpos]}
+
+      if gcode eq 1 ;@line
+         if b_ParametricFeed and left(job_type,6) ne 'spiral' and job_type ne 'tool_box'
+            call @usr_ParametricFeedPrint
+         else
+            {[feed]}
+         endif
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@move_5x
+
+   gcode=0
+
+   if b_PrintAllAxes ; moduleworks drill
+      b_PrintAllAxes=false
+      change(xhpos)=true
+      change(yhpos)=true
+      change(zhpos)=true
+      change(apos)=true
+      change(bpos)=true
+      change(feed)=true
+   endif
+
+   if !x5_job ;wrap
+      if rot_axis_type eq axis4_radial and s_RotationOrder eq 'KINEMATIC'
+         local string sL_yopos_f
+         sL_yopos_f = yopos_f
+         yopos_f = '<' + s_AxisLetterY + '>' + numeric_def_f + '(i)< >'
+      endif
+
+      if b_FirstRapidMove
+         if rot_axis_type eq axis4_face
+            {nb,gcode,xopos,yopos}
+         elseif rot_axis_type eq axis4_radial 
+            if s_RotationOrder ne 'KINEMATIC'
+               {nb,gcode,xlpos,ylpos}
+            else
+               {nb,gcode,xopos,yopos}
+            endif
+         endif
+         
+         {nb,gcode,apos}
+
+         {nb,(43):gcode_f} ;TPL 2.01
+
+         if i_HOffset ne -1
+            {i_HOffset:h_offset_f}
+         endif
+
+         if i_DOffset ne -1
+            if instr(job_type,'drill') eq 0
+               {i_DOffset:d_offset_f}
+            endif
+         endif
+
+         if rot_axis_type eq axis4_face
+            {nb,gcode,zopos}
+         elseif rot_axis_type eq axis4_radial 
+            if s_RotationOrder ne 'KINEMATIC'
+               {nb,gcode,zlpos}
+            else
+               {nb,gcode,zopos}
+            endif
+         endif
+         
+         call @usr_coolingOn
+         b_FirstRapidMove = false
+         b_G49Active = false
+      else
+         if rot_axis_type eq axis4_face
+            {nb,gcode,[xopos],[yopos],[zopos]}
+         elseif rot_axis_type eq axis4_radial 
+            {nb,gcode,[xlpos],[ylpos],[zlpos]}
+         endif
+         {[apos]}
+      endif
+
+      if rot_axis_type eq axis4_radial and s_RotationOrder eq 'KINEMATIC'
+         yopos_f = sL_yopos_f
+      endif
+   else ;x5_job
+      if s_CoordSetSim ne ''
+         call @usr_CoordinatesSet
+      endif
+
+      if b_FirstRapidMove and !b_DrillPlane5X
+         if b_TiltCycleActived
+            {nb,gcode (0):xpos_f (0):ypos_f}
+            {nb (69):gcode_f sA_Comment<<7>>}
+            b_TiltCycleActived = false
+         else
+            if !b_IsHeadHead and !b_IsHeadTable
+               {nb,gcode,xhpos,yhpos}
+            endif
+         endif
+
+         if instr(job_type,'mw') ne 0 and b_G49WithZ
+            {nb (43):gcode_f}
+            {i_HOffset:h_offset_f}
+         else
+            if i_TCPType eq 1
+               {nb (43.4):gcode_f}
+            else
+               {nb (43.5):gcode_f}
+            endif
+            if i_HOffset eq -1
+               call @usr_PrintMessage((1),('meldung+abbruch'),('@move_5x'))
+            else
+               {i_HOffset:h_offset_f sA_Comment<<3>>}
+            endif
+         endif
+
+         b_G49Active = false
+         call @usr_coolingOn
+         {nb gcode xhpos,yhpos,zhpos}
+      else
+         if (instr(job_type,'mw') eq 0 and b_G49WithZ) or !b_G49WithZ
+            {nb,gcode,[xhpos],[yhpos],[zhpos]}
+         endif
+      endif
+
+      if (instr(job_type,'mw') eq 0 and b_G49WithZ) or !b_G49WithZ
+         if i_TCPType eq 1 ;G43.4
+            {[apos]}
+            if s_SecondRotAxisLetter ne ''
+               {[bpos]}
+            endif
+         else ;G43.5
+            {xpos_normal,ypos_normal,zpos_normal}
+         endif
+      endif
+   endif
+
+   b_FirstRapidMove = false
+   
+endp
+
+;-------------------
+
+@line_5x
+
+   gcode=1
+
+   if b_PrintAllAxes ; moduleworks drill
+      b_PrintAllAxes=false
+      change(xhpos)=true
+      change(yhpos)=true
+      change(zhpos)=true
+      change(apos)=true
+      change(bpos)=true
+      change(feed)=true
+   endif
+
+   if !x5_job ;wrap
+      if rot_axis_type eq axis4_radial and s_RotationOrder eq 'KINEMATIC'
+         local string sL_yopos_f
+         sL_yopos_f = yopos_f
+         yopos_f = '<' + s_AxisLetterY + '>' + numeric_def_f + '(i)< >'
+      endif
+
+      if b_FirstRapidMove
+         if rot_axis_type eq axis4_face
+            {nb,gcode,xopos,yopos}
+         elseif rot_axis_type eq axis4_radial 
+            if s_RotationOrder ne 'KINEMATIC'
+               {nb,gcode,xlpos,ylpos}
+            else
+               {nb,gcode,xopos,yopos}
+            endif
+         endif
+         
+         {feed}
+         
+         {nb,gcode,apos,feed}
+
+         {nb,(43):gcode_f} ;TPL 2.01
+
+         if i_HOffset ne -1
+            {i_HOffset:h_offset_f}
+         endif
+
+         if i_DOffset ne -1
+            if instr(job_type,'drill') eq 0
+               {i_DOffset:d_offset_f}
+            endif
+         endif
+
+         if rot_axis_type eq axis4_face
+            {nb,gcode,zopos}
+         elseif rot_axis_type eq axis4_radial 
+            if s_RotationOrder ne 'KINEMATIC'
+               {nb,gcode,zlpos}
+            else
+               {nb,gcode,zopos}
+            endif
+         endif
+
+         {feed}
+         
+         call @usr_coolingOn
+         b_FirstRapidMove = false
+         b_G49Active = false
+         
+         if rot_axis_type eq axis4_radial and s_RotationOrder eq 'KINEMATIC'
+            yopos_f = sL_yopos_f
+         endif
+      else
+         if rot_axis_type eq axis4_face
+            {nb,gcode,[xopos],[yopos],[zopos]}
+         elseif rot_axis_type eq axis4_radial 
+            if s_RotationOrder ne 'KINEMATIC'
+               {nb,gcode,[xlpos],[ylpos],[zlpos]}
+            else
+               {nb,gcode,[xopos],[yopos],[zopos]}
+            endif
+         endif
+
+         {[apos]}
+      endif
+   else ;x5_job
+      if s_CoordSetSim ne ''
+         call @usr_CoordinatesSet
+      endif
+
+      if (instr(job_type,'mw') eq 0 and b_G49WithZ) or !b_G49WithZ
+         if bVMID_MO_G93 and !b_NotFirsLine5x and gcode eq 1 ;@line_5x
+            {(93):gcode_f}
+            b_NotFirsLine5x=true
+         endif
+         {nb,gcode,[xhpos],[yhpos],[zhpos]}
+      endif
+
+      if (instr(job_type,'mw') eq 0 and b_G49WithZ) or !b_G49WithZ
+         if i_TCPType eq 1 ;G43.4
+            {[apos]}
+            if s_SecondRotAxisLetter ne ''
+               {[bpos]}
+            endif
+         else ;G43.5
+            {xpos_normal,ypos_normal,zpos_normal}
+         endif
+      endif
+   endif
+
+   if !bVMID_MO_G93
+      if feed_type eq 'feed_link' and x5_job ;must be without @usr_ParametricFeedPrint because of FS#44103 (feed_link is allways=0 in @start_of_job and @call_proc)
+         {[feed]}
+      elseif b_ParametricFeed and left(job_type,6) ne 'spiral' and job_type ne 'tool_box'
+         call @usr_ParametricFeedPrint
+      else
+         {[feed]}
+      endif
+   else
+      change(feed)=true
+      {inverse_feed:feed_f}
+   endif
+
+   b_FirstRapidMove = false
+
+endp
+
+;-------------------
+
+@usr_CoordinatesSet
+
+   if s_CoordSetSim eq 'RPOS' 
+      xhnext=xrnext
+      yhnext=yrnext
+      zhnext=zrnext
+      xhpos=xrpos
+      yhpos=yrpos
+      zhpos=zrpos
+      xh_move=xr_move
+      yh_move=yr_move
+      zh_move=zr_move
+      change(xhpos)=change(xrpos)
+      change(yhpos)=change(yrpos)
+      change(zhpos)=change(zrpos)
+      change(xh_move)=change(xr_move)
+      change(yh_move)=change(yr_move)
+      change(zh_move)=change(zr_move)
+   elseif s_CoordSetSim eq 'MPOS' 
+      xhnext=xmnext
+      yhnext=ymnext
+      zhnext=zmnext
+      xhpos=xmpos
+      yhpos=ympos
+      zhpos=zmpos
+      xh_move=xmpos
+      yh_move=ympos
+      zh_move=zmpos
+      ah_move=am_move
+      bh_move=bm_move
+      change(xhpos)=change(xmpos)
+      change(yhpos)=change(ympos)
+      change(zhpos)=change(zmpos)
+      change(xh_move)=change(xmpos)
+      change(yh_move)=change(ympos)
+      change(zh_move)=change(zmpos)
+      change(ah_move)=change(am_move)
+      change(bh_move)=change(bm_move)
+   elseif s_CoordSetSim eq 'TPOS'
+      xhpos=xtpos
+      yhpos=ytpos
+      zhpos=ztpos
+      xh_move=xt_move
+      yh_move=yt_move
+      zh_move=zt_move
+      change(xhpos)=change(xtpos)
+      change(yhpos)=change(ytpos)
+      change(zhpos)=change(ztpos)
+      change(xh_move)=change(xt_move)
+      change(yh_move)=change(yt_move)
+      change(zh_move)=change(zt_move)
+   elseif s_CoordSetSim eq 'TOPOS'
+      xhnext=xtonext
+      yhnext=ytonext
+      zhnext=ztonext
+      xhpos=xtopos
+      yhpos=ytopos
+      zhpos=ztopos
+      xh_move=xt_move
+      yh_move=yt_move
+      zh_move=zt_move
+      change(xhpos)=change(xtopos)
+      change(yhpos)=change(ytopos)
+      change(zhpos)=change(ztopos)
+      change(xh_move)=change(xt_move)
+      change(yh_move)=change(yt_move)
+      change(zh_move)=change(zt_move)
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |10-Transform
+;-------------------
+
+@fourth_axis
+
+   if bA_InsideJobFourtAxis<<index_job>>
+      if !fourth_axis_last
+         b_FourthAxisUsed = true
+      else
+         b_FourthAxisUsed = false
+      endif
+      bA_InsideJobFourtAxis<<index_job>> = false ;must be with array because of prev @start_of_job and here because of current @end_of_job
+   endif
+
+   i_PartHomeSave = 0
+
+endp
+
+;-------------------
+
+@rotate
+
+   if b_InsideJob
+      call @usr_Rotate
+   elseif rotate_cancel
+      call @usr_Rotate
+      b_Rotate = false
+   else
+      b_Rotate = true
+   endif
+
+endp
+
+;-------------------
+
+@usr_Rotate
+
+   if !rotate_cancel
+      {nb,(90):gcode_f,(68):gcode_f'R'angle} ;with G91 relative offset of the last active working zero
+      {nb,(90):gcode_f}
+   else
+      {nb,(69):gcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@mirror
+
+   if b_InsideJob
+      call @usr_Mirror
+   elseif mirror_type eq MIRROR_OFF
+      call @usr_Mirror
+      b_Mirror = false
+   else
+      b_Mirror = true
+   endif
+
+endp
+
+;-------------------
+
+@usr_Mirror
+
+   if mirror_type eq MIRROR_OFF
+      gcode = 50.1
+   else
+      gcode = 51.1
+   endif
+
+   {nb,gcode}
+
+   if mirror_type eq MIRROR_X
+      {(0):xlpos_f}
+      if !b_PrintOnlyOnes
+         call @usr_PrintMessage((22),('meldung'),('@usr_Mirror'))
+         b_PrintOnlyOnes = true
+      endif
+   endif
+
+   if mirror_type eq MIRROR_Y
+      {(0):ylpos_f}
+      if !b_PrintOnlyOnes
+         call @usr_PrintMessage((22),('meldung'),('@usr_Mirror'))
+         b_PrintOnlyOnes = true
+      endif
+   endif
+
+   if mirror_type eq MIRROR_XY
+      {(0):xlpos_f,(0)ylpos_f}
+   endif
+
+endp
+
+;-------------------
+
+@change_ref_point
+
+   if !b_MCOJob
+      if b_InsideJob
+         call @usr_ChangeRef
+      elseif ref_point_init
+         call @usr_ChangeRef
+         b_ChangeRef = false
+      else
+         b_ChangeRef = true
+      endif
+   endif
+   
+   if bA_ProcInLoop<<label>> ;shifts would be printed in @end_proc in case of loops
+      nA_XHome<<label>>=xhome
+      nA_YHome<<label>>=yhome
+      nA_ZHome<<label>>=zhome
+   endif
+
+endp
+
+;-------------------
+
+@usr_ChangeRef
+
+   if s_TiltCycle eq 'SC'
+      if i_CalcHomeSavedIn < 7 ;G54-G59
+         i_G10_L = 2
+      else ;G54.1 P1-P48 or G54.1 P1-P300
+         i_G10_L = 20
+      endif
+   endif
+
+   {nb,(10):gcode_f'L'i_G10_L' P'i_HomeGcode' '(91):gcode_f,xhome:xlpos_f,yhome:ylpos_f,zhome:zlpos_f}
+   {nb,(90):gcode_f}
+
+endp
+
+;-------------------
+
+@home_number
+
+   i_HomeGcode = home_number
+   
+   if s_TiltCycle ne 'SC' or b_Is3XMachine ;zero number comes from calc. macro
+      b_PrintHomeNr = true
+   endif
+
+   if !b_PrintHomeNumber
+      call @usr_PrintHomeNumber(i_HomeGcode)
+      i_PartHomeSave = 0  ;because of MacToMac SoliCAM option (older versions where home_id was not implemented)
+   else
+      b_PrintHomeNumber = false
+   endif
+
+endp
+
+;-------------------
+
+@usr_PrintHomeNumber (integer iL_HomeNumber)
+
+   if iL_HomeNumber < 7
+      if b_PrintHomeNr
+         {nb,(53+iL_HomeNumber):gcode_f}
+      endif
+      i_G10_L=2
+   else
+      if b_PrintHomeNr
+         {nb,(54.1):gcode_f'P'iL_HomeNumber}
+      endif
+      i_G10_L=20
+      if i_MaxExtendedHomeNr eq 6 or (i_MaxExtendedHomeNr eq 48 and iL_HomeNumber > 54) or (i_MaxExtendedHomeNr eq 300 and iL_HomeNumber > 306)
+         call @usr_PrintMessage((4),('meldung+abbruch'),('@usr_PrintHomeNumber'))
+      endif
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |14-Tilting
+;-------------------
+
+@usr_RotateToPlane
+
+   local numeric nL_first_rot nL_second_rot nL_third_rot
+
+   if s_RotationOrder eq 'KINEMATIC'
+      nL_first_rot  = euler_angle_z
+      nL_second_rot = euler_angle_x
+      nL_third_rot  = euler_angle_dev_z
+   else
+      nL_first_rot  = first_plane_angle
+      nL_second_rot = second_plane_angle
+      nL_third_rot  = third_plane_angle
+   endif
+
+   if other_angle_pair ne i_SaveAnglePair or n_FirstAxisAngleSave ne first_axis_angle or x5_job
+      i_PartHomeSave = 0
+   endif
+
+   if i_PartHomeSave ne part_home_number
+      if !b_FourthAxisUsed
+         if home_user_name ne ''
+            call @usr_ReplaceString(home_user_name)
+            {sA_Comment<<4>>}
+         else
+            {sA_Comment<<5>>}
+         endif
+         call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue)
+      else
+         {nb sA_Comment<<6>>}
+         call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue)
+      endif
+
+      if !x5_job
+         if !b_G49Active
+            {nb (49):gcode_f}
+            if b_G49WithZ
+               if s_TiltCycle eq 'SC'
+                  skipline = false
+               endif
+               call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue)
+            endif
+            {sA_Comment<<2>>}
+            b_G49Active = true
+         endif
+
+         if s_TiltCycle ne 'SC' and b_TiltCycleActived
+            {nb (69):gcode_f sA_Comment<<7>>}
+            b_TiltCycleActived = false
+         endif
+
+         if rot_axis_type ne axis4_none
+            call @usr_TiltCycle(shift_x,shift_y,shift_z,anext,bnext,(0),anext,bnext,i_HomeGcode)
+         else
+            call @usr_TiltCycle(shift_x,shift_y,shift_z,nL_first_rot,nL_second_rot,nL_third_rot,first_axis_angle,second_axis_angle,i_HomeGcode)
+         endif
+         
+         i_PartHomeSave  = part_home_number
+         i_SaveAnglePair = other_angle_pair
+         n_FirstAxisAngleSave  = first_axis_angle  ;because of motion control - index angle and clamping codes
+         n_SecondAxisAngleSave = second_axis_angle ;because of clamping codes
+      else ;x5_job
+         if s_CoordSetSim ne ''
+            call @usr_CoordinatesSet
+         endif
+
+         call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+         
+         if b_TiltCycleActived
+            if s_TiltCycle ne 'SC'    
+               {nb,(69):gcode_f} ;reset of the tilt cycle
+            else
+               call @usr_TiltCycle((0),(0),(0),(0),(0),(0),(0),(0),i_HomeGcode)
+            endif
+            b_TiltCycleActived = false
+         endif
+
+         if !b_IsHeadHead and !b_IsHeadTable and s_RotationOrder ne 'KINEMATIC'
+            call @usr_TiltCycle(xhnext,yhnext,zhnext,anext,bnext,(0),anext,bnext,i_HomeGcode)
+         else
+            if !b_Is3XMachine and b_ClampingActiv
+               call @usr_UnClamping
+            endif
+            {nb (0):gcode_f anext:apos_f}
+            if b_Is5XMachine
+               {bnext:bpos_f}
+            endif
+            if b_IsHeadHead and s_RotationOrder eq 'KINEMATIC'
+               {nb (0):gcode_f xhnext:xlpos_f yhnext:ylpos_f}
+            endif
+         endif
+
+         i_PartHomeSave = 0 ;because of next index Job in the same MAC-Position
+      endif
+      {nl}
+   endif
+
+endp
+
+;-----------
+
+@usr_TiltCycle(numeric nL_ShiftX, numeric nL_ShiftY, numeric nL_ShiftZ, numeric nL_RotateAngleFirst, numeric nL_RotateAngleSecond, numeric nL_RotateAngleThird, numeric nL_FirstAxisAngle, numeric nL_SecondAxisAngle, numeric nL_HomeNr)
+ 
+   local string sL_FirstRot_f sL_SecondRot_f sL_ThirdRot_f
+
+   if n_FirstAxisAngleSave ne first_axis_angle or n_SecondAxisAngleSave ne second_axis_angle
+      call @usr_UnClamping
+   endif
+
+   if bVMID_MO_FineShiftAfterRot ;TPL 3.0
+      {nb,(52):gcode_f (0):xlpos_f (0):ylpos_f (0):zlpos_f}
+   endif
+
+   if s_TiltCycle ne 'SC'
+      if s_TiltCycle eq 'G68.2'
+         {nb (0):gcode_f nL_FirstAxisAngle:apos_f}
+
+         if s_SecondRotAxisLetter ne '' and !b_FourthAxisUsed
+            {nL_SecondAxisAngle:bpos_f}
+         endif
+
+         {nb,(68.2):gcode_f}
+
+         if s_RotationOrder eq 'X_Y_Z' or s_RotationOrder eq 'X_' or s_RotationOrder eq 'X_Y' ;TPL 3.0
+            sL_FirstRot_f  = '<I>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<J>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<K>' + numeric_def_f + '< >'
+            {'P1 Q123 '}
+         elseif s_RotationOrder eq 'X_Z_Y' or s_RotationOrder eq 'X_Z' ;TPL 3.0
+            sL_FirstRot_f  = '<I>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<K>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<J>' + numeric_def_f + '< >'
+            {'P1 Q132 '}
+         elseif s_RotationOrder eq 'Y_X_Z' or s_RotationOrder eq 'Y_' or s_RotationOrder eq 'Y_X' ;TPL 3.0
+            sL_FirstRot_f  = '<J>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<I>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<K>' + numeric_def_f + '< >'
+            {'P1 Q213 '}
+         elseif s_RotationOrder eq 'Z_Y_X' or s_RotationOrder eq 'Z_' or s_RotationOrder eq 'Z_Y' ;TPL 3.0
+            sL_FirstRot_f  = '<K>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<J>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<I>' + numeric_def_f + '< >'
+            {'P1 Q321 '}
+         elseif s_RotationOrder eq 'Y_Z_X' or s_RotationOrder eq 'Y_Z' ;TPL 3.0
+            sL_FirstRot_f  = '<J>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<K>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<I>' + numeric_def_f + '< >'
+            {'P1 Q231 '}
+         elseif s_RotationOrder eq 'Z_X_Y' or s_RotationOrder eq 'Z_X' ;TPL 3.0
+            sL_FirstRot_f  = '<K>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<I>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<J>' + numeric_def_f + '< >'
+            {'P1 Q312 '}
+         elseif s_RotationOrder eq 'KINEMATIC'
+            sL_FirstRot_f  = '<I>' + numeric_def_f + '< >'
+            sL_SecondRot_f = '<J>' + numeric_def_f + '< >'
+            sL_ThirdRot_f  = '<K>' + numeric_def_f + '< >'
+         endif
+         
+         {nL_ShiftX:xlpos_f, nL_ShiftY:ylpos_f, nL_ShiftZ:zlpos_f, nL_RotateAngleFirst:sL_FirstRot_f, nL_RotateAngleSecond:sL_SecondRot_f, nL_RotateAngleThird:sL_ThirdRot_f}
+         {nb,(53.1):gcode_f}
+
+      elseif instr(s_TiltCycle,'M') ne 0
+         {nb,(200):mcode_f}
+         {nb,(200):mcode_f,(nL_SecondAxisAngle):bpos_f,(nL_FirstAxisAngle):apos_f'I'nL_ShiftX'J'nL_ShiftY'K'nL_ShiftZ}
+      endif
+   else
+      {nb (65):gcode_f'P'i_CalcMacroNumber:s_ProgramNr_f' 'nL_ShiftX:xlpos_f,nL_ShiftY:ylpos_f,nL_ShiftZ:zlpos_f'E'nL_HomeNr:integer_def_f,' '}
+      if s_SecondRotAxisLetter eq '' ;4x
+         {nL_FirstAxisAngle:apos_f}
+      else ;5x
+         {nL_SecondAxisAngle:bpos_f}
+         {nL_FirstAxisAngle:apos_f}
+      endif
+
+      {nb (0):gcode_f nL_FirstAxisAngle:apos_f}
+
+      if s_SecondRotAxisLetter ne '' and !b_FourthAxisUsed
+         {nL_SecondAxisAngle:bpos_f}
+      endif
+   endif
+
+   if bVMID_MO_FineShiftAfterRot ;TPL 3.0
+      {nb,(52):gcode_f 'X#'iA_FineShiftParameter<<home_id,1>> ' Y#'iA_FineShiftParameter<<home_id,2>> ' Z#'iA_FineShiftParameter<<home_id,3>>}
+   endif
+
+   if !x5_job and !b_ClampingActiv
+      call @usr_Clamping
+   endif
+
+   b_TiltCycleActived = true
+
+endp
+
+;-----------
+
+@usr_NewCalcHomeData
+
+   {nl,'!!open file='s_RealPartPath,s_Prefix,i_CalcMacroNumber:s_ProgramNr_f'!!'}
+   {nl'%'}
+   {nl'O'i_CalcMacroNumber:s_ProgramNr_f}
+   {nl sA_Comment<<12>>}
+
+   i_Param_f = '5.0(p)'
+
+   if b_CalcMacroTest
+      local numeric nL_MacPosX nL_MacPosY nL_MacPosZ nL_MRZPointX nL_MRZPointY nL_MRZPointZ nL_MacPosFirstAngle nL_MacPosSecondAngle
+      nL_MacPosX = -329.96      ;MAC-Position_X from machine refrent point
+      nL_MacPosY = -248.049     ;MAC-Position_Y from machine refrent point
+      nL_MacPosZ = -74.442      ;MAC-Positin_Z from machine refrent point
+      nL_MacPosFirstAngle  = 0  ;MAC-First Rotation
+      nL_MacPosSecondAngle = 0  ;MAC-Second Rotation
+      nL_MRZPointX = -265.292   ;MRZ-Point_X from machine refrent point
+      nL_MRZPointY = -217.592   ;MRZ-Point_Y from machine refrent point
+      nL_MRZPointZ = -209.936   ;MRZ-Point_Z from machine refrent point
+   endif
+   
+   local integer iL_HomeParamCalculation iL_MultiplierFirstRotAxis iL_MultiplierSecondRotAxis
+   local string  sL_LocParamFirstRotAxis sL_LocParamSecondRotAxis sL_MultiplierFirstRotAxis sL_MultiplierSecondRotAxis
+   iL_MultiplierFirstRotAxis  = -1 ;(1 or -1) ==> should be the same as the first rot axis vector in VMID
+   iL_MultiplierSecondRotAxis = -1 ;(1 or -1) ==> should be the same as the second rot axis vector in VMID
+   ;iL_MultiplierFirstRotAxis=1 ==> '', iL_MultiplierFirstRotAxis=-1 ==> '-'
+   
+   if iL_MultiplierFirstRotAxis eq -1
+      sL_MultiplierFirstRotAxis = '-'
+   else
+      sL_MultiplierFirstRotAxis = ''
+   endif
+   
+   
+   ;iL_MultiplierSecondRotAxis=1 ==> '', iL_MultiplierSecondRotAxis=-1 ==> '-'
+   if iL_MultiplierSecondRotAxis eq -1
+      sL_MultiplierSecondRotAxis = '-'
+   else
+      sL_MultiplierSecondRotAxis = ''
+   endif
+   
+   first_axis_angle = first_axis_angle*iL_MultiplierFirstRotAxis
+   second_axis_angle = second_axis_angle*iL_MultiplierSecondRotAxis
+   
+   if s_FirstRotAxisLetter eq 'A'
+      sL_LocParamFirstRotAxis =sL_MultiplierFirstRotAxis+'#1'
+   elseif s_FirstRotAxisLetter eq 'B'
+      sL_LocParamFirstRotAxis =sL_MultiplierFirstRotAxis+'#2'
+   else ;C
+      sL_LocParamFirstRotAxis =sL_MultiplierFirstRotAxis+'#3'
+   endif
+   
+   if s_SecondRotAxisLetter eq 'A'
+      sL_LocParamSecondRotAxis =sL_MultiplierSecondRotAxis+'#1'
+   elseif s_SecondRotAxisLetter eq 'B'
+      sL_LocParamSecondRotAxis =sL_MultiplierSecondRotAxis+'#2'
+   else ;C
+      sL_LocParamSecondRotAxis =sL_MultiplierSecondRotAxis+'#3'
+   endif
+   
+   if i_G10_L eq 2
+      if i_HomeGcode < 7 ;G54 - G59
+         ; {nl,'N1 IF [#8 NE 1] GOTO2'}
+         ; {nl,'G54'}
+         ; {nl,'N2 IF [#8 NE 2] GOTO3'}
+         ; {nl,'G55'}
+         ; {nl,'N3 IF [#8 NE 3] GOTO4'}
+         ; {nl,'G56'}
+         ; {nl,'N4 IF [#8 NE 4] GOTO5'}
+         ; {nl,'G57'}
+         ; {nl,'N5'}
+         iL_HomeParamCalculation=(5200)
+      elseif i_MaxExtendedHomeNr eq 48  ;G54.1 P1-P48
+         iL_HomeParamCalculation=(6980)
+      elseif i_MaxExtendedHomeNr eq 300 ;G54.1 P1-P300
+         iL_HomeParamCalculation=(13980)
+      endif
+   else
+      if i_MaxExtendedHomeNr eq 48  ;G54.1 P1-P48
+         ; {nl,'G54.1 P#8'}
+         iL_HomeParamCalculation=(6980)
+      elseif i_MaxExtendedHomeNr eq 300 ;G54.1 P1-P300
+         iL_HomeParamCalculation=(13980)
+      endif
+   endif
+   
+   
+   ;Shifts + MAC
+   {nl sA_Comment<<13>>}
+   {nb'#'(i_StartParamPos+1):i_Param_f'=[[#['(iL_HomeParamCalculation+1):i_Param_f' + [20 * #8]]] + #24]'}  ;X
+   {nb'#'(i_StartParamPos+2):i_Param_f'=[[#['(iL_HomeParamCalculation+2):i_Param_f' + [20 * #8]]] + #25]'}  ;y
+   {nb'#'(i_StartParamPos+3):i_Param_f'=[[#['(iL_HomeParamCalculation+3):i_Param_f' + [20 * #8]]] + #26]'}  ;Z
+   {nb'#'(i_StartParamPos+4):i_Param_f'=[#['(iL_HomeParamCalculation+4):i_Param_f' + [20 * #8]]]'}         ;first_axis_angle
+   
+   if s_SecondRotAxisLetter ne ''
+      {nb,'#'(i_StartParamPos+5):i_Param_f'=[#['(iL_HomeParamCalculation+5):i_Param_f' + [20 * #8]]]'}      ;second_axis_angle
+   endif
+   
+   if b_CalcMacroTest
+      local integer iL_MACPlusPosX iL_MACPlusPosY iL_MACPlusPosZ iL_MACPlusPosFirstRot iL_MACPlusPosSecondRot
+      iL_MACPlusPosX = i_StartParamPos+1
+      iL_MACPlusPosY = i_StartParamPos+2
+      iL_MACPlusPosZ = i_StartParamPos+3
+      iL_MACPlusPosFirstRot = i_StartParamPos+4
+      if s_SecondRotAxisLetter ne ''
+         iL_MACPlusPosSecondRot = i_StartParamPos+5
+      endif
+      {nb';#'iL_MACPlusPosX'=['(nL_MacPosX + shift_x)']'}
+      {nb';#'iL_MACPlusPosY'=['(nL_MacPosY + shift_y)']'}
+      {nb';#'iL_MACPlusPosZ'=['(nL_MacPosZ + shift_z)']'}
+      {nb';#'iL_MACPlusPosFirstRot'=['(nL_MacPosFirstAngle)']'}
+      if s_SecondRotAxisLetter ne ''
+         {nb';#'iL_MACPlusPosSecondRot'=['(nL_MacPosSecondAngle)']'}
+      endif
+   endif
+
+
+   ;New MAC-Position - Rotation center (G54.1 P48)
+   {nl sA_Comment<<14>>}
+   skipline=false
+   b_PrintHomeNr=true
+   
+   if i_MRZPointSavedIn < 7 ;G54 - G59
+      call @usr_PrintHomeNumber(i_MRZPointSavedIn)
+      iL_HomeParamCalculation=(i_MRZPointSavedIn*20+5200)
+   elseif i_MaxExtendedHomeNr eq 48  ;G54.1 P1-P48
+      call @usr_PrintHomeNumber((i_MRZPointSavedIn+6))
+      iL_HomeParamCalculation=(i_MRZPointSavedIn*20+6980)
+   elseif i_MaxExtendedHomeNr eq 300 ;G54.1 P1-P300
+      call @usr_PrintHomeNumber((i_MRZPointSavedIn+6))
+      iL_HomeParamCalculation=(i_MRZPointSavedIn*20+13980)
+   endif
+   
+   {s_LastComment}
+   {nb,'#'(i_StartParamPos+6):i_Param_f'=[#'(i_StartParamPos+1):i_Param_f' - #'(1+iL_HomeParamCalculation):i_Param_f']'} ; X
+   {nb,'#'(i_StartParamPos+7):i_Param_f'=[#'(i_StartParamPos+2):i_Param_f' - #'(2+iL_HomeParamCalculation):i_Param_f']'} ; Y
+   {nb,'#'(i_StartParamPos+8):i_Param_f'=[#'(i_StartParamPos+3):i_Param_f' - #'(3+iL_HomeParamCalculation):i_Param_f']'} ; Z
+   
+   
+   ;TMATRIX
+   local numeric iL_LocDeltaX iL_LocDeltaY iL_LocDeltaZ
+   
+   if b_CalcMacroTest
+      local numeric nL_NewPosPlusMRZPX nL_NewPosPlusMRZPY nL_NewPosPlusMRZPZ nL_LocDeltaX nL_LocDeltaY nL_LocDeltaZ
+      local integer iL_NewPosPlusMRZPX iL_NewPosPlusMRZPY iL_NewPosPlusMRZPZ
+      iL_NewPosPlusMRZPX = i_StartParamPos+6
+      iL_NewPosPlusMRZPY = i_StartParamPos+7
+      iL_NewPosPlusMRZPZ = i_StartParamPos+8
+      nL_NewPosPlusMRZPX = ((nL_MacPosX + shift_x)-nL_MRZPointX)
+      nL_NewPosPlusMRZPY = ((nL_MacPosY + shift_y)-nL_MRZPointY)
+      nL_NewPosPlusMRZPZ = ((nL_MacPosZ + shift_z)-nL_MRZPointZ)
+      {nb';#'iL_NewPosPlusMRZPX'=['nL_NewPosPlusMRZPX:numeric_def_f']'}
+      {nb';#'iL_NewPosPlusMRZPY'=['nL_NewPosPlusMRZPY:numeric_def_f']'}
+      {nb';#'iL_NewPosPlusMRZPZ'=['nL_NewPosPlusMRZPZ:numeric_def_f']'}
+   endif
+
+   {nb sA_Comment<<15>>}
+
+
+   ;Around X - YZ
+   if s_FirstRotAbout eq 'X'
+      {nb,'#'(i_StartParamPos+9):i_Param_f'=[[#'(i_StartParamPos+7):i_Param_f'*COS['sL_LocParamFirstRotAxis']] - [#'(i_StartParamPos+8)'*SIN['sL_LocParamFirstRotAxis']]]'} ;Y
+      {nb,'#'(i_StartParamPos+10):i_Param_f'=[[#'(i_StartParamPos+7):i_Param_f'*SIN['sL_LocParamFirstRotAxis']] + [#'(i_StartParamPos+8)'*COS['sL_LocParamFirstRotAxis']]]'} ;Z
+      iL_LocDeltaX=(i_StartParamPos+6)
+      iL_LocDeltaY=(i_StartParamPos+9)
+      iL_LocDeltaZ=(i_StartParamPos+10)
+      if b_CalcMacroTest
+         nL_LocDeltaX=nL_NewPosPlusMRZPX
+         nL_LocDeltaY=((nL_NewPosPlusMRZPY*cos(first_axis_angle))-(nL_NewPosPlusMRZPZ*sin(first_axis_angle)))
+         nL_LocDeltaZ=((nL_NewPosPlusMRZPY*sin(first_axis_angle))+(nL_NewPosPlusMRZPZ*cos(first_axis_angle)))
+      endif
+   endif
+
+   ;Around Y - ZX
+   if s_FirstRotAbout eq 'Y'
+      {nb,'#'(i_StartParamPos+9):i_Param_f'=[[#'(i_StartParamPos+8):i_Param_f'*COS['sL_LocParamFirstRotAxis']] - [#'(i_StartParamPos+6)'*SIN['sL_LocParamFirstRotAxis']]]'} ;Z
+      {nb,'#'(i_StartParamPos+10):i_Param_f'=[[#'(i_StartParamPos+8):i_Param_f'*SIN['sL_LocParamFirstRotAxis']] + [#'(i_StartParamPos+6)'*COS['sL_LocParamFirstRotAxis']]]'} ;X
+      iL_LocDeltaX=(i_StartParamPos+10)
+      iL_LocDeltaY=(i_StartParamPos+7)
+      iL_LocDeltaZ=(i_StartParamPos+9)
+      if b_CalcMacroTest
+         nL_LocDeltaY=nL_NewPosPlusMRZPY
+         nL_LocDeltaZ=((nL_NewPosPlusMRZPZ*cos(first_axis_angle))-(nL_NewPosPlusMRZPX*sin(first_axis_angle)))
+         nL_LocDeltaX=((nL_NewPosPlusMRZPZ*sin(first_axis_angle))+(nL_NewPosPlusMRZPX*cos(first_axis_angle)))
+      endif
+   endif
+
+   ;Around Z - XY
+   if s_FirstRotAbout eq 'Z'
+      {nb,'#'(i_StartParamPos+9):i_Param_f'=[[#'(i_StartParamPos+6):i_Param_f'*COS['sL_LocParamFirstRotAxis']] - [#'(i_StartParamPos+7)'*SIN['sL_LocParamFirstRotAxis']]]'} ;X
+      {nb,'#'(i_StartParamPos+10):i_Param_f'=[[#'(i_StartParamPos+6):i_Param_f'*SIN['sL_LocParamFirstRotAxis']] + [#'(i_StartParamPos+7)'*COS['sL_LocParamFirstRotAxis']]]'} ;Y
+      iL_LocDeltaX=(i_StartParamPos+9)
+      iL_LocDeltaY=(i_StartParamPos+10)
+      iL_LocDeltaZ=(i_StartParamPos+8)
+      if b_CalcMacroTest
+         nL_LocDeltaZ=nL_NewPosPlusMRZPZ
+         nL_LocDeltaX=((nL_NewPosPlusMRZPX*cos(first_axis_angle))-(nL_NewPosPlusMRZPY*sin(first_axis_angle)))
+         nL_LocDeltaY=((nL_NewPosPlusMRZPX*sin(first_axis_angle))+(nL_NewPosPlusMRZPY*cos(first_axis_angle)))
+      endif
+   endif
+
+   if b_CalcMacroTest
+      {nb';#'iL_LocDeltaX:i_Param_f' =['nL_LocDeltaX:numeric_def_f']'}
+      {nb';#'iL_LocDeltaY:i_Param_f' =['nL_LocDeltaY:numeric_def_f']'}
+      {nb';#'iL_LocDeltaZ:i_Param_f' =['nL_LocDeltaZ:numeric_def_f']'}
+   endif
+
+   if s_SecondRotAxisLetter ne ''
+      if b_CalcMacroTest
+         local numeric nL_LocDeltaXSecond nL_LocDeltaYSecond nL_LocDeltaZSecond
+      endif
+      {nb sA_Comment<<16>>}
+      ;Around X - YZ
+      if s_SecondRotAbout eq 'X'
+         {nb,'#'(i_StartParamPos+11):i_Param_f'=[[#'iL_LocDeltaY:i_Param_f'*COS['sL_LocParamSecondRotAxis']] - [#'iL_LocDeltaZ:i_Param_f'*SIN['sL_LocParamSecondRotAxis']]]'} ;Y
+         {nb,'#'(i_StartParamPos+12):i_Param_f'=[[#'iL_LocDeltaY:i_Param_f'*SIN['sL_LocParamSecondRotAxis']] + [#'iL_LocDeltaZ:i_Param_f'*COS['sL_LocParamSecondRotAxis']]]'} ;Z
+         iL_LocDeltaY=(i_StartParamPos+11)
+         iL_LocDeltaZ=(i_StartParamPos+12)
+         if b_CalcMacroTest
+            nL_LocDeltaYSecond=((nL_LocDeltaY*cos(second_axis_angle))-(nL_LocDeltaZ*sin(second_axis_angle)))
+            nL_LocDeltaZ=((nL_LocDeltaY*sin(second_axis_angle))+(nL_LocDeltaZ*cos(second_axis_angle)))
+            nL_LocDeltaY=nL_LocDeltaYSecond
+         endif
+      endif
+      ;Around Y - ZX
+      if s_SecondRotAbout eq 'Y'
+         {nb,'#'(i_StartParamPos+11):i_Param_f'=[[#'iL_LocDeltaZ:i_Param_f'*COS['sL_LocParamSecondRotAxis']] - [#'iL_LocDeltaX:i_Param_f'*SIN['sL_LocParamSecondRotAxis']]]'} ;Z
+         {nb,'#'(i_StartParamPos+12):i_Param_f'=[[#'iL_LocDeltaZ:i_Param_f'*SIN['sL_LocParamSecondRotAxis']] + [#'iL_LocDeltaX:i_Param_f'*COS['sL_LocParamSecondRotAxis']]]'} ;X
+         iL_LocDeltaX=(i_StartParamPos+12)
+         iL_LocDeltaZ=(i_StartParamPos+11)
+         if b_CalcMacroTest
+            nL_LocDeltaZSecond=((nL_LocDeltaZ*cos(second_axis_angle))-(nL_LocDeltaX*sin(second_axis_angle)))
+            nL_LocDeltaXSecond=((nL_LocDeltaZ*sin(second_axis_angle))+(nL_LocDeltaX*cos(second_axis_angle)))
+            nL_LocDeltaX=nL_LocDeltaXSecond
+            nL_LocDeltaZ=nL_LocDeltaZSecond       
+         endif
+      endif
+      ;Around Z - XY
+      if s_SecondRotAbout eq 'Z'
+         {nb,'#'(i_StartParamPos+11):i_Param_f'=[[#'iL_LocDeltaX:i_Param_f'*COS['sL_LocParamSecondRotAxis']] - [#'iL_LocDeltaY:i_Param_f'*SIN['sL_LocParamSecondRotAxis']]]'} ;X
+         {nb,'#'(i_StartParamPos+12):i_Param_f'=[[#'iL_LocDeltaX:i_Param_f'*SIN['sL_LocParamSecondRotAxis']] + [#'iL_LocDeltaY:i_Param_f'*COS['sL_LocParamSecondRotAxis']]]'} ;Y
+         iL_LocDeltaX=(i_StartParamPos+11)
+         iL_LocDeltaY=(i_StartParamPos+12)
+         if b_CalcMacroTest
+            nL_LocDeltaXSecond=((nL_LocDeltaX*cos(second_axis_angle))-(nL_LocDeltaY*sin(second_axis_angle)))
+            nL_LocDeltaY=((nL_LocDeltaX*sin(second_axis_angle))+(nL_LocDeltaY*cos(second_axis_angle)))
+            nL_LocDeltaX=nL_LocDeltaXSecond
+         endif
+      endif
+      if s_SecondRotAbout ne ''
+         if b_CalcMacroTest
+            {nb';#'iL_LocDeltaX:i_Param_f' =['nL_LocDeltaX:numeric_def_f']'}
+            {nb';#'iL_LocDeltaY:i_Param_f' =['nL_LocDeltaY:numeric_def_f']'}
+            {nb';#'iL_LocDeltaZ:i_Param_f' =['nL_LocDeltaZ:numeric_def_f']'}
+         endif
+      endif
+   endif
+
+   ;---
+
+   {nl sA_Comment<<17>>}
+   {nb,'#'(i_StartParamPos+13):i_Param_f'=[#'iL_LocDeltaX:i_Param_f' - #'(i_StartParamPos+6):i_Param_f']'} ; X
+   {nb,'#'(i_StartParamPos+14):i_Param_f'=[#'iL_LocDeltaY:i_Param_f' - #'(i_StartParamPos+7):i_Param_f']'} ; Y
+   {nb,'#'(i_StartParamPos+15):i_Param_f'=[#'iL_LocDeltaZ:i_Param_f' - #'(i_StartParamPos+8):i_Param_f']'} ; Z
+   
+   if b_CalcMacroTest
+      local numeric nL_NewPosDeltaX nL_NewPosDeltaY nL_NewPosDeltaZ
+      nL_NewPosDeltaX=(nL_LocDeltaX-nL_NewPosPlusMRZPX)
+      nL_NewPosDeltaY=(nL_LocDeltaY-nL_NewPosPlusMRZPY)
+      nL_NewPosDeltaZ=(nL_LocDeltaZ-nL_NewPosPlusMRZPZ)
+      {nb,';#'(i_StartParamPos+13):i_Param_f'=['nL_NewPosDeltaX:numeric_def_f']'} ; X
+      {nb,';#'(i_StartParamPos+14):i_Param_f'=['nL_NewPosDeltaY:numeric_def_f']'} ; Y
+      {nb,';#'(i_StartParamPos+15):i_Param_f'=['nL_NewPosDeltaZ:numeric_def_f']'} ; Z
+   endif
+
+   ;---
+
+   if i_CalcHomeSavedIn < 7 ;G54-G59
+      iL_HomeParamCalculation=(i_CalcHomeSavedIn*20+5200)
+   elseif i_MaxExtendedHomeNr eq 48  ;G54.1 P1-P48
+      iL_HomeParamCalculation=(i_CalcHomeSavedIn*20+6980)
+   elseif i_MaxExtendedHomeNr eq 300 ;G54.1 P1-P300
+      iL_HomeParamCalculation=(i_CalcHomeSavedIn*20+13980)
+   endif
+
+   {nl sA_Comment<<18>>}
+   {nb,'#'(iL_HomeParamCalculation+1):i_Param_f'=[#'(i_StartParamPos+13):i_Param_f' + #'(i_StartParamPos+1):i_Param_f']'} ; X
+   {nb,'#'(iL_HomeParamCalculation+2):i_Param_f'=[#'(i_StartParamPos+14):i_Param_f' + #'(i_StartParamPos+2):i_Param_f']'} ; Y
+   {nb,'#'(iL_HomeParamCalculation+3):i_Param_f'=[#'(i_StartParamPos+15):i_Param_f' + #'(i_StartParamPos+3):i_Param_f']'} ; Z
+   {nb,'#'(iL_HomeParamCalculation+4):i_Param_f'=[#'(i_StartParamPos+4):i_Param_f']'} ;first_axis_angle
+   
+   if s_SecondRotAxisLetter ne ''
+      {nb,'#'(iL_HomeParamCalculation+5):i_Param_f'=[#'(i_StartParamPos+5):i_Param_f']'} ;second_axis_angle
+   endif
+
+   if b_CalcMacroTest
+      {nb,';#'(iL_HomeParamCalculation+1):i_Param_f'=['(nL_NewPosDeltaX+(nL_MacPosX + shift_x)):numeric_def_f']'} ; X
+      {nb,';#'(iL_HomeParamCalculation+2):i_Param_f'=['(nL_NewPosDeltaY+(nL_MacPosY + shift_y)):numeric_def_f']'} ; Y
+      {nb,';#'(iL_HomeParamCalculation+3):i_Param_f'=['(nL_NewPosDeltaZ+(nL_MacPosZ + shift_z)):numeric_def_f']'} ; Z
+      {nb,';#'(iL_HomeParamCalculation+4):i_Param_f'=['(nL_MacPosFirstAngle):numeric_def_f']'} ;first_axis_angle
+      if s_SecondRotAxisLetter ne ''
+         {nb,';#'(iL_HomeParamCalculation+5):i_Param_f'=['(nL_MacPosSecondAngle):numeric_def_f']'} ;second_axis_angle
+      endif
+   endif
+
+   b_PrintHomeNr = true
+   
+   if i_CalcHomeSavedIn < 7  ;G54-G59
+      call @usr_PrintHomeNumber(i_CalcHomeSavedIn)
+   else
+      call @usr_PrintHomeNumber((i_CalcHomeSavedIn+6))
+   endif
+
+   {sA_Comment<<19>>}
+   skipline=false
+   
+   if i_CalcHomeSavedIn < 7  ;G54-G59
+      call @usr_PrintHomeNumber(i_CalcHomeSavedIn)
+   else
+      call @usr_PrintHomeNumber((i_CalcHomeSavedIn+6))
+   endif
+
+   {sA_Comment<<20>>}
+   {nb,(99):mcode_f}
+   {nl,'%'}
+   {nl,'!!close file='s_RealPartPath,s_Prefix,i_CalcMacroNumber:s_ProgramNr_f'!!'}
+   
+   if i_MRZPointSavedIn > i_MaxExtendedHomeNr
+      call @usr_PrintMessage((23),('meldung+abbruch'),('@usr_NewCalcHomeData'))
+   endif
+
+   if i_CalcHomeSavedIn > i_MaxExtendedHomeNr
+      call @usr_PrintMessage((24),('meldung+abbruch'),('@usr_NewCalcHomeData'))
+   endif
+
+   b_PrintHomeNr = false
+
+endp
+
+;-------------------
+
+@usr_Clamping
+
+   if !b_ClampingActiv and b_WithClamping
+      if i_ClampFirstAndSecond ne 0
+         {nb,i_ClampFirstAndSecond:mcode_f sA_Comment<<53>>}
+      else
+         if i_ClampFirstRotAxis ne 0
+            {nb,i_ClampFirstRotAxis:mcode_f sA_Comment<<10>>} ;clamping-ON first_axis_angle
+         endif
+         if i_ClampSecondRotAxis ne 0
+            {nb,i_ClampSecondRotAxis:mcode_f sA_Comment<<11>>} ;clamping-ON second_axis_angle
+         endif
+      endif
+      b_ClampingActiv = true
+   endif
+
+endp
+
+;-------------------
+
+@usr_UnClamping
+
+   if b_ClampingActiv and b_WithClamping
+      if i_UnClampFirstAndSecond ne 0
+         {nb,i_UnClampFirstAndSecond:mcode_f sA_Comment<<54>>}
+      else
+         if i_UnClampFirstRotAxis ne 0
+            {nb,i_UnClampFirstRotAxis:mcode_f sA_Comment<<8>>} ;clamping-ON first_axis_angle (M-Code of boht axes must be printed)
+         endif
+         if i_UnClampSecondRotAxis ne 0
+            {nb,i_UnClampSecondRotAxis:mcode_f sA_Comment<<9>>} ;clamping-ON first_axis_angle (M-Code of boht axes must be printed)
+         endif
+      endif
+      b_ClampingActiv = false
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |08-Drill
+;-------------------
+
+@drill_plane
+
+   if !rotate_plane_off
+      if !b_G49WithZ
+         if i_HOffset eq -1
+            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill_plane'))
+         else
+            {nb (43):gcode_f i_HOffset:h_offset_f}
+            b_G49Active=false
+         endif
+      endif
+
+      call @usr_TiltCycle(xhpos,yhpos,zhpos,euler_angle_z,euler_angle_x,euler_angle_dev_z,first_axis_angle,second_axis_angle,i_HomeGcode)
+      
+      if b_ClampingActiv
+         call @usr_Clamping
+      endif
+
+      ; {nb (0):gcode_f first_axis_angle second_axis_angle}
+      {nb (0):gcode_f first_axis_angle:apos_f second_axis_angle:bpos_f}
+      {nb (0):gcode_f (0):xlpos_f (0):ylpos_f}
+      b_FirstRapidMove=true
+      b_DrillPlane5X=false
+      n_SecondAxisAngleSave=second_axis_angle
+      n_FirstAxisAngleSave=first_axis_angle
+   else
+      if s_TiltCycle ne 'SC'
+         b_PrintAllAxes=true   ; Wrong movements after tilting
+         if b_TiltCycleActived
+            {nb,(69):gcode_f sA_Comment<<7>>} ;reset of the tilt cycle
+         endif
+      else
+         call @usr_TiltCycle((0),(0),(0),(0),(0),(0),(0),(0),i_HomeGcode)
+      endif
+
+      b_TiltCycleActived=false
+      {nb (49):gcode_f}
+      b_G49Active=true
+
+      if b_G49WithZ
+         skipline=false
+         call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+      else
+         if i_TCPType eq 1
+            {nb (43.4):gcode_f}
+         else
+            {nb (43.5):gcode_f}
+         endif
+         if i_HOffset eq -1
+            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill_plane'))
+         else
+            {i_HOffset:h_offset_f sA_Comment<<3>>}
+         endif
+         if b_ClampingActiv
+            call @usr_UnClamping
+         endif
+         b_G49Active=false
+      endif
+      b_DrillPlane5X=true
+   endif
+
+endp
+
+;-------------------
+
+@drill
+
+   local string sL_DwellTimeDrill
+   sL_DwellTimeDrill='<P>5.3(p)< >' ;P==>watining in seconds
+   
+   if drill_cycle_name eq 'G84_G74'
+      if tool_type ne tap_mill
+         call @usr_PrintMessage((13),('meldung+abbruch'),('@drill'))
+      endif
+   endif
+
+   if !x5_job
+      n_DrillUpperZ = drill_upper_zl
+      n_DrillLowerZ = drill_lower_zl
+      if rot_axis_type eq axis4_radial
+         call @move_5x
+      else
+         call @rapid_move
+      endif
+   else
+      n_DrillUpperZ = 0
+      n_DrillLowerZ = (drill_depth*-1)
+      if b_G49WithZ
+         if i_HOffset eq -1
+            call @usr_PrintMessage((1),('meldung+abbruch'),('@drill'))
+         else
+            {nb,(43):gcode_f,i_HOffset:h_offset_f (0):zhpos_f}
+            b_G49Active = false
+         endif
+      else
+         {nb,(0):gcode_f,(0):zhpos_f}
+      endif
+      if s_TiltCycle eq 'SC' and b_FirstRapidMove
+         call @usr_coolingOn
+         b_FirstRapidMove = false
+      endif
+   endif
+
+   if drill_cycle_name eq 'G81'
+      gcode = 81
+   endif
+
+   if drill_cycle_name eq 'G82'
+      gcode = 82
+   endif
+
+   if drill_cycle_name eq 'G83'
+      gcode = 83
+   endif
+
+   if drill_cycle_name eq 'G73'
+      gcode = 73
+   endif
+
+   if drill_cycle_name eq 'G84_G74'
+      if spin_direction eq CW
+         gcode = 84
+      else
+         gcode = 74
+      endif
+   endif
+
+   if drill_cycle_name eq 'G85'
+      gcode = 85
+   endif
+
+   if drill_cycle_name eq 'G86'
+      gcode = 86
+   endif
+
+   if drill_cycle_name eq 'G87'
+      gcode = 87
+   endif
+
+   if drill_cycle_name eq 'G88'
+      gcode = 88
+   endif
+
+   if drill_cycle_name eq 'G89'
+      gcode = 89
+   endif
+
+   if drill_cycle_name eq 'G84_G74'
+      if b_TappingWithG95
+         {nb,(95):gcode_f s_FirstComment'VORSCHUB/UMDREHUNG's_LastComment}
+      endif
+      
+      if b_TappingWithM29
+         call @usr_PrintMessage((15),('meldung+abbruch'),('@drill'))
+         {nb,(29):mcode_f,spin}
+      else
+         {nb,(80):mcode_f,spin}
+      endif
+         
+      if !b_TappingWithG95 and !b_TappingWithM29
+         {(spin*tool_drill_lead):feed_f}
+      endif
+   endif
+
+   {nb,(98):gcode_f,gcode,n_DrillLowerZ:zlpos_f'R'n_DrillUpperZ,' '}
+
+   if (drill_cycle_name eq 'G83' or drill_cycle_name eq 'G73') and down_step ne 0
+      {'Q'down_step,' '}
+   endif
+
+   if nDelayVMID ne 0
+      {nDelayVMID:sL_DwellTimeDrill}
+   endif
+
+   if drill_cycle_name ne 'G84_G74'
+      if b_ParametricFeed
+         call @usr_ParametricFeedPrint
+      else
+         {feed}
+      endif
+   endif
+
+   if drill_cycle_name eq 'G84_G74'
+      if b_TappingWithG95
+         {(tool_drill_lead):feed_f}
+      else
+         {(spin*tool_drill_lead):feed_f}
+      endif
+   endif
+   
+endp
+
+;-------------------
+
+@drill_point
+
+   gcode=0
+
+   if !x5_job
+      if !first_drill
+         {nl'    ',[xlpos],[ylpos],[zlpos]}
+         if rot_axis_type ne axis4_none
+            {[apos]}
+         endif
+      endif
+   else
+      {nl'    '(0):xlpos_f (0):ylpos_f (0):zlpos_f}
+   endif
+
+endp
+
+;-------------------
+
+@drill4x_pnt
+
+   call @usr_PrintMessage((7),('meldung+abbruch'),('@drill'))
+   gcode=0
+   {nb gcode[xopos:xlpos_f],[yopos:ylpos_f],[zopos:zlpos_f],(apos+angle):apos_f}
+
+endp
+
+;-------------------
+
+@end_drill
+
+   {nb,(80):gcode_f}
+
+   if b_TappingWithG95 and drill_cycle_name eq 'G84_G74' ;TPL 2.01
+      {nb,(94):gcode_f s_FirstComment'VORSCHUB MM/UMDREHUNG's_LastComment}
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |13-Job
+;-------------------
+
+@start_of_job
+
+   if i_SubmaschineIDSave ne submachine_ID and !b_SubMachineChange
+      call @usr_PrintMessage((10),('meldung+abbruch'),('@start_of_job'))
+   endif
+
+   if b_HomeNumberAtEachJob
+      call @home_number
+   endif
+
+   call @usr_InitPrintComments
+
+   if position ne 1 and b_Is3XMachine ;because of parts from 5x-VMID
+      call @usr_PrintMessage((9),('meldung+abbruch'),('@start_of_job'))
+   endif
+
+   if b_LoopTransform and !bA_ProcInLoop<<label>>
+      call @usr_PrintMessage((11),('meldung+abbruch'),('@start_of_job'))
+   endif
+
+   if b_IsHeadHead and rot_axis_type ne axis4_none
+      call @usr_PrintMessage((8),('meldung+abbruch'),('@start_of_job'))
+   endif
+
+   call @usr_InitPost ;because of different format of coord. at x5_job
+   call @usr_ToolOffset ;@compensation_3d comes before @start_of_job at x5_job
+
+   if HSM_job eq true or left(job_type,3) eq '3-d' or left(job_type,3) eq 'hss' or left(job_type,6) eq 'spiral' or x5_job eq true or job_type eq 'mw_drill_5x' or left(job_type,2) eq '3x' or left(job_type,3) eq 'mw_' or bVMID_MI_HSCbyAllJobs; or tool_type eq thread_mill
+      if job_type ne 'drill' and b_SmoothinAvailable
+         if sVMID_MO_HSCoption ne ''
+            {nb,sVMID_MO_HSCoption}
+            if sVMID_MI_HSCaditional ne ''
+               {' 'sVMID_MI_HSCaditional}
+            else
+               call @usr_PrintMessage((20),('meldung'),('@start_of_job'))
+            endif
+            {' 's_FirstComment'HSC EIN's_LastComment}
+            b_HighSpeed = true
+         else
+            call @usr_PrintMessage((19),('meldung+abbruch'),('@start_of_job'))
+         endif
+      else
+         
+      endif
+   endif
+
+   if job_type eq 'drill'
+      call @usr_ResetHSC((true))
+   endif
+
+   if b_Main
+      b_InsideJob = true
+      bA_InsideJobFourtAxis<<index_job>> = true ;for @fourth_axis
+      {nl}
+
+      if !b_Is3XMachine
+         call @usr_RotateToPlane
+      endif
+
+      if b_FineToolCorr and (!bA_FineToolCorr<<tool_number>> or bVMID_MI_FineToolCorr)
+         {nb,'#560 = 0 ' s_FirstComment 'VERSCHLEISS LAENGE' s_LastComment}
+         {nb,'#561 = 0 ' s_FirstComment 'VERSCHLEISS RADIUS' s_LastComment}
+
+         if !b_ToolWearWithG10
+            {nb,'#[10000 + #4120] = #560'}
+            {nb,'#[12000 + #4120] = #561'}
+         else
+            if i_ToolWearCompDiam eq 10 or i_ToolWearCompDiam eq 11 ;system A/system B
+               call @usr_PrintMessage((6),('meldung+abbruch'),('@start_of_job'))
+            elseif i_ToolWearCompDiam eq 13 ;system C
+               {nb,(10):gcode_f'L11 P'tool_number:integer_def_f' R#560'} ;Verschleiss L�nge
+               {nb,(10):gcode_f'L13 P'tool_number:integer_def_f' R[#561*2]'} ;Verschleiss Durchmesser
+            endif
+         endif
+
+         bA_FineToolCorr<<tool_number>> = true
+         i_SaveToolNumber = tool_number
+         {nl}
+      endif
+
+      {nb,s_FirstComment'JOB NR:'index_job}
+      call @usr_ReplaceString(job_name)
+      {'| JOB NAME: 'upper(job_name),s_LastComment}
+      
+      if msg ne  ''
+         call @usr_ReplaceString(msg)
+         call @usr_MultiLineMessage(msg,(1),(1),(false))
+      endif
+   else ;!b_Main
+      iGeometryLabelNr = iA_ProgramNumberSave<<label>>+999 ;If the customer want to use this array of sub_procedures
+   endif
+
+   call @usr_ParametricFeedDef
+
+   if sVMID_MI_UserInputStart ne ''
+      {nb,sVMID_MI_UserInputStart}
+      sVMID_MI_UserInputStart = ''
+   endif
+
+   if rot_axis_type ne axis4_none or X5_job
+      call @usr_UnClamping
+   endif
+
+   if bVMID_MI_G61_On
+      {nb,'G61'}
+   endif
+
+   if b_ChangeRef
+      b_ChangeRef = false
+      call @usr_ChangeRef
+   endif
+
+   if b_Mirror
+      b_Mirror = false
+      call @usr_Mirror
+   endif
+
+   if b_Rotate
+      b_Rotate = false
+      call @usr_Rotate
+   endif
+
+   ;Additional Offset of the tool geometry (L,R) - active only with G41/G42
+   if compensation
+      if is_chamfer
+         {nb,(10):gcode_f'L'i_ToolWearCompDiam'P'tostr(tool_number:'5.0(n)'),' R'((cutting_diameter-tool_diameter)/2),sA_Comment<<22>>}
+         b_ToolCorrG10 = true
+      endif
+   endif
+
+   b_FirstRapidMove = true
+
+   if rot_axis_coord eq axis4_polar and rot_axis_type ne axis4_none
+      b_Is5xJob = true
+   endif
+
+   b_InsideJob<<index_job>> = true ;for tranformation (@fourth_axis)
+   b_TurretINRefPos = false
+
+endp
+
+;-------------------
+
+@end_of_job
+
+   if bVMID_MI_G61_On ne 0
+      {nb,'G64'}
+   endif
+
+   if b_ToolCorrG10
+      if is_chamfer
+         {nb,(10):gcode_f'L'i_ToolWearCompDiam'P'tostr(tool_number:'5.0(n)'),' R0',sA_Comment<<23>>}
+         cutting_diameter=0
+      endif
+   endif
+
+   b_ToolCorrG10 = false
+
+   if bVMID_MI_PRGStop
+      call @usr_program_stop
+   endif
+
+   if !b_LoopTransform ; in order to print values from @change_ref_point
+      b_InsideJob = false
+   endif
+
+   if !b_Is3XMachine and (x5_job or b_Is5xJob)
+      if bVMID_MO_G93
+         {nb (94):gcode_f tool_feed:feed_f}
+      endif
+
+      call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+
+      {nb(49):gcode_f}
+
+      if b_G49WithZ
+         {sA_Comment<<21>>}
+      endif
+
+      b_G49Active = true
+      {nb (28):gcode_f (91):gcode_f (0):apos_f}
+      {nb (90):gcode_f}
+      n_FirstAxisAngleSave = 0
+      n_SecondAxisAngleSave = bpos
+      i_PartHomeSave = 0 ;because of next index Job in the same MAC-Position
+   endif
+
+   if sVMID_MI_UserInputEnd ne ''
+      {nb,sVMID_MI_UserInputEnd}
+      sVMID_MI_UserInputEnd = ''
+   endif
+
+   if rot_axis_type ne axis4_none or X5_job
+      call @usr_Clamping
+   endif
+
+   i_SubmaschineIDSave = submachine_ID
+   b_Is5xJob = false
+   b_ChangeTool = false
+   b_InsideJob = false
+
+endp
+
+;-------------------
+
+@usr_ParametricFeedDef
+
+   if b_ParametricFeed
+      if left(job_type,6) ne 'spiral' and job_type ne 'tool_box'
+         if instr(job_type,'drill') eq 0
+            if HSM_job
+               {nb,'#'(i_StartParamFeed)'='feed_rapid:ParametricFeed_f,sA_Comment<<24>>}
+               {nb,'#'(i_StartParamFeed+1)'='feed_rate:ParametricFeed_f,sA_Comment<<25>>}
+               {nb,'#'(i_StartParamFeed+2)'='feed_ramp_down:ParametricFeed_f,sA_Comment<<26>>}
+               {nb,'#'(i_StartParamFeed+3)'='feed_ramp_up:ParametricFeed_f,sA_Comment<<27>>}
+            else
+               if X5_job or left(job_type,3) eq 'hss'
+                  {nb,'#'(i_StartParamFeed+1)'='feed_rate:ParametricFeed_f,sA_Comment<<25>>}
+                  {nb,'#'(i_StartParamFeed+2)'='z_feed:ParametricFeed_f,sA_Comment<<28>>}
+                  {nb,'#'(i_StartParamFeed+3)'='finish_feed:ParametricFeed_f,sA_Comment<<29>>}
+                  n_SaveZFeed=z_feed
+               else
+                  if job_type eq 'face_milling'  ;Planfraesen
+                     {nb,'#'(i_StartParamFeed)'='feed_link:ParametricFeed_f,sA_Comment<<30>>}
+                  endif
+                  {nb,'#'(i_StartParamFeed+1)'='feed_rate:ParametricFeed_f,sA_Comment<<25>>}
+                  {nb,'#'(i_StartParamFeed+2)'='z_feed:ParametricFeed_f,sA_Comment<<28>>}
+                  {nb,'#'(i_StartParamFeed+4)'='finish_feed:ParametricFeed_f,sA_Comment<<50>>}
+                  {nb,'#'(i_StartParamFeed+5)'='(finish_feed*feed_lead_in_percent/100):ParametricFeed_f,sA_Comment<<51>>}
+                  {nb,'#'(i_StartParamFeed+6)'='(finish_feed*feed_lead_out_percent/100):ParametricFeed_f,sA_Comment<<52>>}
+               endif
+            endif
+         else
+            {nb,'#'(i_StartParamFeed+7)'='z_feed:ParametricFeed_f,sA_Comment<<31>>}
+         endif
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@usr_ParametricFeedPrint
+
+   if change(feed) or s_FeedTypeSave ne feed_type
+      if instr(job_type,'drill') eq 0
+         if HSM_job
+            if feed_type eq 'feed_rate'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed+1):'5.3(n)')
+            endif
+            if feed_type eq 'ramp_down_feed'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed+2):'5.3(n)')
+            endif
+            if feed_type eq 'ramp_up_feed'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed+3):'5.3(n)')
+            endif
+            if feed_type eq 'feed_rapid'
+               s_ParaFeedValue='#'+tostr((i_StartParamFeed):'5.3(n)')
+            endif
+         else
+            if X5_job or left(job_type,3) eq 'hss' ; feed_type always feed_rate
+               if feed eq n_SaveZFeed ;z_feed  ; (because of bug in SC2008 R12 and SC2009)
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+2):'5.3(n)')
+               else
+                  if feed eq finish_feed
+                     s_ParaFeedValue='#'+tostr((i_StartParamFeed+3):'5.3(n)')
+                  else
+                     s_ParaFeedValue='#'+tostr((i_StartParamFeed+1):'5.3(n)')
+                  endif
+               endif
+            else
+               if feed_type eq 'z_feed' or feed_type eq 'z_feed_safety'
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+2):'5.3(n)')
+               elseif feed_type eq 'feed_link'  ;job Planfraesen
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed):'5.3(n)')
+               elseif feed eq finish_feed
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+4):'5.3(n)')
+               elseif feed_type eq 'feed_finish_lead_in'
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+5):'5.3(n)')
+               elseif feed_type eq 'feed_finish_lead_out'
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+6):'5.3(n)')
+               else ;feed_rate
+                  s_ParaFeedValue='#'+tostr((i_StartParamFeed+1):'5.3(n)')
+               endif
+            endif
+         endif
+      else
+         s_ParaFeedValue='#'+tostr((i_StartParamFeed+7):'5.3(n)')
+      endif
+      {'F's_ParaFeedValue}
+   endif
+
+   s_FeedTypeSave=feed_type
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |09-MCO
+;-------------------
+
+@mco_cycle
+
+   if MCO_CycleName eq 'mco_ToolBreak'
+      b_CallFromMCO = true
+      call @tool_breakage
+   endif
+
+   if MCO_CycleName eq 'mco_RetreatToToolStart'
+      if bVMID_MCO_RetractToToolStartLevel
+         b_RetreatToToolZLevel = true
+      else
+         b_RetreatToToolZLevel = false
+      endif
+   endif 
+
+endp
+
+;-------------------
+
+@start_mach_ctrl
+
+   call @usr_ReplaceString(machine_control_name)
+   {nb,'(' upper(machine_control_name)')'}
+
+endp
+
+;-------------------
+
+@end_mach_ctrl
+
+   if b_G53
+      call @home_number
+      b_G53 = false
+   endif
+
+   b_MCOJob = false
+   b_InsideJob = false
+
+endp
+
+;-------------------
+
+@move_object
+
+   local numeric nL_PosX nL_PosY nL_PosZ nL_PosFirstRotary nL_PosSecondRotary
+
+   if MCO_CoordSysType eq 1 ;machine coordinate system
+      gcode=53
+      {nb,gcode}
+      nL_PosX=move_axis_x
+      nL_PosY=move_axis_y
+      nL_PosZ=move_axis_z
+      nL_PosFirstRotary=move_axis_a
+      nL_PosSecondRotary=move_axis_b
+      b_G53=false  ;G53 is not modal
+   else                    ;part coordinate system
+      {nb}
+      nL_PosX=xh_move
+      nL_PosY=yh_move
+      nL_PosZ=zh_move
+      nL_PosFirstRotary=ah_move
+      nL_PosSecondRotary=bh_move
+   endif
+
+   change(nL_PosX)=userDef_x
+   change(nL_PosY)=userDef_y
+   change(nL_PosZ)=userDef_z
+   change(feed_move)=userDef_f
+
+   if is_rapid_move
+      gcode=0
+   else
+      gcode=1
+   endif
+
+   {gcode,[nL_PosX:xlpos_f],[nL_PosY:ylpos_f],[nL_PosZ:zlpos_f]}
+
+   if !is_rapid_move
+      {[feed_move:feed_f]}
+   endif
+
+   if change(nL_PosFirstRotary) or change(nL_PosSecondRotary)
+      i_PartHomeSave  =0
+   endif
+
+   b_InsideJob=true
+   b_TurretINRefPos=false
+;   b_MCOJob=true ;this should be correct already from software
+
+endp
+
+;------------------
+
+@cool_flood
+
+   call @usr_MCONewLine
+   local integer iCoolant1 iCoolant2 iCoolant3
+   if ActionName eq 'Maschine'
+      if i_MachFloodCoolantOn eq 0
+         if i_MachFloodIvalCoolantOn eq 0
+            iCoolant1=i_MachHpFloodCoolantOn
+            iCoolant2=i_MachLpFloodCoolantOn
+            iCoolant3=i_MachHpFloodCoolantOff
+         else
+            if flood_coolant_val ne 0
+               iCoolant3=i_MachFloodIvalCoolantOn
+               iCoolant2=i_MachFloodIvalCoolantOff
+            else
+               iCoolant2=i_MachFloodIvalCoolantOff
+            endif
+         endif
+      else
+         iCoolant1=i_MachFloodCoolantOn
+         iCoolant2=i_MachFloodCoolantOff
+      endif
+   else
+      if i_FloodCoolantOn eq 0
+         if i_FloodIvalCoolantOn eq 0
+            iCoolant1=i_HpFloodCoolantOn
+            iCoolant2=i_LpFloodCoolantOn
+            iCoolant3=i_HpFloodCoolantOff ; i_LpFloodCoolantOff
+         else
+            if flood_coolant_val ne 0
+               iCoolant3=i_FloodIvalCoolantOn ;flood_coolant_val
+               iCoolant2=i_FloodIvalCoolantOff
+            else
+               iCoolant2=i_FloodIvalCoolantOff
+            endif
+         endif
+      else
+         iCoolant1=i_FloodCoolantOn
+         iCoolant2=i_FloodCoolantOff
+      endif
+   endif
+   if flood_coolant eq 1
+      {iCoolant1:mcode_f}
+   elseif flood_coolant eq 2
+      {iCoolant2:mcode_f}
+   else
+      {iCoolant3:mcode_f}
+      if flood_coolant_val ne 0
+         {flood_coolant_val}
+      endif
+   endif
+   flood_coolant_val=0 ;init
+
+endp
+
+;-------------------
+
+@act_air
+
+   call @usr_MCONewLine
+   if ActionName eq 'Maschine'
+      if air_blast_coolant eq 1
+         {i_MachActiveAirCoolantOn:mcode_f}
+      else
+         {i_MachActiveAirCoolantOff:mcode_f}
+      endif
+   else
+      if air_blast_coolant eq 1
+         {i_AirBlastCoolantOn:mcode_f}
+      else
+         {i_AirBlastCoolantOff:mcode_f}
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@cool_through_tool
+
+   call @usr_MCONewLine
+   local integer iCoolant1 iCoolant2 iCoolant3
+   if i_ThroughCoolantOn eq 0
+      if i_ThroughIvalCoolantOn eq 0
+         iCoolant1=i_HpThroughCoolantOn
+         iCoolant2=i_LpThroughCoolantOn
+         iCoolant3=i_HpThroughCoolantOff ; i_LpThroughCoolantOff
+      else
+         if Through_coolant_val ne 0
+            iCoolant3=i_ThroughIvalCoolantOn
+            iCoolant2=i_ThroughIvalCoolantOff
+         else
+            iCoolant2=i_ThroughIvalCoolantOff
+         endif
+      endif
+   else
+      iCoolant1=i_ThroughCoolantOn
+      iCoolant2=i_ThroughCoolantOff
+   endif
+
+   if Through_coolant eq 1
+      {iCoolant1:mcode_f}
+   elseif Through_coolant eq 2
+      {iCoolant2:mcode_f}
+   else
+      {iCoolant3:mcode_f}
+      if Through_coolant_val ne 0
+         {Through_coolant_val}
+      endif
+   endif
+   Through_coolant_val=0 ;init
+
+endp
+
+;-------------------
+
+@cool_mist
+
+   call @usr_MCONewLine
+   local integer iCoolant1 iCoolant2 iCoolant3
+   if ActionName eq 'Maschine'
+      if i_MachMistCoolantOn eq 0
+         if i_MachMistIvalCoolantOn eq 0
+            iCoolant1=i_MachHpMistCoolantOn
+            iCoolant2=i_MachLpMistCoolantOn
+            iCoolant3=i_MachHpMistCoolantOff ; i_MachLpMistCoolantOff
+         else
+            if mist_coolant_val ne 0
+               iCoolant3=i_MachMistIvalCoolantOn
+               iCoolant2=i_MachMistIvalCoolantOff
+            else
+               iCoolant2=i_MachMistIvalCoolantOff
+            endif
+         endif
+      else
+         iCoolant1=i_MachMistCoolantOn
+         iCoolant2=i_MachMistCoolantOff
+      endif
+   else
+      if i_MistCoolantOn eq 0
+         if i_MistIvalCoolantOn eq 0
+            iCoolant1=i_HpMistCoolantOn
+            iCoolant2=i_LpMistCoolantOn
+            iCoolant3=i_HpMistCoolantOff ; i_LpMistCoolantOff
+         else
+            if mist_coolant_val ne 0
+               iCoolant3=i_MistIvalCoolantOn
+               iCoolant2=i_MistIvalCoolantOff
+            else
+               iCoolant2=i_MistIvalCoolantOff
+            endif
+         endif
+      else
+         iCoolant1=i_MistCoolantOn
+         iCoolant2=i_MistCoolantOff
+      endif
+   endif
+
+   if mist_coolant eq 1
+      {iCoolant1:mcode_f}
+   elseif mist_coolant eq 2
+      {iCoolant2:mcode_f}
+   else
+      {iCoolant3:mcode_f}
+      if mist_coolant_val ne 0
+         {mist_coolant_val}
+      endif
+   endif
+   mist_coolant_val=0 ;init
+
+endp
+
+;-------------------
+
+@active_air_through_spindle
+
+   call @usr_MCONewLine
+   if air_blast_coolant eq 1 or air_blast_coolant eq 2
+      call @usr_coolingOn
+   else
+      call @usr_CoolingOff
+   endif
+
+endp
+
+;-------------------
+
+@machine_power
+
+   call @usr_MCONewLine
+   if MachinePower eq 1
+      {i_MachinePowerOn:mcode_f}
+   else
+      {i_MachinePowerOff:mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@machine_light
+
+   call @usr_MCONewLine
+   if MachineLight eq 1
+      {i_MachineLightOn:mcode_f}
+   else
+      {i_MachineLightOff:mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@oil_skimmer
+
+   call @usr_MCONewLine
+   if OilSkimmer eq 1
+      {i_OilSkimmerOn:mcode_f}
+   else
+      {i_OilSkimmerOff:mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@min_quan_loubr
+
+   call @usr_MCONewLine
+   minimum_quantity_L=min_quan_lubr
+   if min_quan_lubr eq 2
+      call @usr_coolingOn
+   else
+      call @usr_CoolingOff
+   endif
+
+endp
+
+;-------------------
+
+@door
+
+   call @usr_MCONewLine
+   if open_door eq 1
+      {i_OpenDoorOn:mcode_f s_FirstComment'TUER AUF's_LastComment}
+   else
+      {i_OpenDoorOff:mcode_f s_FirstComment'TUER ZU's_LastComment}
+   endif
+
+endp
+
+;-------------------
+
+@record_machining
+
+   call @usr_MCONewLine
+   if RecordMachining eq 1
+      {i_RecordMachiningOn:mcode_f}
+   endif
+   if RecordMachining eq 2
+      {i_RecordMachiningOff:mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@chip_convery
+
+   call @usr_MCONewLine
+   if chip_convey eq 1  ;CW
+      {i_ChipConveyCW:mcode_f}
+   elseif chip_convey eq 2   ;CCW
+      {i_ChipConveyCCW:mcode_f}
+   else ;Off
+      {i_ChipConveyOff:mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@bed_rinsing
+
+   call @usr_MCONewLine
+   mach_bed_rinsing_coolant=Bed_Rinsing
+   if Bed_Rinsing eq 1
+      call @usr_coolingOn
+   else
+     call @usr_CoolingOff
+   endif
+
+endp
+
+;-------------------
+
+@mist_collector
+
+   call @usr_MCONewLine
+   if MistCollector eq 1 ;MistCollector:on
+      {i_MistCollectorOn:mcode_f}
+   else                  ;off
+      {i_MistCoolantOff:mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@change_pallet
+
+   ;Must be defined in VMID ==> Table / Options / Pallet change and number of the pallett
+   call @usr_MCONewLine
+   ; {nb,(36):mcode_f} ;The new machines can have this option - the pallet will be changed only agtef confirmation on the machine
+   ; {nb,(98):mcode_f} ;M50 or M98 =Palettenwechsel
+   ;The new machines can have this option - older witout P-Parameter
+   ; {'P'PalletNum} ;P1=Palette 1 wechseln, P2=Palette 2 wechseln
+   {(910+PalletNum):mcode_f} ;P1=Palette 1 wechseln, P2=Palette 2 wechseln
+
+endp
+
+;-------------------
+
+@misc_act
+
+   if message ne ''
+      call @usr_ReplaceString(message)
+      {nb,'('upper(message)')'}
+   endif
+   if bVMID_MI_PRGStop
+      call @usr_program_stop
+      call @home_number
+   endif
+
+endp
+
+;-------------------
+
+@delay
+
+   {nb(4):gcode_f,delay_period:s_DwellTime,sA_Comment<<32>>} ;wait time in seconds (0.1-900s)
+
+endp
+
+;-------------------
+
+@dwell
+
+   if job_type ne 'deep drill'
+      call @usr_MCONewLine
+   endif
+   {nb,(4):gcode_f,dwell_time:s_DwellTime,sA_Comment<<32>>} ;wait time in seconds (0.1-900s)
+
+endp
+
+;-------------------
+
+@machine_opt_stop
+
+   if optional_stop eq 1
+      call @usr_MCONewLine
+      {(1):mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@machine_stop
+
+   if machine_stop eq 1
+      call @usr_MCONewLine
+      {(0):mcode_f}
+   endif
+
+endp
+
+;-------------------
+
+@mco_message
+
+   call @usr_MCONewLine
+   call @usr_ReplaceString(message)
+   {'('upper(message)')'}
+
+endp
+
+;-------------------
+
+@spin
+
+   call @usr_MCONewLine
+   if spin_direction ne 3
+      mcode=2+spin_direction
+      n_SpinSave=spin_rate
+      {spin_rate:spin_f}
+      b_SpinOn = true
+   else                      ;off
+      mcode=5
+      n_SpinSave=0
+      b_SpinOn = false
+   endif
+   {mcode}
+
+endp
+
+;-------------------
+
+@unload_tool
+
+   {nb(0):tool_number_f,(6):mcode_f}
+
+endp
+
+;-------------------
+
+@fixture_change
+
+   call @usr_ReplaceString(fixture_name)
+   {nb,'('upper(fixture_name)')'}
+   if fixture_message ne ''
+      call @usr_ReplaceString(fixture_message)
+      {nb,'('upper(fixture_message)')'}
+   endif
+
+endp
+
+;-------------------
+
+@usr_MCONewLine
+
+   if MCO_New_Line eq 1
+      {nb}
+   else
+      {' '}
+   endif
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |07-Coolant
+;-------------------
+
+@controlled_coolant
+
+   if coolant_control eq 1
+   b_CoolantOnCode=true
+      call @usr_coolingOn
+   else
+      call @usr_CoolingOff
+   endif
+   
+endp
+
+;-------------------
+
+@usr_coolingOn
+
+   ;0- no action
+   ;1- on
+   ;2- off
+   if flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_FloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_FloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if LP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_LpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_LpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if HP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_HpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_HpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if flood_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_FloodIvalCoolantOn:mcode_f}
+      if flood_coolant_val ne 0
+         {flood_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_FloodIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_ThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_ThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if HP_through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_HpThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_HpThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if LP_through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_LpThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_LpThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+
+   if through_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_ThroughIvalCoolantOn:mcode_f}
+      if through_coolant_val ne 0
+         {through_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_ThroughIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if air_blast_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_AirBlastCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_AirBlastCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if air_through_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_AirThroughCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_AirThroughCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if HP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_HpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_HpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if LP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_LpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_LpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mist_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MistIvalCoolantOn:mcode_f}
+      if mist_coolant_val ne 0
+         {mist_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MistIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if minimum_quantity_L eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MinQuanityLCoolantOn:mcode_f}
+      if minimum_quantity_L_val ne 0
+         {minimum_quantity_L_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MinQuanityLCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_HP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachHpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachHpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_LP_flood_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachLpFloodCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachLpFloodCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_flood_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachFloodIvalCoolantOn:mcode_f}
+      if mach_flood_coolant_val ne 0
+         {mach_flood_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachFloodIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_LP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachLpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachLpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_HP_mist_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachHpMistCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachHpMistCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_mist_ival_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachMistIvalCoolantOn:mcode_f}
+      if mach_mist_coolant_val ne 0
+         {mach_mist_coolant_val}
+      endif
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachMistIvalCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_active_air_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachActiveAirCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachActiveAirCoolantOff
+      b_CoolantOnCode=true
+   endif
+   
+   if mach_bed_rinsing_coolant eq 1
+      if !b_CoolantOnCode
+         skipline=false
+      endif
+      {nb,i_MachBedRinsingCoolantOn:mcode_f}
+      i_CoolantCount=(i_CoolantCount+1)
+      iA_CoolCodeSave<<i_CoolantCount>>=i_MachBedRinsingCoolantOff
+      b_CoolantOnCode=true
+   
+   endif
+
+   b_CoolantOnCode=false
+
+endp
+
+;-------------------
+
+@usr_CoolingOff
+
+   while i_CoolantCount > i_RemoveCount
+      i_RemoveCount=(i_RemoveCount+1)
+      iLookAheadCount=0
+      while i_CoolantCount > iLookAheadCount
+         iLookAheadCount=(iLookAheadCount+1)
+         if i_RemoveCount+iLookAheadCount <= 9999
+            if iA_CoolCodeSave<<i_RemoveCount>> eq iA_CoolCodeSave<<i_RemoveCount+iLookAheadCount>>
+               iA_CoolCodeSave<<i_RemoveCount+iLookAheadCount>>=0
+            endif
+         endif
+      endw
+      if iA_CoolCodeSave<<i_RemoveCount>> ne 0
+         {nb,iA_CoolCodeSave<<i_RemoveCount>>:mcode_f}
+      endif
+   endw
+   i_RemoveCount  = 0
+   i_CoolantCount = 0
+
+endp
+
+;-------------------
+;-------------------
+;#endregion
+;-------------------
+;#region |16-Other
+;-------------------
+
+@usr_PrintMessage(integer iL_MessageCounter, string sL_ToDo, string sL_CallRoutine)
+
+   local string sLA_Message<<61>> sL_RoutineMessage
+   sL_ToDo = upper(sL_ToDo)
+
+   if instr(sL_ToDo,'ABBRUCH') eq 0 and instr(sL_ToDo,'HINWEIS') eq 0  and instr(sL_ToDo,'MELDUNG') eq 0
+      sL_RoutineMessage = 'Im Fehlerroutinenaufruf #'+tostr(iL_MessageCounter)+' aus '+sL_CallRoutine+' ist der zweite Parameter falsch deklariert !'
+      print sL_RoutineMessage
+      abort
+   endif
+ 
+   sLA_Message<<1>>  = 'PP: H-Option f�r G43.x nicht aktiviert!' 
+   sLA_Message<<2>>  = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): 3D-Korrektur noch nicht getestet'
+   sLA_Message<<3>>  = 'Mehrfachaufspannung ist im Postprozessor nicht integriert. Bitte wenden Sie sich an den SolidCAM Support'
+   sLA_Message<<4>>  = 'PP: Die maximale Anzahl der NPV wurde erreicht. Bitte pr�fen Sie die maximale Teilnullpunktnummer'
+   sLA_Message<<5>>  = 'PP: R�ckzugsreihenfolge im PP nicht integriert, bitte pr�fen!'
+   sLA_Message<<6>>  = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Im System A/B kein Werkzeugverschleiss m�glich'
+   sLA_Message<<7>>  = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): @drill_4x_pnt noch nicht getestet!'
+   sLA_Message<<8>>  = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Abwicklung mit KopfKopf-Kinematik nicht m�glich'
+   sLA_Message<<9>>  = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Die NP-Positionen d�rfen bei 3X-Ausgabe nicht verwendet werden'
+   sLA_Message<<10>> = 'PP/CAM: Ein Wechsel der SUB-MASCHINE zwischen Jobs ist nicht erlaubt! Kann aber, wenn ben�tigt, mit "b_SubMachineChange" erlaubt werden.'
+   sLA_Message<<11>> = 'PP/VMID: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei Verwendung der Loops muss der VMID-Parameter "Unterprogramme" aktiviert werden'
+   sLA_Message<<12>> = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Fehlerhafter Adressraum angegeben f�r G28'
+   sLA_Message<<13>> = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei Bohrzyklus "'+drill_cycle_name+'" sollte ein Gewindebohrer benutzt werden'
+   sLA_Message<<14>> = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Unter Verschiedene Job-Parameter "3D-Kompensation" muss definiert werden'
+   sLA_Message<<15>> = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Das Format beim Zyklus G84/G74 mit M29 sollte �berpr�ft werden'
+   sLA_Message<<16>> = job_name+': Sie k�nnen optional auch unter Bewegungseingrenzung --> die 4.Achse ausschalten.'
+   sLA_Message<<17>> = 'PP: Error! Check VMID definition. Dummy device is wrong!'
+   sLA_Message<<18>> = 'PP: Schwenkreihenfole Kinematik-Achsen und 45-Grad Kinematik nicht m�glich, auf Benutzerdefiniert wechseln!'
+   sLA_Message<<19>> = 'PP/VMID: HSC-Option (G05.1 oder G121 in den Maschinenoptionen nicht gesetzt!'
+   sLA_Message<<20>> = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): HSC-Stufe (P1 oder M3 usw) in den Joboptionen nicht gesetzt!'
+   sLA_Message<<21>> = 'Die Bruchkontrolle nicht integriert. Bitte wenden Sie sich an den SolidCAM Support'
+   sLA_Message<<22>> = 'PP: Im Job: '+job_name+' (JobNr.:'+tostr(index_job:'5.0(n)')+'): Bei der Spiegelung um nur einer Achse ist die Kreisbewegung und die Korrekturrichtung umgekehrt'
+   sLA_Message<<23>> = 'Die maximale programmierbare Nullpunktnummer �berschritten. Bitte pr�fen Sie die GPP-Parameter "i_MRZPointSavedIn"'
+   sLA_Message<<24>> = 'Die maximale programmierbare Nullpunktnummer �berschritten. Bitte pr�fen Sie die GPP-Parameter "i_CalcHomeSavedIn"'
+   sLA_Message<<25>> = 'PP: Schwenkreihenfolge f�r G68.2 nicht zul�ssig'
+   
+   ;'\x09' = TAP
+   sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '\x0a' + ';.....Meldung Nr.'+tostr(iL_MessageCounter)+' Aufruf aus '+sL_CallRoutine
+
+   if instr(sL_ToDo,'MELDUNG') ne 0
+      if sL_CallRoutine ne ''
+         print sL_RoutineMessage
+      else
+         print sLA_Message<<iL_MessageCounter>>
+         sL_RoutineMessage = sLA_Message<<iL_MessageCounter>>
+      endif 
+      
+      if sL_CallRoutine ne ''
+         sL_RoutineMessage = sLA_Message<<iL_MessageCounter>> + '\x0a' + '; Meldung Nr.'+tostr(iL_MessageCounter)+' Aufruf aus '+sL_CallRoutine ;TPL 4.0
+      endif
+   endif
+   
+   if instr(sL_ToDo,'ABBRUCH') ne 0 or instr(sL_ToDo,'HINWEIS') ne 0
+      {nl,';--------------------------------------------'}
+      {nl,'; ' sL_RoutineMessage}
+      {nl,';--------------------------------------------'}
+      {nl}
+      if instr(sL_ToDo,'ABBRUCH') ne 0
+         {nl,';--- Abbruch der NC-Erzeugung ---'}
+         abort
+      endif
+   endif
+
+endp
+
+;-------------------
+
+@usr_InitPrintComments
+
+   local string  sL_StockFormat
+   sL_StockFormat = '5.1(p)'
+
+   if s_GPPLanguage eq 'de'
+      sA_Comment<<1>> = s_FirstComment+'SCHWENKZYKLUS RESET'+s_LastComment
+      sA_Comment<<2>> = s_FirstComment+'LAENGE KORREKTUR AUS'+s_LastComment
+      sA_Comment<<3>> = s_FirstComment+'TCPC ON'+s_LastComment
+      sA_Comment<<4>> = s_FirstComment+upper(home_user_name)+' POSITION '+tostr(position:'5.0(n)')+s_LastComment
+      sA_Comment<<5>> = s_FirstComment+'NP '+tostr(mac_number:'5.0(n)')+' POSITION '+tostr(position:'5.0(n)')+s_LastComment
+      sA_Comment<<6>> = s_FirstComment+'TRANSFORMATION 4.ACHSE'+s_LastComment
+      sA_Comment<<7>> = s_FirstComment+'SCHWENKZYKLUS RESET'+s_LastComment
+      sA_Comment<<8>> = s_FirstComment+'KLEMMUNG 4.ACHSE AUS'+s_LastComment
+      sA_Comment<<9>> = s_FirstComment+'KLEMMUNG 5.ACHSE AUS'+s_LastComment
+	   sA_Comment<<10>> = s_FirstComment+'KLEMMUNG 4.ACHSE EIN'+s_LastComment
+      sA_Comment<<11>> = s_FirstComment+'KLEMMUNG 5.ACHSE EIN'+s_LastComment
+      sA_Comment<<12>> = s_FirstComment+'SOLIDCAM NULLPUNKTBERECHNUNG'+s_LastComment
+      sA_Comment<<13>> = s_FirstComment+'VERSCHIEBUNG+NULLPUNKT'+s_LastComment
+      sA_Comment<<14>> = s_FirstComment+'NP POSITION-DREHACHSEN MITTE '
+      sA_Comment<<15>> = s_FirstComment+'BERECHNUNG DELTA '+s_FirstRotAxisLetter+s_LastComment
+      sA_Comment<<16>> = s_FirstComment+'BERECHNUNG DELTA '+s_SecondRotAxisLetter+s_LastComment
+      sA_Comment<<17>> = s_FirstComment+'NEUE POSITION-DELTA'+s_LastComment
+      sA_Comment<<18>> = s_FirstComment+'NEUE POSITION+DREHACHSEN MITTE'+s_LastComment
+      sA_Comment<<19>> = ' '+s_FirstComment+'BERECHNETE WERTE WURDEN IN NULLPUNKT '
+      sA_Comment<<20>> = ' GESPEICHERT'+s_LastComment
+      sA_Comment<<21>> = s_FirstComment+'TCPC OFF'+s_LastComment
+      sA_Comment<<22>> = ' '+s_FirstComment+'SCHNEIDENDER DURCHMESSER='+tostr(cutting_diameter)+s_LastComment
+      sA_Comment<<23>> = ' '+s_FirstComment+'SCHNEIDENDER DURCHMESSER='+tostr(tool_diameter)+s_LastComment
+      sA_Comment<<24>> = ' '+s_FirstComment+'EIL-VORSCHUB'+s_LastComment
+      sA_Comment<<25>> = ' '+s_FirstComment+'XY-VORSCHUB'+s_LastComment
+      sA_Comment<<26>> = ' '+s_FirstComment+'ABWAERTS-VORSCHUB'+s_LastComment
+      sA_Comment<<27>> = ' '+s_FirstComment+'AUFWAERTS-VORSCHUB'+s_LastComment
+      sA_Comment<<28>> = ' '+s_FirstComment+'Z-VORSCHUB'+s_LastComment
+      sA_Comment<<29>> = ' '+s_FirstComment+'RUECKZUG-VORSCHUB'+s_LastComment
+      sA_Comment<<30>> = ' '+s_FirstComment+'LINK-VORSCHUB'+s_LastComment
+      sA_Comment<<31>> = ' '+s_FirstComment+'VORSCHUB BOHREN'+s_LastComment
+      sA_Comment<<32>> = ' '+s_FirstComment+'VERWEILEN'+s_LastComment
+      sA_Comment<<33>> = s_FirstComment+'PROGRAMMSTOPP AUS EXTRA PARAMETER'+s_LastComment
+      ;@usr_HeadOfFile:
+         sA_Comment<<34>> = s_FirstComment+'CAM-TEILNAME: '+upper(part_name)+s_LastComment
+         sA_Comment<<35>> = s_FirstComment+'ERSTELLDATUM: '+date+s_LastComment
+         sA_Comment<<36>> = s_FirstComment+'ERSTELLT MIT SOLIDCAM'+s_LastComment
+         sA_Comment<<37>> = s_FirstComment+'PP-STAND '+s_Revision+s_LastComment
+         sA_Comment<<38>> = s_FirstComment+'ROHMASSE: X='+tostr(stock_x:sL_StockFormat)+' Y='+tostr(stock_y:sL_StockFormat)+' Z='+tostr(stock_z:sL_StockFormat)+s_LastComment
+         sA_Comment<<39>> = s_FirstComment+'VERWENDETE WERKZEUGE'+s_LastComment
+      ;@usr_HeadOfFile:
+      sA_Comment<<50>> = ' '+s_FirstComment+'SCHLICHT-VORSCHUB'+s_LastComment
+      sA_Comment<<51>> = ' '+s_FirstComment+'SCHLICHTVORSCHUB ANFAHREN'+s_LastComment
+      sA_Comment<<52>> = ' '+s_FirstComment+'SCHLICHTVORSCHUB ABFAHREN'+s_LastComment
+      sA_Comment<<53>> = s_FirstComment+'KLEMMUNG 4.+5.ACHSE EIN'+s_LastComment
+      sA_Comment<<54>> = s_FirstComment+'KLEMMUNG 4.+5.ACHSE AUS'+s_LastComment
+   elseif s_GPPLanguage eq 'eng'
+      sA_Comment<<1>> = s_FirstComment+'CANCEL TWP'+s_LastComment
+      sA_Comment<<2>> = s_FirstComment+'CANCEL LENGHT OFFSET'+s_LastComment
+      sA_Comment<<3>> = s_FirstComment+'TCPC ON'+s_LastComment
+      sA_Comment<<4>> = s_FirstComment+ upper(home_user_name)+' ON MAC '+tostr(mac_number)+s_LastComment
+      sA_Comment<<5>> = s_FirstComment+'POSITION '+tostr(position)+' ON MAC '+tostr(mac_number)+s_LastComment
+      sA_Comment<<6>> = s_FirstComment+'TRANSFORMATION 4TH AXIS'+s_LastComment
+      sA_Comment<<7>> = s_FirstComment+'PLANE RESET'+s_LastComment
+      sA_Comment<<8>> = s_FirstComment+'UNCLAMP 4TH AXIS'+s_LastComment
+      sA_Comment<<9>> = s_FirstComment+'UNCLAMP 5TH AXIS'+s_LastComment
+	   sA_Comment<<10>> = s_FirstComment+'CLAMP 4TH AXIS'+s_LastComment
+      sA_Comment<<11>> = s_FirstComment+'CLAMP 5TH AXIS'+s_LastComment
+      sA_Comment<<12>> = s_FirstComment+'SOLIDCAM WORK-OFFSET CALCULATION'+s_LastComment
+      sA_Comment<<13>> = s_FirstComment+'SHIFTS+POSITION'+s_LastComment
+      sA_Comment<<14>> = s_FirstComment+'NEW MAC POSITION - ROTATION AXES CENTER '
+      sA_Comment<<15>> = s_FirstComment+'CALCULATION DELTA '+s_FirstRotAxisLetter+s_LastComment
+      sA_Comment<<16>> = s_FirstComment+'CALCULATION DELTA '+s_SecondRotAxisLetter+s_LastComment
+      sA_Comment<<17>> = s_FirstComment+'NEW POSITION-DELTA'+s_LastComment
+      sA_Comment<<18>> = s_FirstComment+'NEW POSITION+ROTATION AXES CENTER'+s_LastComment
+      sA_Comment<<19>> = s_FirstComment+'CALCULATED VALUES ARE STORED IN WORK-OFFSET '
+      sA_Comment<<20>> = s_LastComment
+	   sA_Comment<<21>> = s_FirstComment+'TCPC OFF'+s_LastComment
+      sA_Comment<<22>> = s_FirstComment+'CUTTING DIAMETER='+tostr(cutting_diameter)+s_LastComment
+      sA_Comment<<23>> = s_FirstComment+'CUTTING DIAMETER='+tostr(tool_diameter)+s_LastComment
+      sA_Comment<<24>> = ' '+s_FirstComment+'RAPID-FEED'+s_LastComment
+      sA_Comment<<25>> = ' '+s_FirstComment+'XY-FEED'+s_LastComment
+      sA_Comment<<26>> = ' '+s_FirstComment+'RAMP DOWN-FEED'+s_LastComment
+      sA_Comment<<27>> = ' '+s_FirstComment+'RAMP UP-FEED'+s_LastComment
+      sA_Comment<<28>> = ' '+s_FirstComment+'Z-FEED'+s_LastComment
+      sA_Comment<<29>> = ' '+s_FirstComment+'FINISH-FEED'+s_LastComment
+      sA_Comment<<30>> = ' '+s_FirstComment+'LINK-FEED'+s_LastComment
+      sA_Comment<<31>> = ' '+s_FirstComment+'DRILL FEED'+s_LastComment
+      sA_Comment<<32>> = ' '+s_FirstComment+'DWELL'+s_LastComment
+      sA_Comment<<33>> = s_FirstComment+'PROGRAM STOP FROM EXTRA PARAMETER'+s_LastComment
+      ;@usr_HeadOfFile:
+         sA_Comment<<34>> = s_FirstComment+'CAMPART NAME: '+upper(part_name)+s_LastComment
+         sA_Comment<<35>> = s_FirstComment+'DATE: '+date+s_LastComment
+         sA_Comment<<36>> = s_FirstComment+'GENERATED WITH SOLIDCAM'+s_LastComment
+         sA_Comment<<37>> = s_FirstComment+'PP-VERSION '+s_Revision+s_LastComment
+         sA_Comment<<38>> = s_FirstComment+'STOCK SIZE: X='+tostr(stock_x:sL_StockFormat)+' Y='+tostr(stock_y:sL_StockFormat)+' Z='+tostr(stock_z:sL_StockFormat)+s_LastComment
+         sA_Comment<<39>> = s_FirstComment+'USED TOOLS'+s_LastComment
+      ;@usr_HeadOfFile:
+   endif
+
+endp
+
+;-------------------
+
+@usr_HeadOfFile
+
+   ; {nl,s_FirstComment'NC-CODE GENERIERT MIT SOLIDCAM's_LastComment}
+   ; {nl,s_FirstComment'PP-STAND     : ',s_Revision s_LastComment}
+
+   if s_MachineName ne ''
+      {nl,s_FirstComment'MASCHINE     : 'upper(s_MachineName)s_LastComment}
+   endif
+
+   if sVMID_MO_PartName ne ''
+      ; {nl,s_FirstComment'TEIL-NAME    : 'upper(part_name)s_LastComment}
+      {nl,s_FirstComment'TEIL-NAME    : 'upper(sVMID_MO_PartName)s_LastComment}
+   endif
+
+   if sVMID_MO_DrawNumber ne ''
+      {nl,s_FirstComment'Z.NR.        : 'upper(sVMID_MO_DrawNumber)s_LastComment}
+   endif
+
+   if sVMID_MO_DrawIndex ne ''
+      {nl,s_FirstComment'INDEX        : 'upper(sVMID_MO_DrawIndex)s_LastComment}
+   endif
+
+   if sVMID_MO_Programmer eq ''
+      sVMID_MO_Programmer = user_account
+   endif
+   {nl,s_FirstComment'PROGRAMMIERER: 'upper(sVMID_MO_Programmer)s_LastComment}
+   {nl,s_FirstComment'DATUM - ZEIT : 'date' - 'time s_LastComment}
+   {nl,s_FirstComment'PP-STAND     : ',s_Revision s_LastComment}
+   ; {nl,s_FirstComment'ROHTEIL      : X='stock_x, ' Y='stock_y, ' Z='stock_z s_LastComment}
+   {nl,s_FirstComment'----WERKZEUGE--------------------'s_LastComment}
+
+endp
+
+;-------------------
+
+@usr_PathOfCamPart
+
+   ; --> s_RealPartPath=same location for proc file and main g_file
+   local integer iL_RealGfileLength iL_FullGlength iL_WithoutSuffixLength
+   local string  sL_RealFileNameTemp
+   iL_RealGfileLength = strlen(g_file_name)
+   iL_FullGlength = strlen(full_g_file_name)
+   iL_FullGlength = iL_FullGlength-iL_RealGfileLength
+   s_RealPartPath=left(full_g_file_name,iL_FullGlength)
+   iL_WithoutSuffixLength = iL_RealGfileLength-4
+   sL_RealFileNameTemp = left(g_file_name,iL_WithoutSuffixLength)
+   
+   if !b_GCodeFileWithNr
+      s_RealFileName = left(sL_RealFileNameTemp,8)  ;Files should be named with an (8)-character filename and (3)-character extension
+   else
+      s_RealFileName = sL_RealFileNameTemp
+   endif
+
+endp
+
+;-------------------
+
+@usr_ReplaceString(string sL_ReplaceCharacter)
+
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','ae',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','oe',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','ue',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','ae',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','oe',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','ue',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','ss',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','e',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','a',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','e',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','e',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','a',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','a',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','a',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','e',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','E',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'~','_',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','2',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','3',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'(','_',0)
+   sL_ReplaceCharacter=replace(sL_ReplaceCharacter,')','_',0)
+   if b_FileOpenClose ;only for the file name
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','D',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'{','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'}','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'[','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,']','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'$','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'%','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','o',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'/','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'\\','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'|','I',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'�','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'"','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,',','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'-','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,' ','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,'.','_',0)
+      sL_ReplaceCharacter=replace(sL_ReplaceCharacter,';','_',0)
+   endif
+
+   b_FileOpenClose = false
+   sL_ReplaceCharacter = upper(sL_ReplaceCharacter)
+
+endp
+
+;-------------------
+
+@usr_FillSolidCamArray
+
+   ;fghijklmnopqrstuvwxyzabcde
+   sA_SolidArray<<1,1>>='a'
+   sA_SolidArray<<1,2>>='f'
+   sA_SolidArray<<2,1>>='b'
+   sA_SolidArray<<2,2>>='g'
+   sA_SolidArray<<3,1>>='c'
+   sA_SolidArray<<3,2>>='h'
+   sA_SolidArray<<4,1>>='d'
+   sA_SolidArray<<4,2>>='i'
+   sA_SolidArray<<5,1>>='e'
+   sA_SolidArray<<5,2>>='j'
+   sA_SolidArray<<6,1>>='f'
+   sA_SolidArray<<6,2>>='k'
+   sA_SolidArray<<7,1>>='g'
+   sA_SolidArray<<7,2>>='l'
+   sA_SolidArray<<8,1>>='h'
+   sA_SolidArray<<8,2>>='m'
+   sA_SolidArray<<9,1>>='i'
+   sA_SolidArray<<9,2>>='n'
+   sA_SolidArray<<10,1>>='j'
+   sA_SolidArray<<10,2>>='o'
+   sA_SolidArray<<11,1>>='k'
+   sA_SolidArray<<11,2>>='p'
+   sA_SolidArray<<12,1>>='l'
+   sA_SolidArray<<12,2>>='q'
+   sA_SolidArray<<13,1>>='m'
+   sA_SolidArray<<13,2>>='r'
+   sA_SolidArray<<14,1>>='n'
+   sA_SolidArray<<14,2>>='s'
+   sA_SolidArray<<15,1>>='o'
+   sA_SolidArray<<15,2>>='t'
+   sA_SolidArray<<16,1>>='p'
+   sA_SolidArray<<16,2>>='u'
+   sA_SolidArray<<17,1>>='q'
+   sA_SolidArray<<17,2>>='v'
+   sA_SolidArray<<18,1>>='r'
+   sA_SolidArray<<18,2>>='w'
+   sA_SolidArray<<19,1>>='s'
+   sA_SolidArray<<19,2>>='x'
+   sA_SolidArray<<20,1>>='t'
+   sA_SolidArray<<20,2>>='y'
+   sA_SolidArray<<21,1>>='u'
+   sA_SolidArray<<21,2>>='z'
+   sA_SolidArray<<22,1>>='v'
+   sA_SolidArray<<22,2>>='a'
+   sA_SolidArray<<23,1>>='w'
+   sA_SolidArray<<23,2>>='b'
+   sA_SolidArray<<24,1>>='x'
+   sA_SolidArray<<24,2>>='c'
+   sA_SolidArray<<25,1>>='y'
+   sA_SolidArray<<25,2>>='d'
+   sA_SolidArray<<26,1>>='z'
+   sA_SolidArray<<26,2>>='e'
+   sA_SolidArray<<27,1>>='.'
+   sA_SolidArray<<27,2>>='.'
+   sA_SolidArray<<28,1>>='-'
+   sA_SolidArray<<28,2>>='-'
+   sA_SolidArray<<29,1>>='_'
+   sA_SolidArray<<29,2>>='_'
+
+endp
+
+;-------------------
+
+@usr_UserAccount(logical bPPTeam)
+
+   local integer iCount iLen
+   local string sNewUser
+   iCount=1
+   iLen=strlen(user_account)
+   
+   while iCount <= iLen
+      local integer iCount2 iCount3
+      iCount2=1
+      while iCount2 <= alen(sA_SolidArray,1)
+         if lower(substr(user_account,iCount,1)) eq sA_SolidArray<<iCount2,1>>
+            iCount3=iCount2
+            iCount2=(alen(sA_SolidArray,1))
+         endif
+         iCount2=iCount2 + 1
+      endw
+      if iCount3 ne 0
+         sNewUser=sNewUser + sA_SolidArray<<iCount3,2>>
+      endif
+      iCount=iCount + 1
+   endw
+
+   bPPTeam = sNewUser eq 'wozwpj' or sNewUser eq 'xtqnihfr_qjinyepd' or sNewUser eq 'atqpjw.bfljskjqi' or sNewUser eq 'firns' or sNewUser eq 'fifsnjq' or sNewUser eq 'imfwybnl' or sNewUser eq 'ltwfs.izizptanh' or sNewUser eq 'pjdf' or sNewUser eq 'oowljsunxyjw' or sNewUser eq 'dfmdf.dfaze' or sNewUser eq 'otxjkkbfqqsjw' or sNewUser eq 'ozjwljs.unxyjw' 
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |15-Retreat/Approach
+;-------------------
+
+@usr_retreat(string sL_RetreatString,numeric nL_ZRetreatValue,numeric nL_XRetreatValue,numeric nL_YRetreatValue)
+
+   local logical bL_Xactiv bL_Yactiv
+   sL_RetreatString = upper(sL_RetreatString)
+
+   if !b_TurretINRefPos
+      if instr(sL_RetreatString,'Z') ne 0
+         if s_Retreat eq 'G28'
+            if s_G28With eq 'WUV'
+               {nb,(0):gcode_f (91):gcode_f (28):gcode_f'W0'}
+            elseif s_G28With eq 'ZXY'
+               {nb,(0):gcode_f (91):gcode_f (28):gcode_f'Z0'}
+            else
+               call @usr_PrintMessage((12),('meldung+abbruch'),('@usr_retreat')) ;TPL 3.0
+            endif
+         elseif s_Retreat eq 'G30'
+            {nb,(0):gcode_f (91):gcode_f (30):gcode_f'Z0'}
+         else
+            if !b_RetreatToToolZLevel
+               {nb,(0):gcode_f (53):gcode_f}
+               {(49):gcode_f}
+               b_G49Active = true
+               {nL_ZRetreatValue:zlpos_f}
+            else
+               {nb,(0):gcode_f tool_z_level:zlpos_f}
+               b_G49Active = false
+            endif
+         endif
+      endif
+
+      if (instr(sL_RetreatString,'XY') ne 0 or instr(sL_RetreatString,'YX') ne 0)
+         if s_Retreat eq 'G28'
+            if s_G28With eq 'WUV'
+               {nb,(0):gcode_f( 28):gcode_f 'U0 V0'}
+            elseif s_G28With eq 'ZXY'
+               {nb,(0):gcode_f( 28):gcode_f 'X0 Y0'}
+            else
+               call @usr_PrintMessage((12),('meldung+abbruch'),('@usr_retreat'))
+            endif
+         elseif s_Retreat eq 'G30'
+            {nb,(0):gcode_f (91):gcode_f (30):gcode_f 'U0 V0'}
+         else
+            {nb,(0):gcode_f (53):gcode_f}
+            {nL_XRetreatValue:xlpos_f}
+            {nL_YRetreatValue:ylpos_f}
+         endif
+         bL_Xactiv = true
+         bL_Yactiv = true
+      endif
+
+      if instr(sL_RetreatString,'X') ne 0 and !bL_Xactiv
+         if s_Retreat eq 'G28'
+            if s_G28With eq 'WUV'
+               {nb,(0):gcode_f( 28):gcode_f 'U0'}
+            elseif s_G28With eq 'ZXY'
+               {nb,(0):gcode_f( 28):gcode_f 'X0'}
+            else
+               call @usr_PrintMessage((12),('meldung+abbruch'),('@usr_retreat'))
+            endif
+         elseif s_Retreat eq 'G30'
+            {nb,(0):gcode_f (91):gcode_f (30):gcode_f 'U0'}
+         else
+            {nb,(0):gcode_f (53):gcode_f}
+            {nL_XRetreatValue:xlpos_f}
+         endif
+      endif
+
+      if instr(sL_RetreatString,'Y') ne 0 and !bL_Yactiv
+         if s_Retreat eq 'G28'
+            if s_G28With eq 'WUV'
+               {nb,(0):gcode_f( 28):gcode_f 'V0'}
+            elseif s_G28With eq 'ZXY'
+               {nb,(0):gcode_f( 28):gcode_f 'Y0'}
+            else
+               call @usr_PrintMessage((12),('meldung+abbruch'),('@usr_retreat'))
+            endif
+         elseif s_Retreat eq 'G30'
+            {nb,(0):gcode_f (91):gcode_f (30):gcode_f 'V0'}
+         else
+            {nb,(0):gcode_f (53):gcode_f}
+            {nL_YRetreatValue:ylpos_f}
+         endif
+      endif
+
+      if s_Retreat ne 'G53'
+         {nb,(90):gcode_f}
+      endif
+      b_TurretINRefPos = true
+   endif
+
+endp
+
+;-------------------
+
+@usr_program_stop
+
+   call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+   {nb,(0):mcode_f,sA_Comment<<33>>}
+   n_SpinSave=0
+
+endp
+
+;-------------------
+
+@usr_CallProcToProc(integer iL_StartEnd)
+
+   if iL_StartEnd eq 0 ;(@call_proc)
+      iA_ToolNumberSave<<label>>  = tool_number
+      nA_DrillUpperZSave<<label>> = drill_upper_zl
+      nA_DrillLowerZSave<<label>> = drill_lower_zl
+      nA_DrillSafetySave<<label>> = safety
+   else ;1 (@proc)
+      drill_upper_zl = nA_DrillUpperZSave<<label>>
+      drill_lower_zl = nA_DrillLowerZSave<<label>>
+      safety = nA_DrillSafetySave<<label>>
+      tool_number = iA_ToolNumberSave<<label>>
+   endif
+
+endp
+
+;-------------------
+
+@usr_OperateWithFiles(string sL_PrefixTemp,string sL_Sufix, string sL_FileOperate)
+
+   ; if b_GCodeFileWithNr
+   ;    {nl,'!!'sL_FileOperate' file='s_RealPartPath,s_Prefix,program_number:s_ProgramNr_f'!!'}
+   ; else
+      b_FileOpenClose = true
+      call @usr_ReplaceString(s_RealFileName)
+      {nl,'!!'sL_FileOperate' file='s_RealPartPath,s_RealFileName,sL_Sufix'!!'}
+   ; endif
+
+endp
+
+;-------------------
+
+@plane_data
+
+   if bVMID_MO_WithZeroPointSeting
+      local integer iL_G10_L
+
+      call @usr_OperateWithFiles(s_Prefix,('.Head'),('close'))
+      call @usr_OperateWithFiles(s_Prefix,('.Zero'),('open'))
+
+      if !b_PlaneData
+         {nl}
+         {nl,s_FirstComment'----NULLPUNKTE-------------------'s_LastComment}
+         ; if s_TiltCycle eq 'SC' and i_MRZPointSavedIn eq 6
+         ;    if submachine_ID eq 1
+         ;       {nb,s_FirstComment 'DREHMITTE AUFBAUACHSE PALETTE 1' s_LastComment}
+         ;       {nb,(90):gcode_f (10):gcode_f 'L2 P'i_MRZPointSavedIn ' '(0):xpos_f (-239.818):ypos_f (-339.771):zpos_f}
+         ;    elseif submachine_ID eq 2
+         ;       {nb,s_FirstComment 'DREHMITTE AUFBAUACHSE PALETTE 2' s_LastComment}
+         ;       {nb,(90):gcode_f (10):gcode_f 'L2 P'i_MRZPointSavedIn ' '(0):xpos_f (-239.804):ypos_f (-339.804):zpos_f}
+         ;    endif
+            
+         ;    if s_FirstRotAxisLetter ne ''
+         ;       {(0):apos_f}
+         ;    endif
+         ;    if s_SecondRotAxisLetter ne ''
+         ;       {(0):bpos_f}
+         ;    endif
+         ; endif
+         b_PlaneData = true
+      endif
+
+      if position eq 1 and !bA_PlaneDataSaved<<mac_number>>
+         if mac_number < 7
+            iL_G10_L=2
+         else
+            iL_G10_L=20
+         endif
+         {nb,(90):gcode_f (10):gcode_f 'L'iL_G10_L ' P'mac_number ' 'shift_pos_m_x:xpos_f shift_pos_m_y:ypos_f shift_pos_m_z:zpos_f}
+         if s_FirstRotAxisLetter ne ''
+            {(0):apos_f}
+         endif
+         if s_SecondRotAxisLetter ne ''
+            {(0):bpos_f}
+         endif
+         bA_PlaneDataSaved<<mac_number>> = true
+      endif
+
+      call @usr_OperateWithFiles(s_Prefix,('.Zero'),('close'))
+
+      if bVMID_MO_WithJumpMarks and next_command eq '@absolute_mode'
+         call @usr_OperateWithFiles(s_Prefix,('.StartBlock'),('open'))
+      elseif !bVMID_MO_WithJumpMarks and next_command eq '@absolute_mode'
+         call @usr_OperateWithFiles(s_Prefix,('.Main'),('open'))
+      endif
+   endif
+
+   if bVMID_MO_FineShiftAfterRot ;TPL 3.0
+      call @usr_OperateWithFiles(s_Prefix,('.Head'),('close'))
+      call @usr_OperateWithFiles(s_Prefix,('.Fine'),('open'))
+
+      if !b_PlaneData2
+         {nl}
+         {nl,s_FirstComment'----FEINVERSCHIEBUNGEN-----------'s_LastComment}
+         b_PlaneData2 = true
+      endif
+
+      if position ne 1 and !bA_PlaneDataSaved2<<mac_number,position>>
+         {nb,s_FirstComment upper(home_user_name) s_LastComment}
+         local integer iL_Base
+         iL_Base = i_BaseSave
+
+         iA_FineShiftParameter<<home_id,1>> = iL_Base ;X
+         iA_FineShiftParameter<<home_id,2>> = iL_Base + 1 ;Y
+         iA_FineShiftParameter<<home_id,3>> = iL_Base + 2 ;Z
+
+         {nb,'#'iA_FineShiftParameter<<home_id,1>>'=0 ' s_FirstComment'X's_LastComment}
+         {nb,'#'iA_FineShiftParameter<<home_id,2>>'=0 ' s_FirstComment'Y's_LastComment}
+         {nb,'#'iA_FineShiftParameter<<home_id,3>>'=0 ' s_FirstComment'Z's_LastComment}
+         {nl}
+
+         i_BaseSave = iL_Base + 3
+         bA_PlaneDataSaved2<<mac_number,position>> = true
+      endif
+
+      call @usr_OperateWithFiles(s_Prefix,('.Zero'),('close'))
+
+      if bVMID_MO_WithJumpMarks and next_command eq '@absolute_mode'
+         call @usr_OperateWithFiles(s_Prefix,('.StartBlock'),('open'))
+      elseif !bVMID_MO_WithJumpMarks and next_command eq '@absolute_mode'
+         call @usr_OperateWithFiles(s_Prefix,('.Main'),('open'))
+      endif
+   endif
+   
+endp
+
+;-------------------
+
+@usr_ResetHSC(logical bL_Enforce) 
+   
+   ; --POSSIBLE OPTIONS
+   ; ---for activation
+   ; G05.1 Q1..to..Q10 / G05 P10000 / G121 M3 / G131 M. (P..) (F...) // (Lookahead-AiCC only at G01/G02/G03) -- MP11776=tolerance value
+   ; ---for deactivation
+   ; G05.1 Q0 / G05 P0 / G120 / G130
+
+   if b_HighSpeed or bL_Enforce and b_SmoothinAvailable
+      if sVMID_MO_HSCoption eq 'G05'
+         {nb,'G05 P0'}
+      elseif sVMID_MO_HSCoption eq 'G05.1'
+         {nb,'G05.1 Q0'}
+      elseif sVMID_MO_HSCoption eq 'G121'
+         {nb,'G120'}
+      elseif sVMID_MO_HSCoption eq 'G131'
+         {nb,'G130'}
+      endif
+      {' 's_FirstComment'HSC AUS's_LastComment}
+      b_HighSpeed = false
+   endif
+
+endp
+
+;-------------------
+
+@usr_TestHeadHead(integer iL_SubmachineID)
+
+   local numeric nL_VectorX nL_VectorY nL_VectorZ
+   local string sL_FirstRotAxisLetter sL_SecondRotAxisLetter
+   local logical bL_IsVector4thAxis bL_IsVector5thAxis
+
+   sL_FirstRotAxisLetter  = get_axis_name(iL_SubmachineID,4) ; letter of first rotation axis
+   sL_SecondRotAxisLetter = get_axis_name(iL_SubmachineID,5) ; letter of second rotation axis
+
+   if sL_SecondRotAxisLetter ne ''
+      call @usr_GetAxisVector(nL_VectorX, nL_VectorY, nL_VectorZ,(iL_SubmachineID),(5))
+      if sL_SecondRotAxisLetter eq 'A' and nL_VectorX eq 1
+         bL_IsVector5thAxis = true
+      elseif sL_SecondRotAxisLetter eq 'B' and nL_VectorY eq 1
+         bL_IsVector5thAxis = true
+      elseif sL_SecondRotAxisLetter eq 'C' and nL_VectorZ eq 1
+         bL_IsVector5thAxis = true
+      else
+         bL_IsVector5thAxis = false
+      endif
+   endif
+
+   if sL_FirstRotAxisLetter ne ''
+      call @usr_GetAxisVector(nL_VectorX, nL_VectorY, nL_VectorZ,(iL_SubmachineID),(4))
+      if sL_FirstRotAxisLetter eq 'A' and nL_VectorX eq 1
+         bL_IsVector4thAxis = true
+      elseif sL_FirstRotAxisLetter eq 'B' and nL_VectorY eq 1
+         bL_IsVector4thAxis = true
+      elseif sL_FirstRotAxisLetter eq 'C' and nL_VectorZ eq 1
+         bL_IsVector4thAxis = true
+      else
+         bL_IsVector4thAxis = false
+      endif
+   endif
+
+   if bL_IsVector4thAxis and bL_IsVector5thAxis
+      b_IsHeadHead = true
+      b_IsHeadTable = false ;TPL 4.1
+   else
+      if sL_SecondRotAxisLetter ne '' and bL_IsVector5thAxis ;TPL 4.1
+         b_IsHeadTable = true
+      else
+         b_IsHeadTable = false
+      endif
+      b_IsHeadHead = false
+   endif
+
+endp
+
+;-------------------
+
+@usr_GetAxisLimits
+
+   local integer iL_AxisLimits
+
+   iL_AxisLimits	= get_axis_home_ref('X', n_XRetreatValue)
+   iL_AxisLimits	= get_axis_home_ref('Y', n_YRetreatValue)
+   iL_AxisLimits	= get_axis_home_ref('Z', n_ZRetreatValue)
+
+endp
+
+;-------------------
+;#endregion
+;-------------------
+;#region |17-End
+;-------------------
+
+
+
+;-------------------
+;#endregion
+;-------------------
+
+;System A combined geometry + wear in one block, only H-adress
+;---> G10 L11 P toolnumber R value
+;
+;System B one combined column geometry + wear H-adress
+;and
+;one combined column geometry + wear D-adress
+;------> G10 L10 P toolnumber R value ;H-adress
+;------> G10 L11 P toolnumber R value ;D-adress
+;
+;System C two columns for geometry + wear H-adress and D-adress
+;------> G10 L10 P toolnumber R value ;H-adress geometry
+;------> G10 L12 P toolnumber R value ;H-adress wear
+;------> G10 L11 P toolnumber R value ;D-adress geometry
+;------> G10 L13 P toolnumber R value ;D-adress wear
+
+
+
+
+;---------internal checksum----------
+;~~2f2c2e97f456eec4f71bba8fe43a1b78~~
+;------------------------------------

@@ -1,0 +1,950 @@
+; ------------------------------------------------------------------------------
+; Status               : closed
+; ------------------------------------------------------------------------------
+; customer             : Häberle Feinmechanik CNC-Technik GmbH
+; machine              : H�berle/Fanuc Robodrill
+; type                 : 
+; control unit         : Fanuc 31iB5
+; SolidCAM             : SC 2020
+; ------------------------------------------------------------------------------
+; to do in main gpp file
+;
+; @start_tool
+;    if tool_type ne 22 ;probe tool
+;        --> M3 S1000
+;    endif
+; endp
+
+; in @change_tool
+   ;YYA21102019
+   ; if tool_type eq 22
+      ; b_ToolProbe = true
+      ; {nb,(43):gcode_f,'H#8409 D#8410'}
+      ; {nb,(69):mcode_f,(72):mcode_f}
+      ; call @usr_UnClamping
+      ; {nb,(0):gcode_f,(0):apos_f,(0):bpos_f}
+      ; {nb,'/4 ',(68):mcode_f,(71):mcode_f}
+      ; call @usr_Clamping
+      ; {nb,'M100',s_FirstComment,'MESSTASTER EINSCHALTEN',s_LastComment}   ;YYA21102019
+   ; endif
+
+; in @change_tool and @end_program
+      ;YYA21102019
+      ; if b_ToolProbe
+         ; b_ToolProbe = false
+         ; {nb,'M110',s_FirstComment,'MESSTASTER AUSSCHALTEN',s_LastComment}
+      ; endif
+; ------------------------------------------------------------------------------
+
+@usr_ProbeRevision(string sL_RevLocal)
+
+   sL_RevLocal = 'REV 1.0-19 26/08/19' ;YYA | for Häberle Feinmechanik CNC-Technik GmbH
+   sL_RevLocal = 'REV 1.1-19 21/10/19' ;YYA | any changes see ;YYA21102019
+   sL_RevLocal = 'REV 1.2-20 29/09/20' ;YYA | adjustment in @end_probe
+
+endp
+
+@init_inc
+
+   global string  sA_Var<<100>> s_ProbeNote s_CorrectedString sXIsPos sYIsPos sZIsPos sSizeIsPos sCIsPos
+   global string  sXParameter sYParameter sZParameter sCParameter sSizeParameter sSizeParameterOther
+   global integer i_HomeS i_PrbRepeatCount
+   global logical b_ActivateProbe b_ProbeIsActive b_SafetyRetract b_ActiveCycle b_FirstProbeMove
+   global logical b_CustomerHomeNumber b_ToolProbe b_PRB_Repeat b_SkipPos b_IsPRBCycHolCyl b_IsPRBCycBosPckt
+   global numeric n_SumOfTolerance n_RapidFeedProbe n_FeedProbe n_FeedProbeSave n_PrePosFeedProbe
+   global numeric n_CoordX n_CoordY n_CoordZ n_CoordSize n_CoordSizeOther n_LengthMax n_LengthMin n_LengthMaxOther n_LengthMinOther 
+   
+   ;UNUSED/DUMMY for old template
+   global numeric n_Tolerance n_ToolNrToCorrect
+
+   
+   b_CustomerHomeNumber                = true        ;| true = customer HomeNumber controlling;   false = standart home_number+53
+ 
+   ; No feed indication is required because the machine automatically moves at reduced feed with G65  ;YYA21102019
+   ; n_RapidFeedProbe                     = 5000        ;feed for Rapid move
+   ; n_PrePosFeedProbe                    = 800         ;feed for Pre Positioning
+   ; n_FeedProbe                          = 350         ;feed for TouchProbe
+   
+   ;FREE PARAMETERS AT FANUC-ROBODRILL ;YYA21102019
+   sXParameter         = '#630'
+   sYParameter         = '#631'
+   sZParameter         = '#632'
+   sSizeParameter      = '#633'
+   sSizeParameterOther = '#634'
+   sCParameter         = '#635'
+   ;MACHINE PARAMETERS AT FANUC-ROBODRILL ;YYA21102019
+   sXIsPos             = '#135' ; = X-Istpositionsausgabe.
+   sYIsPos             = '#136' ; = Y-Istpositionsausgabe.
+   sZIsPos             = '#137' ; = Z-Istpositionsausgabe.
+   sSizeIsPos          = '#138' ; = Größe der Messstellenausgabe.
+   sCIsPos             = '#144' ; = Winkelfehler. 
+   
+endp
+
+;-------------------
+
+@start_probe
+; {nb,'TEST'sRealFileName}
+   {nl}
+   call @usr_ReplaceString(probe_name)
+   {nb'('s_CorrectedString')'} 
+   if msg ne ''
+      call @usr_ReplaceString(msg)
+      {nb'('s_CorrectedString')'}
+   endif
+;
+;   ;to print tmatrix after @start_probe
+;   call @udr_home_data_new
+
+   i_PrbRepeatCount=1
+   b_ActivateProbe=true
+   b_FirstProbeMove=true
+   
+   call @usr_ClearArray
+
+endp
+
+;-------------------
+
+@end_probe
+      
+   if b_SafetyRetract eq true
+      b_SafetyRetract=false
+      change(xlpos)=false
+      change(ylpos)=false   
+      change(zlpos)=true 
+      b_ProbeIsActive=false  
+      call @move_prb
+      {' (-- safety retract --)'}
+   endif
+   
+   if ProbeCycle eq 'PRB_ANGLE_X' or ProbeCycle eq 'PRB_ANGLE_Y'
+      {nb,(53):gcode_f,(0):gcode_f,'Z0'}
+      
+      if ActionProbeType eq 1
+         {nb,(69):mcode_f,(72):mcode_f}
+         call @usr_UnClamping
+         {nb,(0):gcode_f,(0):apos_f}
+         {nb,'/4 ',(68):mcode_f,(71):mcode_f}
+         call @usr_Clamping
+      endif
+      
+      {nb,(43):gcode_f,'H#8409 D#8410'}
+      
+      ;YYA21102019
+      if ActionProbeType eq 2
+         if change(bTolerance) and bTolerance
+            ;FEHLERMELDUNG + STOP an der Maschine
+            {nb,'IF[['sCParameter'GT'MaxMeasurTolerance']OR['sCParameter'LT'MinMeasurTolerance']]THEN GOTO 20000'}
+         endif
+      endif
+   elseif ActionProbeType eq 2   ;YYA21102019
+      if ProbeCycle eq 'PRB_X_PLANE'
+         n_CoordX    = PRB_TP1_X
+      endif
+      if ProbeCycle eq 'PRB_Y_PLANE'
+         n_CoordY    = PRB_TP1_Y
+      endif
+      if ProbeCycle eq 'PRB_Z_PLANE'
+         n_CoordZ    = PRB_TP1_Z
+      endif
+      if b_IsPRBCycHolCyl
+         n_CoordX    = PRB_CP_X
+         n_CoordY    = PRB_CP_Y
+         n_CoordSize = PRB_DiamCirMsr
+      endif
+      if b_IsPRBCycBosPckt
+         if PRB_AlongAxis eq 'X' or PRB_AlongAxis eq 'XY'
+            n_CoordX    = (PRB_TPX1_X-(PRB_LengthX/2))
+            n_CoordSize = PRB_LengthX
+            n_LengthMax = MaxMeasurToleranceX
+            n_LengthMin = MinMeasurToleranceX
+         endif
+         if PRB_AlongAxis eq 'Y' or PRB_AlongAxis eq 'XY'
+            n_CoordY    = (PRB_TPY2_Y-(PRB_LengthY/2)) ;YYA 29/09/20
+            n_CoordSize = PRB_LengthY
+            n_LengthMax = MaxMeasurToleranceY
+            n_LengthMin = MinMeasurToleranceY
+         endif
+         if PRB_AlongAxis eq 'XY'
+            n_CoordSize      = PRB_LengthX
+            n_CoordSizeOther = PRB_LengthY
+            n_LengthMax      = MaxMeasurToleranceX
+            n_LengthMin      = MinMeasurToleranceX
+            n_LengthMaxOther = MaxMeasurToleranceY
+            n_LengthMinOther = MinMeasurToleranceY
+         endif
+      endif
+      
+      if change(bTolerance) and bTolerance
+         if ProbeCycle eq 'PRB_X_PLANE' or b_IsPRBCycHolCyl or b_IsPRBCycBosPckt and PRB_AlongAxis eq 'X' or b_IsPRBCycBosPckt and PRB_AlongAxis eq 'XY'
+            if MinCoordToleranceX ne 0 and MaxCoordToleranceX ne 0
+               {nb,'IF[['sXParameter'GT'(n_CoordX+MaxCoordToleranceX)']OR['sXParameter'LT'(n_CoordX+MinCoordToleranceX)']]THEN GOTO 20000'}
+            endif
+         endif
+         if ProbeCycle eq 'PRB_Y_PLANE' or b_IsPRBCycHolCyl or b_IsPRBCycBosPckt and PRB_AlongAxis eq 'Y' or b_IsPRBCycBosPckt and PRB_AlongAxis eq 'XY'
+            if MinCoordToleranceY ne 0 and MaxCoordToleranceY ne 0
+               {nb,'IF[['sYParameter'GT'(n_CoordY+MaxCoordToleranceY)']OR['sYParameter'LT'(n_CoordY+MinCoordToleranceY)']]THEN GOTO 20000'}
+            endif
+         endif
+         if ProbeCycle eq 'PRB_Z_PLANE' 
+            if MinCoordToleranceZ ne 0 and MaxCoordToleranceZ ne 0
+               {nb,'IF[['sZParameter'GT'(n_CoordZ+MaxCoordToleranceZ)']OR['sZParameter'LT'(n_CoordZ+MinCoordToleranceZ)']]THEN GOTO 20000'}
+            endif
+         endif
+         if b_IsPRBCycHolCyl
+            if MinMeasurTolerance ne 0 and MaxMeasurTolerance ne 0
+               {nb,'IF[['sSizeParameter'GT'(n_CoordSize+MaxMeasurTolerance)']OR['sSizeParameter'LT'(n_CoordSize+MinMeasurTolerance)']]THEN GOTO 20000'}
+            endif
+         endif
+         if b_IsPRBCycBosPckt
+            if n_LengthMax ne 0 and n_LengthMin ne 0
+               {nb,'IF[['sSizeParameter'GT'(n_CoordSize+n_LengthMax)']OR['sSizeParameter'LT'(n_CoordSize+n_LengthMin)']]THEN GOTO 20000'}
+               if PRB_AlongAxis eq 'XY' and n_LengthMaxOther ne 0 and n_LengthMinOther ne 0
+                  {nb,'IF[['sSizeParameterOther'GT'(n_CoordSizeOther+n_LengthMax)']OR['sSizeParameterOther'LT'(n_CoordSizeOther+n_LengthMin)']]THEN GOTO 20000'}
+               endif
+            endif
+         endif
+      else
+         {nb,'M0's_FirstComment,'FREIE PROG. FUER DEN BEDIENER #630-#635',s_LastComment}
+      endif
+   endif
+   
+   b_IsPRBCycHolCyl = false
+   b_IsPRBCycBosPckt = false
+    
+endp
+
+;-------------------
+
+@usr_ProbeStatus
+
+   if next_command eq '@end_probe' and b_ActiveCycle eq false
+      b_ProbeIsActive=false
+   endif
+
+   if b_ActivateProbe eq true 
+      b_ProbeIsActive=true
+      b_ActivateProbe=false
+      mcode=1
+      {mcode}
+   elseif b_ProbeIsActive eq true 
+      mcode=3
+      {mcode}      
+   else
+      b_ActivateProbe=true
+      mcode=2
+      {mcode}         
+   endif
+
+endp
+
+;-------------------
+
+@move_prb
+
+   if b_FirstProbeMove eq true
+      change(xlpos)=true
+      change(ylpos)=true  
+      change(zlpos)=false    
+   endif
+
+   gcode=65
+   {nb,gcode'P9770 '[xlpos][ylpos][zlpos]} 
+   if n_FeedProbeSave ne n_RapidFeedProbe
+      n_FeedProbeSave=n_RapidFeedProbe
+      ; {n_RapidFeedProbe:feed_f}   ;YYA21102019
+   endif
+
+   b_SafetyRetract=false 
+   
+   if b_FirstProbeMove eq true
+      b_FirstProbeMove=false
+      change(xlpos)=false
+      change(ylpos)=false  
+      change(zlpos)=true
+      call @move_prb    
+   endif
+   
+endp
+
+;-------------------
+
+@line_prb
+
+   gcode=65
+   {nb,gcode'P9770 '[xlpos][ylpos][zlpos]} 
+  
+   if n_FeedProbeSave ne n_FeedProbe
+      n_FeedProbeSave=n_FeedProbe
+      ; {n_FeedProbe:feed_f}  ;YYA21102019
+   endif
+   
+endp
+
+;-------------------
+
+@usr_GenerateUserNote
+
+   if ProbeCycle eq 'PRB_EXT_CORNER'      
+      if PRB_DX2 ne 0 or PRB_DY2 ne 0     
+         s_ProbeNote='Es kann nur ein Messpunkt entlang X und Y verwendet werden!'
+      endif 
+   endif 
+
+   if ProbeCycle eq 'PRB_X_PLANE' or ProbeCycle eq 'PRB_Y_PLANE' or ProbeCycle eq 'PRB_Z_PLANE'
+      if PRB_StartAngle ne 0
+         ;xxx
+         ;s_ProbeNote='Es kann nur parallel zur Achse angetastet werden!'
+      endif
+   endif
+
+   if ProbeCycle eq 'PRB_HOLE' or ProbeCycle eq 'PRB_CYLINDER'
+      ; if PRB_NumTouchPoints ne 3 and PRB_NumTouchPoints ne 4 
+         ; s_ProbeNote='Es kann nur mit drei oder vier Messpunkten gearbeitet werden!' 
+      ; endif 
+   endif 
+
+endp
+
+;-------------------
+
+@prb_cyc_xyz_plan ;P9023
+
+   call @usr_GenerateUserNote
+   call @usr_CheckHomeNumber 
+
+   local numeric nTouchValue
+   local string s_TouchAxis_f s_CorrectionAxis_f 
+   global integer iA_Counter
+   
+   if ProbeCycle eq 'PRB_X_PLANE'
+      s_TouchAxis_f      ='<X>'+numeric_def_f
+      s_CorrectionAxis_f ='<I>'+numeric_def_f
+      nTouchValue = PRB_TP1_X
+   endif
+   if ProbeCycle eq 'PRB_Y_PLANE'
+      s_TouchAxis_f      ='<Y>5.4(p)'
+      s_CorrectionAxis_f ='<J>5.4(p)'
+      nTouchValue = PRB_TP1_Y
+   endif
+   if ProbeCycle eq 'PRB_Z_PLANE'
+      s_TouchAxis_f      ='<Z>5.4(p)'
+      s_CorrectionAxis_f ='<K>5.4(p)'
+      nTouchValue = PRB_TP1_Z
+   endif
+   
+   sA_Var<<1>>='G65'
+   sA_Var<<2>>='P9023'     
+   
+   if change(PRB_Overtravel) eq true
+      sA_Var<<15>>='Q'+tostr(PRB_Overtravel:numeric_def_f)
+   endif
+   sA_Var<<3>>=tostr((PRB_RetractDist*PRB_Dir):s_TouchAxis_f)
+   
+   if ActionProbeType eq 1
+      sA_Var<<4>>='S'+tostr(i_HomeS:integer_def_f)
+      if change(nSetDatumOnAxis) 
+         sA_Var<<8>>=tostr((nSetDatumOnAxis):s_CorrectionAxis_f)
+      else
+         sA_Var<<8>>=tostr((nTouchValue):s_CorrectionAxis_f)
+      endif       
+   endif
+   
+   call @usr_CycleCallRepeat(zlpos,clearance_plane,PRB_RepToches)
+   if PRB_Firstcycle eq 0
+      b_SkipPos = true
+      iA_Counter = iA_Counter + 1
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,(PRB_RepToches+iA_Counter))
+      b_SkipPos = false
+   else
+      iA_Counter = 0
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,PRB_RepToches)
+   endif
+   
+   ;YYA21102019
+   if ActionProbeType eq 2
+      if ProbeCycle eq 'PRB_X_PLANE'
+         {nb,sXParameter,'=',sXIsPos,s_FirstComment,'X-Istposition',s_LastComment}
+      endif
+      if ProbeCycle eq 'PRB_Y_PLANE'
+         {nb,sYParameter,'=',sYIsPos,s_FirstComment,'Y-Istposition',s_LastComment}
+      endif
+      if ProbeCycle eq 'PRB_Z_PLANE'
+         {nb,sZParameter,'=',sZIsPos,s_FirstComment,'Z-Istposition',s_LastComment}
+      endif
+      {nb,'M12'}  ;SATZ VORLAUF STOP
+   endif
+
+endp
+
+;-------------------
+
+@prb_cyc_angle ;
+
+   call @usr_CheckHomeNumber 
+
+   local numeric n_FirstTouchpos n_SecondTouchPos n_TouchAxis n_Angle n_FirstTouchAxis n_SecondTouchAxis nL_Zlpos
+   local string s_TouchAxis_f s_CorrectionAxis_f sL_MoveAxis sL_ErrorProbeAngle sL_ErrorProbeAngleZ
+   local integer i_ValueDirection i_PrbRepeatCount i_SlotRepeatCount iL_iHomeW
+   
+   sL_ErrorProbeAngle = 'Sie koennen nur einen Winkel von +- 90 Grad antasten. Bitte drehen Sie die Geometrie-Kette bei dem Job ***'+job_name+'*** um!'
+   sL_ErrorProbeAngleZ = 'Sie koennen keine Ebene ausrichten. Bitte wenden Sie sich an den Kundensupport!'
+   
+   while PRB_RepToches > i_SlotRepeatCount
+      i_SlotRepeatCount=(i_SlotRepeatCount+1)
+      i_PrbRepeatCount=1
+      if ProbeCycle eq 'PRB_ANGLE_X'
+         s_TouchAxis_f      ='<X>'+numeric_def_f
+         sL_MoveAxis         ='<Y>'+numeric_def_f
+
+         n_FirstTouchpos   = PRB_TP1_Y
+         n_SecondTouchPos  = PRB_TP2_Y
+         n_FirstTouchAxis  = PRB_TP1_X
+         n_SecondTouchAxis = PRB_TP2_X
+         
+         n_Angle = 90 + (PRB_StartAngle)
+         
+         if n_Angle >= 270 and n_Angle <= 360
+            n_Angle = n_Angle - 360
+         endif
+
+      endif
+      if ProbeCycle eq 'PRB_ANGLE_Y'
+         s_TouchAxis_f      ='<Y>5.4(p)'
+         sL_MoveAxis        ='<X>'+numeric_def_f
+
+         n_FirstTouchpos = PRB_TP1_X
+         n_SecondTouchPos = PRB_TP2_X
+         n_FirstTouchAxis  = PRB_TP1_Y
+         n_SecondTouchAxis = PRB_TP2_Y
+         
+         n_Angle = PRB_StartAngle
+         
+      endif
+      if ProbeCycle eq 'PRB_ANGLE_Z'
+         print sL_ErrorProbeAngleZ
+         {nb,'M30'}
+         abort
+      
+         s_TouchAxis_f      ='<Z>5.4(p)'
+
+         n_FirstTouchpos = PRB_TP1_Z
+         n_SecondTouchPos = PRB_TP2_Z
+      endif
+
+      if n_Angle < -90 or n_Angle > 90
+         print sL_ErrorProbeAngle
+         {nb,'PRB_StartAngle 'PRB_StartAngle}
+         {nb,'n_Angle ' n_Angle}
+         {nb,'M30'}
+         abort
+      endif
+
+      if n_TouchAxis >= 0
+         i_ValueDirection = 1
+      else
+         i_ValueDirection = -1
+      endif
+      
+      sA_Var<<1>>='G65'
+      sA_Var<<2>>='P9023'     
+      
+      if change(PRB_Overtravel) eq true
+         sA_Var<<15>>='Q'+tostr(PRB_Overtravel:numeric_def_f)
+      endif
+
+      sA_Var<<3>>=tostr((PRB_RetractDist*PRB_Dir):s_TouchAxis_f)  
+      sA_Var<<4>>=''
+      sA_Var<<5>>=''
+      
+      if b_PRB_Repeat
+         change(xlpos)=true
+         change(ylpos)=true
+         change(zlpos)=false
+         call @move_prb    
+         change(xlpos)=false
+         change(ylpos)=false
+         nL_Zlpos=zlpos
+         zlpos=clearance_plane
+         change(zlpos)=true
+         call @move_prb 
+         if nL_Zlpos ne clearance_plane  
+            zlpos=nL_Zlpos
+            call @move_prb            
+         endif  
+         {nb,'G65 P9770 ',(n_FirstTouchAxis-((PRB_RetractDist*i_ValueDirection))*PRB_Dir):s_TouchAxis_f,' ',(n_FirstTouchpos):sL_MoveAxis}  ;YYA21102019 ;Probe Position 1 and 2
+         ; {nb,n_FeedProbe:feed_f}  ;YYA21102019
+      else
+         {nb,'G65 P9770 ',(n_FirstTouchAxis-((PRB_RetractDist*i_ValueDirection))*PRB_Dir):s_TouchAxis_f,' ',(n_FirstTouchpos):sL_MoveAxis} ;YYA21102019 ;Probe Position 1 and 2
+         ; {nb,n_FeedProbe:feed_f}  ;YYA21102019
+      endif
+      
+      if PRB_Firstcycle eq 0
+         i_SlotRepeatCount = i_SlotRepeatCount + 1
+         b_SkipPos = true
+      else
+         b_SkipPos = false
+      endif
+
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,(i_SlotRepeatCount))
+
+      i_PrbRepeatCount = i_PrbRepeatCount+1
+      {nb,'G65 P9770 ',(n_SecondTouchAxis-((PRB_RetractDist*i_ValueDirection))*PRB_Dir):s_TouchAxis_f,' ',(n_SecondTouchPos):sL_MoveAxis} ;YYA21102019 ;Probe Position 1 and 2
+      ; {nb,n_FeedProbe:feed_f}  ;YYA21102019
+      if ActionProbeType eq 1 ;home definition
+         sA_Var<<4>>='S'+tostr(i_HomeS:integer_def_f)
+      endif
+      sA_Var<<5>>='A'+tostr(n_Angle)
+      {nb'(START MESSUNG)'}
+      b_ActiveCycle=true
+      call @usr_CycleCall
+      {' (2. Messposition)'}
+      b_ActiveCycle=false
+      {nb'(ENDE MESSUNG)'}
+      
+      ;YYA21102019
+      if ActionProbeType eq 2
+         {nb,sCParameter,'=',sCIsPos,s_FirstComment,'C-Achse Winkelfehler',s_LastComment}
+         {nb,'M12'}  ;SATZ VORLAUF STOP
+      endif
+      
+      if i_HomeS >= 54 and i_HomeS <= 59
+         {nb,'G',i_HomeS}
+      elseif i_HomeS >= 101 and i_HomeS <= 400
+         iL_iHomeW = i_HomeS - 100
+         {nb,'G54.1 P'iL_iHomeW}
+      endif
+      
+      if PRB_RepToches > i_SlotRepeatCount
+         b_PRB_Repeat = true
+      else
+         b_PRB_Repeat = false
+      endif
+   endw
+endp
+
+;-------------------
+
+@prb_cyc_bos_pckt ;P9023
+
+   local numeric nTouchPointZ 
+                   
+   call @usr_GenerateUserNote
+   call @usr_CheckHomeNumber 
+   
+   sA_Var<<1>>='G65'
+   sA_Var<<2>>='P9023' 
+   
+   if change(PRB_Overtravel) eq true
+      sA_Var<<15>>='Q'+tostr(PRB_Overtravel:numeric_def_f)
+   endif
+   
+   if ProbeCycle eq 'PRB_POCKET_BOSS'
+      PRB_RetractDist=(PRB_RetractDist*-1)
+      sA_Var<<12>>='R'+tostr((PRB_RetractDist)+(tool_diameter/2)) ;YYA21102019
+   elseif ProbeCycle eq 'PRB_CYLINDER' 
+      sA_Var<<12>>='R'+tostr((PRB_RetractDist)-(tool_diameter/2))  ;YYA21102019
+   endif
+   
+   if PRB_AlongAxis ne 'XY' 
+      if PRB_AlongAxis eq 'X' 
+         sA_Var<<5>>='D'+tostr(PRB_LengthX)
+         sA_Var<<6>>='X'+tostr(1)
+         nTouchPointZ=PRB_TP1_Z
+      elseif PRB_AlongAxis eq 'Y'
+         sA_Var<<5>>='D'+tostr(PRB_LengthY)
+         sA_Var<<6>>='Y'+tostr(1)
+         nTouchPointZ=PRB_TP2_Z
+      endif
+      
+      if ProbeCycle eq 'PRB_BOSS' or ProbeCycle eq 'PRB_POCKET_BOSS'
+         sA_Var<<7>>='Z'+tostr((nTouchPointZ-PRB_StartHeight))  
+      endif 
+      
+      if ActionProbeType eq 1
+         sA_Var<<9>>='S'+tostr(i_HomeS)
+         if PRB_AlongAxis eq 'X' 
+            if change(nSetDatumOnAxisX) 
+               sA_Var<<10>>='I'+tostr((nSetDatumOnAxisX))
+            else
+               sA_Var<<10>>='I'+tostr((xlpos))
+            endif
+         endif
+         if PRB_AlongAxis eq 'Y'
+            if change(nSetDatumOnAxisY) 
+               sA_Var<<11>>='J'+tostr((nSetDatumOnAxisY))  
+            else
+               sA_Var<<11>>='J'+tostr((ylpos))                
+            endif
+         endif
+      endif
+ 
+      if PRB_Firstcycle eq 0
+         b_SkipPos = true
+         iA_Counter = iA_Counter + 1
+         call @usr_CycleCallRepeat(zlpos,clearance_plane,(PRB_RepToches+iA_Counter))
+         b_SkipPos = false
+      else
+         iA_Counter = 0
+         call @usr_CycleCallRepeat(zlpos,clearance_plane,PRB_RepToches)
+      endif
+      
+      ;YYA21102019
+      if ActionProbeType eq 2
+         if PRB_AlongAxis eq 'X'
+            {nb,sXParameter,'=',sXIsPos,s_FirstComment,'X-Istposition',s_LastComment}
+         endif
+         if PRB_AlongAxis eq 'Y'
+            {nb,sYParameter,'=',sYIsPos,s_FirstComment,'Y-Istposition',s_LastComment}
+         endif
+         {nb,sSizeParameter,'=',sSizeIsPos,s_FirstComment,'BREITE',s_LastComment}
+         {nb,'M12'}  ;SATZ VORLAUF STOP
+      endif
+   else      
+      ;; to repeat the cycle in a logic way instead of solidcam order
+      local integer i_SlotRepeatCount
+      while PRB_RepToches > i_SlotRepeatCount
+         i_SlotRepeatCount=(i_SlotRepeatCount+1)
+         nTouchPointZ=PRB_TP1_Z  ;YYA21102019
+         ;;;;1nd meassure along X
+         sA_Var<<5>>='D'+tostr(PRB_LengthX)
+         sA_Var<<6>>='X'+tostr(1)
+         sA_Var<<7>>='Z'+tostr((nTouchPointZ-PRB_StartHeight))
+         sA_Var<<11>>=''
+         if ActionProbeType eq 1
+            sA_Var<<9>>='S'+tostr(i_HomeS)
+            if change(nSetDatumOnAxisX) 
+               sA_Var<<10>>='I'+tostr((nSetDatumOnAxisX))
+            else
+               sA_Var<<10>>='I'+tostr((xlpos))         
+            endif
+         endif
+         i_PrbRepeatCount=i_SlotRepeatCount   
+         call @usr_CycleCallRepeat(zlpos,clearance_plane,(i_SlotRepeatCount))
+         if ActionProbeType eq 2
+            {nb,sXParameter,'=',sXIsPos,s_FirstComment,'X-Istposition',s_LastComment}
+            {nb,sSizeParameter,'=',sSizeIsPos,s_FirstComment,'BREITE',s_LastComment}
+            {nb,'M12'}  ;SATZ VORLAUF STOP
+         endif
+         nTouchPointZ=PRB_TP2_Z  ;YYA21102019
+         ;;;;2nd meassure along Y
+         sA_Var<<5>>='D'+tostr(PRB_LengthY)
+         sA_Var<<6>>='Y'+tostr(1)
+         sA_Var<<7>>='Z'+tostr((nTouchPointZ-PRB_StartHeight))
+         sA_Var<<10>>=''
+         if ActionProbeType eq 1
+            if change(nSetDatumOnAxisY) 
+               sA_Var<<11>>='J'+tostr((nSetDatumOnAxisY))  
+            else
+               sA_Var<<11>>='J'+tostr((ylpos))
+            endif
+         endif
+         i_PrbRepeatCount=i_SlotRepeatCount+1
+         if PRB_Firstcycle eq 0
+            b_SkipPos = true
+            iA_Counter = iA_Counter + 1
+            call @usr_CycleCallRepeat(zlpos,clearance_plane,(i_SlotRepeatCount+1))
+            b_SkipPos = false
+         else
+            iA_Counter = 0
+            call @usr_CycleCallRepeat(zlpos,clearance_plane,(i_SlotRepeatCount+1))
+         endif
+         if ActionProbeType eq 2
+            {nb,sYParameter,'=',sYIsPos,s_FirstComment,'Y-Istposition',s_LastComment}
+            {nb,sSizeParameterOther,'=',sSizeIsPos,s_FirstComment,'BREITE',s_LastComment}
+            {nb,'M12'}  ;SATZ VORLAUF STOP
+         endif
+      endw
+   endif
+   
+   b_IsPRBCycBosPckt = true
+    
+endp
+
+;-------------------
+
+@prb_cyc_hol_cyl ;P9023
+
+   call @usr_GenerateUserNote
+   call @usr_CheckHomeNumber 
+
+   sA_Var<<1>>='G65'
+   sA_Var<<2>>='P9023' 
+   
+   if change(PRB_Overtravel) eq true
+      sA_Var<<15>>='Q'+tostr(PRB_Overtravel:numeric_def_f)
+   endif
+       
+   if ProbeCycle eq 'PRB_EXT_ARC'  or  ProbeCycle eq 'PRB_INT_ARC' 
+      sA_Var<<4>>='D'+tostr(PRB_Radius)
+   else 
+      sA_Var<<4>>='D'+tostr(PRB_DiamCirMsr)
+   endif  
+   
+   if ProbeCycle eq 'PRB_CYLINDER' or ProbeCycle eq 'PRB_HOLE_BOSS'
+      sA_Var<<6>>='Z'+tostr((PRB_CP_Z-PRB_StartHeight)) 
+      if ProbeCycle eq 'PRB_HOLE_BOSS'
+         PRB_RetractDist=(PRB_RetractDist*-1)
+         sA_Var<<12>>='R'+tostr((PRB_RetractDist)+(tool_diameter/2)) ;YYA21102019
+      elseif ProbeCycle eq 'PRB_CYLINDER' 
+         sA_Var<<12>>='R'+tostr((PRB_RetractDist)-(tool_diameter/2))  ;YYA21102019
+      endif 
+   endif         
+      
+   if ActionProbeType eq 1 ; home definition    
+      sA_Var<<5>>='S'+tostr(i_HomeS)
+      if change(nSetDatumOnAxisX) 
+         sA_Var<<9>>='I'+tostr((nSetDatumOnAxisX))  
+      else
+         sA_Var<<9>>='I'+tostr((PRB_CP_X))
+      endif
+      if change(nSetDatumOnAxisY) 
+         sA_Var<<10>>='J'+tostr((nSetDatumOnAxisY))  
+      else
+         sA_Var<<10>>='J'+tostr((PRB_CP_Y))
+      endif        
+   endif
+
+   if PRB_Firstcycle eq 0
+      b_SkipPos = true
+      iA_Counter = iA_Counter + 1
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,(PRB_RepToches+iA_Counter))
+      b_SkipPos = false
+   else
+      iA_Counter = 0
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,PRB_RepToches)
+   endif
+   
+   ;YYA22102019
+   if ActionProbeType eq 2
+      {nb,sXParameter,'=',sXIsPos,s_FirstComment,'X-Istposition',s_LastComment}
+      {nb,sYParameter,'=',sYIsPos,s_FirstComment,'Y-Istposition',s_LastComment}
+      {nb,sSizeParameter,'=',sSizeIsPos,s_FirstComment,'DURCHMESSER',s_LastComment}
+      {nb,'M12'}  ;SATZ VORLAUF STOP
+   endif
+   
+   b_IsPRBCycHolCyl = true
+
+endp
+
+;-------------------
+
+@prb_cyc_cor ;P9023
+
+
+   print'DIE ROUTINE WURDE NICHT GETESTET, DA DIE MASCHINE DIESE ZYKLEN NICHT UNTERSTUETZT!'
+   {nb,'M30'}
+   abort
+   
+   call @usr_GenerateUserNote
+   call @usr_CheckHomeNumber 
+     
+   sA_Var<<1>>='G65'
+   sA_Var<<2>>='P9023'
+
+   if ActionProbeType eq 1 ;home definition
+      sA_Var<<3>>='X'+tostr((PRB_RetractDist_X*PRB_Dir_X))
+      sA_Var<<4>>='Y'+tostr((PRB_RetractDist_Y*PRB_Dir_Y)) 
+      sA_Var<<5>>='W'+tostr(i_HomeS)  
+   else                    ;measurement
+      sA_Var<<3>>='A'+tostr(1:integer_def_f)
+      sA_Var<<4>>='X'+tostr(PRB_CP_X)
+      sA_Var<<5>>='Y'+tostr(PRB_CP_Y) 
+      if change(iHomeNumberToCorrect)
+         sA_Var<<6>>='W'+tostr(i_HomeS:integer_def_f)
+      endif
+      if n_Tolerance ne 0
+         sA_Var<<7>>='T'+tostr(-(abs(n_Tolerance)):numeric_def_f) 
+      endif  
+   endif
+
+   if change(nSetDatumOnAxisX) 
+      sA_Var<<8>>='I'+tostr((nSetDatumOnAxisX))  
+   endif
+   if change(nSetDatumOnAxisY) 
+      sA_Var<<9>>='J'+tostr((nSetDatumOnAxisY))  
+   endif 
+   
+   if PRB_Firstcycle eq 0
+      b_SkipPos = true
+      iA_Counter = iA_Counter + 1
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,(PRB_RepToches+iA_Counter))
+      b_SkipPos = false
+   else
+      iA_Counter = 0
+      call @usr_CycleCallRepeat(zlpos,clearance_plane,PRB_RepToches)
+   endif
+
+endp
+
+;-------------------
+
+@usr_CheckHomeNumber
+   
+   local string sL_ErrorHomeNumber
+   local numeric nL_NumberP
+   sL_ErrorHomeNumber = 'Sie haben einen falschen Nullpunkt definiert!'
+   
+   if b_CustomerHomeNumber
+      if change(iHomeNumberToCorrect) eq false
+         if bSplit_HomeNumber
+            if strlen(s_SplitHomeNumber) eq 3
+               if s_SplitHomeNumber eq 'G54'
+                  i_HomeS = 54
+               elseif s_SplitHomeNumber eq 'G55'
+                  i_HomeS = 55
+               elseif s_SplitHomeNumber eq 'G56'
+                  i_HomeS = 56
+               elseif s_SplitHomeNumber eq 'G57'
+                  i_HomeS = 57
+               elseif s_SplitHomeNumber eq 'G58'
+                  i_HomeS = 58
+               elseif s_SplitHomeNumber eq 'G59'
+                  i_HomeS = 59
+               else
+                  print sL_ErrorHomeNumber
+                  {nb,'M30'}
+                  abort
+               endif
+            elseif strlen(s_SplitHomeNumber) >= 8 and strlen(s_SplitHomeNumber) <= 10
+               if substr(s_SplitHomeNumber,1,7) eq 'G54.1 P'
+                  nL_NumberP = tonum(replace(s_SplitHomeNumber,'G54.1 P',''))
+                  if nL_NumberP >= 1 and nL_NumberP <= 48
+                     i_HomeS = nL_NumberP + 100    ;G54.1 P1 = S101; G54.1 P2 = S102.....
+                  else
+                     print sL_ErrorHomeNumber
+                     {nb,'M30'}
+                     abort
+                  endif
+               endif
+            else
+               print sL_ErrorHomeNumber
+               {nb,'M30'}
+               abort
+            endif
+         elseif !bSplit_HomeNumber
+            if i_SaveProbeHomeNumber >= 54 and i_SaveProbeHomeNumber <= 59
+               i_HomeS = i_SaveProbeHomeNumber
+            elseif home_number >= 7
+               i_HomeS = (i_SaveProbeHomeNumber+100)   ;G54.1 P1 = S101; G54.1 P2 = S102.....
+            else
+               print sL_ErrorHomeNumber
+               {nb,'M30'}
+               abort
+            endif
+         endif
+      elseif change(iHomeNumberToCorrect) eq true
+         if iHomeNumberToCorrect >= 54 and iHomeNumberToCorrect <= 59 or iHomeNumberToCorrect >= 101 and iHomeNumberToCorrect <= 400
+            i_HomeS=iHomeNumberToCorrect
+         else
+            print sL_ErrorHomeNumber
+            {nb,'M30'}
+            abort
+         endif 
+      endif
+   else
+      ;NOT TESTET
+      if change(iHomeNumberToCorrect) eq false
+         if home_number <= 6
+            i_HomeS=(home_number+53)
+         elseif home_number >= 7
+            i_HomeS=((home_number-6)+ 100)   ;G54.1 P1 = S101; G54.1 P2 = S102.....
+         endif
+      elseif change(iHomeNumberToCorrect) eq true
+         if iHomeNumberToCorrect >= 54 and iHomeNumberToCorrect <= 59 or iHomeNumberToCorrect >= 101 and iHomeNumberToCorrect <= 400
+            i_HomeS=iHomeNumberToCorrect
+         endif  
+      else
+         print sL_ErrorHomeNumber
+         {nb,'M30'}
+         abort
+      endif 
+         ; if iHomeNumberToCorrect <= 6
+            ; i_HomeS=(iHomeNumberToCorrect+53)
+         ; else 
+            ; i_HomeS=((home_number-6)+ 100)    ;G54.1 P1 = S101; G54.1 P2 = S102..... 
+         ; endif               
+   endif
+ 
+
+
+endp
+
+;-------------------
+
+@usr_CycleCall
+
+   if s_ProbeNote ne ''
+      s_ProbeNote='Fehler im Job '+job_name+' Nr.:'+tostr(index_job)+' '+s_ProbeNote
+      print s_ProbeNote
+      {nb'M30'}
+      abort
+   endif
+
+   local integer nRemoveCounter
+   nRemoveCounter=1
+   {nb}
+   while nRemoveCounter <= asize(sA_Var)
+      if sA_Var<<nRemoveCounter>> ne ''
+         {sA_Var<<nRemoveCounter>>' '}
+      endif
+      nRemoveCounter=nRemoveCounter+1
+   endw      
+  
+endp
+
+;---------------
+
+@usr_CycleCallRepeat(numeric nZlpos numeric nClearancePlane integer iRepTouches)
+
+   while iRepTouches >= i_PrbRepeatCount  
+      if !b_PRB_Repeat
+         if !b_SkipPos
+            if i_PrbRepeatCount > 1
+               change(xlpos)=false
+               change(ylpos)=false
+               zlpos=nClearancePlane
+               change(zlpos)=true
+               call @move_prb
+               change(xlpos)=true
+               change(ylpos)=true
+               change(zlpos)=false
+               call @move_prb    
+               if nZlpos ne nClearancePlane  
+                  change(xlpos)=false
+                  change(ylpos)=false 
+                  zlpos=nZlpos
+                  call @move_prb            
+               endif
+            endif
+         endif
+      endif
+      i_PrbRepeatCount=(i_PrbRepeatCount+1)
+      {nb'(START MESSUNG)'}
+      b_ActiveCycle=true
+      call @usr_CycleCall
+      if ProbeCycle eq 'PRB_ANGLE_Y' or ProbeCycle eq 'PRB_ANGLE_X' or ProbeCycle eq 'PRB_ANGLE_Z'
+         {' (1. Messposition)'}
+      endif
+;      call @usr_ProbeStatus
+      b_ActiveCycle=false
+      {nb'(ENDE MESSUNG)'}
+      b_SafetyRetract=true
+   endw
+   
+endp   
+
+;---------------
+
+@usr_ClearArray
+
+   local integer nRemoveCounter iAsize
+   nRemoveCounter=1
+   while nRemoveCounter <= asize(sA_Var)
+      sA_Var<<nRemoveCounter>>=''
+      nRemoveCounter=nRemoveCounter+1
+   endw
+
+endp
+
