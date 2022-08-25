@@ -1,0 +1,11 @@
+{{
+    _toolPathXform = {
+		_chngRefPoint 	:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\change_ref_point.gppt",
+		_chngToolCnxt 	:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\chng_tool_cnext.gppt",
+		_fourthAxis		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\fourth_axis.gppt",
+		_mirror 		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\mirror.gppt",
+		_rotaryInfo 	:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotary_info.gppt",
+		_rotate 		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotate.gppt",
+		_xformInfo 		:include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\transform_info.gppt"
+	}
+}}

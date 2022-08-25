@@ -1,0 +1,155 @@
+
+   if i_SubmaschineIDSave ne submachine_ID and !b_SubMachineChange
+      call @usr_PrintMessage((10),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
+   endif
+
+{{if usr.b_HomeNumberAtEachJob-}}
+	if b_HomeNumberAtEachJob
+      	call @home_number
+   	endif
+{{-end}}
+
+   call @usr_InitPrintComments
+
+   if position ne 1 and b_Is3XMachine ;because of parts from 5x-VMID
+      call @usr_PrintMessage((9),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
+   endif
+
+   if b_LoopTransform and !bA_ProcInLoop<<label>>
+      call @usr_PrintMessage((11),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
+   endif
+
+   if b_IsHeadHead and rot_axis_type ne axis4_none
+      call @usr_PrintMessage((8),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
+   endif
+
+   call @usr_InitPost ;because of different format of coord. at x5_job
+   call @usr_ToolOffset ;@compensation_3d comes before @start_of_job at x5_job
+
+{{if usr.sVMID_MO_HSCoption != "none"-}}
+if HSM_job eq true or left(job_type,3) eq '3-d' or left(job_type,3) eq 'hss' or left(job_type,6) eq 'spiral' or x5_job eq true or job_type eq 'mw_drill_5x' or left(job_type,2) eq '3x' or left(job_type,3) eq 'mw_' or bVMID_MI_HSCbyAllJobs; or tool_type eq thread_mill
+      if job_type ne 'drill' and b_SmoothinAvailable
+         if sVMID_MO_HSCoption ne ''
+            {nb,sVMID_MO_HSCoption}
+            if sVMID_MI_HSCaditional ne ''
+               {' 'sVMID_MI_HSCaditional}
+            else
+               call @usr_PrintMessage((20),('{{res.message | string.downcase}}'),('@start_of_job'))
+            endif
+            {' 's_FirstComment'HSC EIN's_LastComment}
+            b_HighSpeed = true
+         else
+            {{#call @usr_PrintMessage((19),('meldung+abbruch'),('@start_of_job'))}}
+         endif
+      else
+         
+      endif
+   endif
+
+   if job_type eq 'drill'
+      call @usr_ResetHSC((true))
+   endif
+{{-end}}
+
+   if b_Main
+      b_InsideJob = true
+      bA_InsideJobFourtAxis<<index_job>> = true ;for @fourth_axis
+      {nl}
+
+{{if HasFirstAxis-}}
+	if !b_Is3XMachine
+    	call @usr_RotateToPlane
+	endif
+{{-end}}
+
+{{if usr.bVMID_MI_FineToolCorr-}}
+	if b_FineToolCorr and (!bA_FineToolCorr<<tool_number>> or bVMID_MI_FineToolCorr)
+    	{nb,'#560 = 0 ' s_FirstComment 'VERSCHLEISS LAENGE' s_LastComment}
+    	{nb,'#561 = 0 ' s_FirstComment 'VERSCHLEISS RADIUS' s_LastComment}
+
+        if !b_ToolWearWithG10
+        	{nb,'#[10000 + #4120] = #560'}
+        	{nb,'#[12000 + #4120] = #561'}
+        else
+        	if i_ToolWearCompDiam eq 10 or i_ToolWearCompDiam eq 11 ;system A/system B
+            	call @usr_PrintMessage((6),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
+        	elseif i_ToolWearCompDiam eq 13 ;system C
+            	{nb,(10):gcode_f'L11 P'tool_number:integer_def_f' R#560'} ;Verschleiss Lï¿½nge
+            	{nb,(10):gcode_f'L13 P'tool_number:integer_def_f' R[#561*2]'} ;Verschleiss Durchmesser
+			endif
+		endif
+
+         bA_FineToolCorr<<tool_number>> = true
+         i_SaveToolNumber = tool_number
+         {nl}
+      endif
+{{-end}}
+
+      {nb,s_FirstComment'JOB NR:'index_job}
+      call @usr_ReplaceString(job_name)
+      {'| JOB NAME: 'upper(job_name),s_LastComment}
+      
+      if msg ne  ''
+         call @usr_ReplaceString(msg)
+         call @usr_MultiLineMessage(msg,(1),(1),(false))
+      endif
+   else ;!b_Main
+      iGeometryLabelNr = iA_ProgramNumberSave<<label>>+999 ;If the customer want to use this array of sub_procedures
+   endif
+
+{{if usr.withParametricfeed-}}
+	call @usr_ParametricFeedDef
+{{-end}}
+
+{{if usr.sVMID_MI_UserInputStart-}}
+	if sVMID_MI_UserInputStart ne ''
+		{nb,sVMID_MI_UserInputStart}
+		sVMID_MI_UserInputStart = ''
+	endif
+{{-end}}
+
+{{if HasFirstAxis-}}
+	if rot_axis_type ne axis4_none or X5_job
+    	call @usr_UnClamping
+	endif
+{{-end}}
+
+{{if usr.bVMID_MI_G61_On-}}
+	if bVMID_MI_G61_On
+    	{nb,'G61'}
+   	endif
+{{-end}}
+
+   if b_ChangeRef
+      b_ChangeRef = false
+      call @usr_ChangeRef
+   endif
+
+   if b_Mirror
+      b_Mirror = false
+      call @usr_Mirror
+   endif
+
+   if b_Rotate
+      b_Rotate = false
+      call @usr_Rotate
+   endif
+
+   ;Additional Offset of the tool geometry (L,R) - active only with G41/G42
+   if compensation
+      if is_chamfer and cutting_diameter ne 0
+         {nb,(10):gcode_f'L'i_ToolWearCompDiam'P'tostr(tool_number:'5.0(n)'),' R'((cutting_diameter-tool_diameter)/2),sA_Comment<<22>>}
+         b_ToolCorrG10 = true
+      endif
+   endif
+
+   b_FirstRapidMove = true
+
+ {{if HasFirstAxis-}}
+ 	if rot_axis_coord eq axis4_polar and rot_axis_type ne axis4_none
+		b_Is5xJob = true
+	endif
+ {{-end}}
+
+   b_InsideJob<<index_job>> = true ;for tranformation (@fourth_axis)
+   b_TurretINRefPos = false

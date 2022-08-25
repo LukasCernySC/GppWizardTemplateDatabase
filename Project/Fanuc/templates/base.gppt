@@ -1,293 +1,55 @@
-{{#-----------------Include Section----------------------
+{{
+	#-----------------Include Section----------------------
 
 		#Template Engine - Support Functions
-	functions 				= include "functions/functions.gppt"
+	include "functions\\functions.gppt"
+	include "functions\\stringFunctions.gppt"
+	include "functions\\vmidFunctions.gppt"
 	
 	#----VMID----
-	add_vmid_options 		= include "routines/_1_VMID/add_vmid_options.gppt"
+	include "routines\\_1_VMID\\add_vmid_options.gppt"
 	
 	#----Init Post----
-	gpp_head 				= include "routines/gpp_head.gppt"
-	print_comments 			= include "routines/print_comments.gppt"
+	gpp_head 				= include "routines\\gpp_head.gppt"
+	print_comments 			= include "routines\\print_comments.gppt"
 
 	
 		#----Trace----
 	if res.language == de
-		trace = include "routines/_2_Trace/german_trace.gppt"
+		trace = include "routines\\_2_Trace\\german_trace.gppt"
 	else if res.language == en
-		trace = include "routines/_2_Trace/usa_trace.gppt"
+		trace = include "routines\\_2_Trace\\usa_trace.gppt"
 	else
 		trace = include "routines\\_2_Trace\\devTrace.gppt"
 	end
 	
-	#----System Commands----
-						#----Common----
-	common = {}		
-		common.absoluteMode 	= include "routines/_3_System_commands/_1_Common/Absolute_Mode/absolute_mode.gppt"
-		common.endOfFile 		= include "routines/_3_System_commands/_1_Common/End_of_File/end_of_file.gppt"
-		common.endOfJob 		= include "routines/_3_System_commands/_1_Common/End_of_Job/end_of_job.gppt"
-		common.endProgram 		= include "routines/_3_System_commands/_1_Common/End_Program/end_program.gppt"
-		common.feedSpin 		= include "routines/_3_System_commands/_1_Common/Feed_Spin/feed_spin.gppt"
-		common.homeData 		= include "routines/_3_System_commands/_1_Common/Home_data/home_data.gppt"
-		common.homeNumber 		= include "routines/_3_System_commands/_1_Common/Home_Number/home_number.gppt"
-		common.machinePlane 	= include "routines/_3_System_commands/_1_Common/Machine_Plane/machine_plane.gppt"
-		common.message 			= include "routines/_3_System_commands/_1_Common/Message/message.gppt"
-		common.mFeedSpin 		= include "routines/_3_System_commands/_1_Common/M_Feed_Spin/m_feed_spin.gppt"
-		common.relativeMode 	= include "routines/_3_System_commands/_1_Common/Relative_Mode/relative_mode.gppt"
-		common.setup 			= include "routines/_3_System_commands/_1_Common/Setup/setup.gppt"
-		common.startOfFile 		= include "routines/_3_System_commands/_1_Common/Start_of_File/start_of_file.gppt"
-		common.startOfJob 		= include "routines/_3_System_commands/_1_Common/Start_of_Job/start_of_job.gppt"
-		common.startProgram 	= include "routines/_3_System_commands/_1_Common/Start_Program/start_program.gppt"
-		common.vmidInfo 		= include "routines/_3_System_commands/_1_Common/VMID_Info/vmid_info.gppt"
-
-						#----Tool Path----
-	toolPath = {}
-		toolPath.arc 				= include "routines/_3_System_commands/_2_Tool_Path/Arc/arc.gppt"
-		toolPath.arc4xCartesian 	= include "routines/_3_System_commands/_2_Tool_Path/Arc4x_Cartesian/arc_4x_cartesian.gppt"
-		toolPath.arc4xPolar 		= include "routines/_3_System_commands/_2_Tool_Path/Arc4x_Polar/arc_4x_polar.gppt"
-		toolPath.arc5x 				= include "routines/_3_System_commands/_2_Tool_Path/Arc5x/arc_5x.gppt"
-		toolPath.comp 				= include "routines/_3_System_commands/_2_Tool_Path/Compensation/compensation.gppt"
-		toolPath.compH 				= include "routines/_3_System_commands/_2_Tool_Path/Compensation_h/compensation_h.gppt"
-		toolPath.drill 				= include "routines/_3_System_commands/_2_Tool_Path/Drill/drill.gppt"
-		toolPath.drill4xCartesian 	= include "routines/_3_System_commands/_2_Tool_Path/Drill4x_Cartesian/drill4x_cartesian.gppt"
-		toolPath.drill4xPnt 		= include "routines/_3_System_commands/_2_Tool_Path/Drill4x_Pnt/drill4x_pnt.gppt"
-		toolPath.drill4xPolar 		= include "routines/_3_System_commands/_2_Tool_Path/Drill4x_Polar/drill4x_polar.gppt"
-		toolPath.drillPoint 		= include "routines/_3_System_commands/_2_Tool_Path/Drill_Point/drill_point.gppt"
-		toolPath.drillEnd 			= include "routines/_3_System_commands/_2_Tool_Path/End_Drill/end_drill.gppt"
-		toolPath.initCpos 			= include "routines/_3_System_commands/_2_Tool_Path/Init_Cpos/init_cpos.gppt"
-		toolPath.line 				= include "routines/_3_System_commands/_2_Tool_Path/Line/line.gppt"
-		toolPath.line5x 			= include "routines/_3_System_commands/_2_Tool_Path/Line_5x/line_5x.gppt"
-		toolPath.lineOn 			= include "routines/_3_System_commands/_2_Tool_Path/Line_On/line_on.gppt"
-		toolPath.line4x				= include "routines/_3_System_commands/_2_Tool_Path/Line4x/line_4x.gppt"
-		toolPath.line4xCartesian 	= include "routines/_3_System_commands/_2_Tool_Path/Line4x_Cartesian/line4x_cartesian.gppt"
-		toolPath.line4xDir 			= include "routines/_3_System_commands/_2_Tool_Path/Line4x_Dir/line4x_dir.gppt"
-		toolPath.line4xPolar 		= include "routines/_3_System_commands/_2_Tool_Path/Line4x_Polar/line4x_polar.gppt"
-		toolPath.move4x 			= include "routines/_3_System_commands/_2_Tool_Path/Move4x/move_4x.gppt"
-		toolPath.move4xCartesian 	= include "routines/_3_System_commands/_2_Tool_Path/Move4x_Cartesian/move4x_cartesian.gppt"
-		toolPath.move4xDir 			= include "routines/_3_System_commands/_2_Tool_Path/Move4x_Dir/move4x_dir.gppt"
-		toolPath.move4xPolar 		= include "routines/_3_System_commands/_2_Tool_Path/Move4x_Polar/move4x_polar.gppt"
-		toolPath.move5x 			= include "routines/_3_System_commands/_2_Tool_Path/Move5x/move_5x.gppt"
-		toolPath.moveRapid 			= include "routines/_3_System_commands/_2_Tool_Path/Rapid_Move/rapid_move.gppt"
-		toolPath.info 				= include "routines/_3_System_commands/_2_Tool_Path/Tool_Path_Info/tool_path_info.gppt"
-	
-						#----Tool Path Transform----
-	toolPathXform = {}
-		toolPathXform.chngRefPoint 	= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Change_Ref_Point\\change_ref_point.gppt"
-		toolPathXform.chngToolCnxt 	= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Chng_Tool_Cnext\\chng_tool_cnext.gppt"
-		toolPathXform.fourthAxis	= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Fourth_Axis\\fourth_axis.gppt"
-		toolPathXform.mirror 		= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Mirror\\mirror.gppt"
-		toolPathXform.rotaryInfo 	= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Rotary_Info\\rotary_info.gppt"
-		toolPathXform.rotate 		= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Rotate\\rotate.gppt"
-		toolPathXform.xformInfo 	= include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\Transform_Info\\transform_info.gppt"
-	
-						#----MCO----
-	mco = {}
-		mco.mco 			= include "routines\\_3_System_commands\\_4_MCO\\mco.gppt"
-		mco.delay 			= include "routines\\_3_System_commands\\_4_MCO\\Delay\\delay.gppt"
-		mco.moveObj 		= include "routines\\_3_System_commands\\_4_MCO\\Move_Object\\move_object.gppt"
-		mco.spindlesSync 	= include "routines\\_3_System_commands\\_4_MCO\\Spindles_Sync\\spindles_sync.gppt"
-		mco.startMachCtrl 	= include "routines\\_3_System_commands\\_4_MCO\\Start_Mach_Ctrl\\start_mach_ctrl.gppt"
-		mco.startObjAct 	= include "routines\\_3_System_commands\\_4_MCO\\Start_Object_Act\\start_obj_act.gppt"
-		mco.startTool 		= include "routines\\_3_System_commands\\_4_MCO\\Start_Tool\\start_tool.gppt"
-		mco.stopTool 		= include "routines\\_3_System_commands\\_4_MCO\\Stop_Tool\\stop_tool.gppt"
-		
-						#----Plane Rotations
-	planeRotations = {}
-		planeRotations.drillPlane 		= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Drill_Plane\\drill_plane.gppt"
-		planeRotations.planeData 		= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Plane_Data\\plane_data.gppt"
-		planeRotations.rotateToPlane 	= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Rotate_to_Plane\\rotate_to_plane.gppt"
-		planeRotations.tmatrix 			= include "routines\\_3_System_commands\\_5_Plane_Rotations\\Tmatrix\\tmatrix.gppt"
-	
-						#----Proc----
-	proc = {}
-		proc.callPrms 	= include "routines\\_3_System_commands\\_6_Proc\\Call_Prms\\call_prms.gppt"
-		proc.callProc 	= include "routines\\_3_System_commands\\_6_Proc\\Call_Proc\\call_proc.gppt"
-		proc.endLoop 	= include "routines\\_3_System_commands\\_6_Proc\\End_Loop\\end_loop.gppt"
-		proc.endProc 	= include "routines\\_3_System_commands\\_6_Proc\\End_Proc\\end_proc.gppt"
-		proc.loop 		= include "routines\\_3_System_commands\\_6_Proc\\Loop\\loop.gppt"
-		proc.proc 		= include "routines\\_3_System_commands\\_6_Proc\\Proc\\proc.gppt"
-	
-						#----Tool----
-	tool = {}
-		tool.changeTool 		= include "routines\\_3_System_commands\\_7_Tool\\Change_Tool\\change_tool.gppt"
-		tool.defTool 			= include "routines\\_3_System_commands\\_7_Tool\\Def_Tool\\def_tool.gppt"
-		tool.defTurnTool 		= include "routines\\_3_System_commands\\_7_Tool\\Def_Turn_Tool\\def_turn_tool.gppt"
-		tool.offsetChange 		= include "routines\\_3_System_commands\\_7_Tool\\Offset_Change\\offset_change.gppt"
-		tool.toolBreakage 		= include "routines\\_3_System_commands\\_7_Tool\\Tool_Breakage\\tool_breakage.gppt"
-		tool.turnChangeOffset 	= include "routines\\_3_System_commands\\_7_Tool\\Turn_Change_Offset\\turn_chng_offset.gppt"
-		tool.turnChangeTool 	= include "routines\\_3_System_commands\\_7_Tool\\Turn_Change_Tool\\turn_change_tool.gppt"
-
-						#----Channel Sync----
-	channelSync = {}
-		channelSync.syncProc = include "routines\\_3_System_commands\\_8_Channel_Synchronization\\Sync_Process\\sync_process.gppt"
-		
-						#----Turning Cycles----
-	turningCycles = {}
-		turningCycles.groove 		= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Groove\\groove.gppt"
-		turningCycles.thread		= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Thread\\thread.gppt"
-		turningCycles.turnDrill		= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Turn_Drill\\turn_drill.gppt"
-		turningCycles.turnEndProc	= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Turn_Endproc\\turn_endproc.gppt"
-		turningCycles.turnOptParms	= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Turn_Opt_Parms\\turn_opt_parms.gppt"
-		turningCycles.turnProc		= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Turn_Proc\\turn_proc.gppt"
-		turningCycles.turning		= include "routines\\_3_System_commands\\_9_Turning_Cycles\\Turning\\turning.gppt"
-
-						#----Probe----
-	probe = {}
-		probe.angle		= include "routines\\_3_System_commands\\_10_Probe\\Angle_Probe_Cycles\\prb_cyc_angle.gppt"
-		probe.boss		= include "routines\\_3_System_commands\\_10_Probe\\Boss_Probe_Cycle\\prb_cyc_bos_pckt.gppt"
-		probe.corner	= include "routines\\_3_System_commands\\_10_Probe\\Corner_Probe\\prb_cyc_bos_pckt.gppt"
-		probe.cylinder	= include "routines\\_3_System_commands\\_10_Probe\\Cylindrical_Probe_Cycles\\prb_cyc_hol_cyl.gppt"
-		probe.endProbe	= include "routines\\_3_System_commands\\_10_Probe\\End_Probe\\end_probe.gppt"
-		probe.line		= include "routines\\_3_System_commands\\_10_Probe\\Line_Probe\\line_probe.gppt"
-		probe.move		= include "routines\\_3_System_commands\\_10_Probe\\Move_Probe\\move_probe.gppt"
-		probe.point		= include "routines\\_3_System_commands\\_10_Probe\\Single_Point_Probe_Cycles\\prb_cyc_xyz_plan.gppt"
-		probe.start		= include "routines\\_3_System_commands\\_10_Probe\\Start_Probe\\start_probe.gppt"
-#--------------------------------------------------------
+	#--------------------------------------------------------
 }}
 
 {{
 #--------Events to load before init post-----------------
 	#Template Engine - Support Functions
-	functions
-	add_vmid_options
+	
+	
 	#gpp_head
 	
 	print_comments
 #--------------------------------------------------------
 }}
 
+{{
 @init_post
-;#region 1. Global Variables
-	
-	;Variables for controller stuff---------------------------------------------------------------------------------------------------------
-	global string sA_ControllerType<<100,10>>									;Selection list for different controls
-	global string s_TypeOfController											;Selected controller
-	global string s_ProgramNumber												;Program number output based on controller
-	;Variables for turret stuff-------------------------------------------------------------------------------------------------------------
-	global logical b_HalfIndex													;Half indexing turret 
-
-	;----------------Variables for tool stuff-----------------------------------------------------------------------------------------------
-	
-	;		----Messages----
-	global string s_OpenComment, s_CloseComment									;String used for open and close comments
-	;		----Message formatting----
-	global integer i_ToolDescriptionLen											;Set how many characters are allowed on one line
-	global integer i_ToolDescriptionMaxLines									;Set max amount of lines allowed for tool Description
-	global logical l_DefaultMessageFormat										;True = Default message format. See @usr_MessageFormat
-	;																			False = @cus_MessageFormat. See @cus_MessageFormat
-	;		----Tool Change/Operation Messages----
-	global logical b_OutputToolMessage											;True = Tool Message at tool change
-	global logical b_DefaultOpMessage											;True = Generates a default operation message ex: TURN OD
-	
-	
-	;Variables for job stuff ---------------------------------------------------------------------------------------------------------------
-	global integer iA_SaveNumberOfChannels<<4>>									;Used in start_of_file to grab # of channels
-	;																			;If single channel we can skip logic for quicker post
-    ;		----Homing----
-	global logical l_EndProgram													;Used for homing. Posting one operation vs multiple
-	
-	
-	;Variables for C-axis stuff ------------------------------------------------------------------------------------------------------------
-	
-	
-	;Variables for position stuff ----------------------------------------------------------------------------------------------------------
-	global numeric nA_SaveLast_opos<<2,3>>										;Save the last axis position |X|Y|Z|
-	global numeric nA_SaveLast_hpos<<2,3>>										;Save the last axis position |X|Y|Z|
-	global numeric nA_SaveLast_apos<<2>>										;Save the last apos value
-	global numeric nA_SaveLast_bpos<<2>>										;Save the last bpos value
-	;Variables for interpolation stuff -----------------------------------------------------------------------------------------------------
-	global logical bA_CylindricalInterpolation<<2>>                             ;"true" if G12.1 + G16 active
-	global numeric nA_CylindricalCartesianY<<2>>								;Save the calculated cartesian Y value for output
-	global numeric nA_CylindricalCartesianY_RAW<<2>>							;Save the calculated cartesian Y value without rounding
-	global numeric nA_SaveLast_CylindricalCartesianY<<2>>						;Save the last cartesian Y value for G12.1 + G16
-
-	;Variables for synchronization ---------------------------------------------------------------------------------------------------------
-	global integer iA_Z_MasterChannel<<2>>										;Contains the channel which have Z-Axis control
-	global integer iA_C_MasterChannel<<2>>										;Contains the channel which have C-Axis control
-	
-	;Variables for format string -----------------------------------------------------------------------------------------------------------
-	global string  toolNumber_f                                                 ;Format style of tool call output
-	global string  wearNumber_f                                                 ;Format style of tool wear number output
-	global string  spin_TT1_f spin_TT2_f spin_TT3_f spin_TT4_f					;Format style of turning tool spin output
-	global string  spin_MT1_f spin_MT2_f spin_MT3_f spin_MT4_f					;Format style of milling tool spin output
-	global string  radius_f                                                     ;Format style of radius output
-	global string  anext_f                                                      ;Format style of C-Axis output
-	global string  dapos_f                                                      ;Format style of C-Axis incremental output
-	global string  bpos_f bnext_f                                               ;Format style of B-Axis output
-	global string  xonext_f yonext_f zonext_f                                   ;Format style of onext coordinates
-	global string  xhnext_f yhnext_f zhnext_f                                   ;Format style of hnext coordinates
-	global string  xocenter_rel_f yocenter_rel_f zocenter_rel_f                 ;Format style of ocenter_rel
-	global string  xhcenter_rel_f yhcenter_rel_f zhcenter_rel_f                 ;Format style of hcenter_rel
-	global string  xlcenter_rel_f ylcenter_rel_f zlcenter_rel_f                 ;Format style of lcenter_rel
-	global string  shift_x_after_rot_f                                          ;Format style of shift_#_after_rot
-	global string  shift_y_after_rot_f                                          ;Format style of shift_#_after_rot
-	global string  shift_z_after_rot_f                                          ;Format style of shift_#_after_rot
-	global string  Drill_Retract_f                                                    ;Format style of G8x R-value
-	global string  Drill_Peck_f                                                    ;Format style of G8x Q-value
-	global string  Drill_Dwell_f                                                    ;Format style of G8x P-value
-	
-	 ;#region 3.-- Controller Selection
-	;List of controls ----------------------------------------------------------------------------------------------------------------------
-	;	Haas
-	sA_ControllerType<<1,1>> = 'HaasNGC'
-	;	Fanuc
-	sA_ControllerType<<1,2>> = 'System_A'
-	sA_ControllerType<<2,2>> = 'System_B'
-	sA_ControllerType<<3,2>> = 'System_C'
-	;	Okuma
-	sA_ControllerType<<1,3>> = 'OSP300'
-	sA_ControllerType<<2,3>> = 'OSP200'
-	sA_ControllerType<<3,3>> = '5070'
-	;	Mazatrol
-	sA_ControllerType<<1,4>> = 'SmoothX'
-	sA_ControllerType<<2,4>> = 'SmoothG'
-	;	Mitsubishi 
-	sA_ControllerType<<1,5>> = 'M7'
-	
- ;endregion
-	
-	;------------Post processor preparation stuff-------------------------------------------------------------------------------------------
-	;	----Controller Selection----
-	s_TypeOfController				= sA_ControllerType<<1,1>>
-	;---------------------------------------------------------------------------------------------------------------------------------------
-	numeric_def_f					= '5.3(r)'
-	integer_def_f					= '8.0(p)'
-	wearNumber_f					= '<T>z2.0(p)< >'
-	dapos_f							= '<H>5.3(r)< >'
-	; radius_f						= '<R>5.4(r)< >'
-	
-	;------------Turrent--------------------------------------------------------------------------------------------------------------------
-	b_HalfIndex						= true										;True = Machine has half indexing turret
-	;------------Messages-------------------------------------------------------------------------------------------------------------------
-	;	----Tool Messages/Comments----
-	l_DefaultMessageFormat			= true										;True = Default Message formatting
-	i_ToolDescriptionLen			= 32										;Tool Description: Max characters per line
-	i_ToolDescriptionMaxLines		= 5											;Tool Description: Max lines 
-	;	----Operation Messages/Comments----
-	
-	;---------------------------------------------------------------------------------------------------------------------------------------
-
- 
-
- ;#region Block Numbering
-	blknum_letter         = 'N'
-	blknum_f              = '5.0(p)'
-	blknum_gen            = true
-	blknum_exist          = true
-	blknum                = 1
-	blknum_delta          = 1
-	blknum_max            = 99999
- ;#endregion
-
+	include : 'routines\\_3_System_commands\\init\\_initPost.gpp'
+endp
+}}
 
 {{
+@usr_trace
 	#----Trace----
 	#region is built into .gppt
 	trace
-
-}}
-
 endp
+}}
 
 
 ;#region 2. System Commands
@@ -297,108 +59,97 @@ endp
 ;#region 2.SC.a------ | Common
 
 {{
-#@absolute_mode
-	common.absoluteMode
-#endp
+	include "routines\\_3_System_commands\\_1_Common\\absolute_mode.gppt"
+}}
+
+
+{{#@relative_mode
+	include "routines\\_3_System_commands\\_1_Common\\relative_mode.gppt"
 }}
 
 
 {{
-#@relative_mode
-	common.relativeMode
-#endp
+@feed_spin
+	include "routines\\_3_System_commands\\_1_Common\\feed_spin.gppt"
+endp
 }}
 
 
 {{
-#@feed_spin
-	common.feedSpin
-#endp
+@start_of_job
+	include "routines\\_3_System_commands\\_1_Common\\start_of_job.gppt"
+endp
 }}
 
 
 {{
-#@start_of_job
-	common.startOfJob
-#endp
+@start_of_file
+	include "routines\\_3_System_commands\\_1_Common\\start_of_file.gppt"
+@endp
+}}
+
+
+{{#@vmid_info
+	include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt"
+}}
+
+
+{{#@setup
+	include "routines\\_3_System_commands\\_1_Common\\setup.gppt"
 }}
 
 
 {{
-	common.startOfFile
+@start_program
+	include "routines\\_3_System_commands\\_1_Common\\start_program.gppt"
+endp
+}}
+
+
+{{#@message
+	include "routines\\_3_System_commands\\_1_Common\\message.gppt"
 }}
 
 
 {{
-#@vmid_info
-	common.vmidInfo
-#endp
+@machine_plane
+	include "routines\\_3_System_commands\\_1_Common\\machine_plane.gppt"
+endp
 }}
 
 
 {{
-#@setup
-	common.setup
-#endp
+@m_feed_spin
+	include "routines\\_3_System_commands\\_1_Common\\m_feed_spin.gppt"
+endp
 }}
 
 
-{{
-#@start_program
-	common.startProgram
-#endp
+{{#@home_data
+	include "routines\\_3_System_commands\\_1_Common\\home_data.gppt"
 }}
 
 
-{{
-#@message
-	common.message
-#endp
+{{#@home_number
+	include "routines\\_3_System_commands\\_1_Common\\home_number.gppt"
 }}
 
 {{
-#@machine_plane
-	common.machinePlane
-#endp
-}}
-
-
-{{
-#@m_feed_spin
-	common.mFeedSpin
-#endp
-}}
-
-
-{{
-#@home_data
-	common.homeData
-#endp
-}}
-
-
-{{
-#@home_number
-	common.homeNumber
-#endp
+@end_of_job
+	include "routines\\_3_System_commands\\_1_Common\\end_of_job.gppt"
+endp
 }}
 
 {{
-#@end_of_job
-	common.endOfJob
-#endp
+@end_program
+	include "routines\\_3_System_commands\\_1_Common\\end_program.gppt"
+endp
 }}
 
 {{
-#@end_program
-	common.endProgram
-#endp
-}}
-
-{{
-#@end_of_file
-	common.endOfFile
-#endp
+@end_of_file
+	include "routines\\_3_System_commands\\_1_Common\\end_of_file.gppt"
+endp
 }}
 
 
@@ -507,7 +258,7 @@ endp
 					{nb}
 				endif
 			endif
-		else
+		else; If customer would like some other way
 			call @cus_MessageFormat(sL_ReplacedToolMsg)
 		endif
 	endif
@@ -535,172 +286,178 @@ endp
 ;#region 2.SC.b------ | Tool-Path
 
 {{
-#@arc
-	toolPath.arc
-#endp
+@arc
+	include "routines\\_3_System_commands\\_2_Tool_Path\\arc.gppt"
+endp
 }}
 
 
 {{
-#@arc_5x
-	toolPath.arc5x
-#endp
+@arc_5x
+	include "routines\\_3_System_commands\\_2_Tool_Path\\arc_5x.gppt"
+endp
 }}
 
 
 {{
-#@arc_4x_cartesian
-	toolPath.arc4xCartesian
-#endp
+@arc_4x_cartesian
+	include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_cartesian.gppt"
+endp
 }}
 
 {{
-#@arc_4x_polar
-	toolPath.arc4xPolar
-#endp
+@arc_4x_polar
+	include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_polar.gppt"
+endp
 }}
 
 
-{{
-#@tool_path_info
-	toolPath.info
-#endp
-}}
-
-
-{{
-#@rapid_move
-	toolPath.moveRapid
-#endp
+{{#@tool_path_info
+	include "routines\\_3_System_commands\\_2_Tool_Path\\tool_path_info.gppt"
 }}
 
 
 {{
-#@move_5x
-	toolPath.move5x
-#endp
+@rapid_move
+	include "routines\\_3_System_commands\\_2_Tool_Path\\rapid_move.gppt"
+endp
 }}
 
 
 {{
-#@move_4x
-	toolPath.move4x
-#endp
+@move_5x
+	include "routines\\_3_System_commands\\_2_Tool_Path\\move_5x.gppt"
+endp
 }}
 
 
 {{
-#@move4x_polar
-	toolPath.move4xPolar
-#endp
+@move_4x
+	include "routines\\_3_System_commands\\_2_Tool_Path\\move_4x.gppt"
+endp
 }}
 
-{{
-#@move4x_dir
-	toolPath.move4xDir
-#endp
-}}
 
 {{
-#@move4x_cartesian
-	toolPath.move4xCartesian
-#endp
+@move4x_polar
+	include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_polar.gppt"
+endp
 }}
 
-{{
-#@drill_point
-	toolPath.drillPoint
-#endp
-}}
 
 {{
-#@drill
-	toolPath.drill
-#endp
+@move4x_dir
+	include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_dir.gppt"
+endp
 }}
 
-{{
-#@drill4x_cartesian
-	toolPath.drill4xCartesian
-#endp
-}}
 
 {{
-#@end_drill
-	toolPath.drillEnd
-#endp
+@move4x_cartesian
+	include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_cartesian.gppt"
+endp
 }}
 
-{{
-#@compensation
-	toolPath.comp
-#endp
-}}
 
 {{
-#@compensation_h
-	toolPath.compH
-#endp
+@drill_point
+	include "routines\\_3_System_commands\\_2_Tool_Path\\drill_point.gppt"
+endp
 }}
 
-{{
-#@line
-	toolPath.line
-#endp
-}}
 
 {{
-#@line_4x
-	toolPath.line4x
-#endp
+@drill
+	include "routines\\_3_System_commands\\_2_Tool_Path\\drill.gppt"
+endp
 }}
 
-{{
-#@line4x_cartesian
-	toolPath.line4xCartesian
-#endp
+
+{{#@drill4x_cartesian
+	include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_cartesian.gppt"
 }}
 
-{{
-#@line4x_dir
-	toolPath.line4xDir
-#endp
-}}
 
 {{
-#@line4x_polar
-	toolPath.line4xPolar
-#endp
+@end_drill
+	include "routines\\_3_System_commands\\_2_Tool_Path\\end_drill.gppt"
+endp
 }}
 
-{{
-#@line_5x
-	toolPath.line5x
-#endp
-}}
 
 {{
-#@line_on
-	toolPath.lineOn
-#endp
+@compensation
+	include "routines\\_3_System_commands\\_2_Tool_Path\\compensation.gppt"
+endp
 }}
 
-{{
-#@drill4x_polar
-	toolPath.drill4xPolar
-#endp
-}}
 
 {{
-#@drill4x_pnt
-	toolPath.drill4xPnt
-#endp
+@compensation_h
+	include "routines\\_3_System_commands\\_2_Tool_Path\\compensation_h.gppt"
+endp
 }}
 
+
 {{
-#@init_cpos
-	toolPath.initCpos
-#endp
+@line
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line.gppt"
+endp
+}}
+
+
+{{
+@line_4x
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line_4x.gppt"
+endp
+}}
+
+
+{{
+@line4x_cartesian
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_cartesian.gppt"
+endp
+}}
+
+
+{{#line4x_dir
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_dir.gppt"
+}}
+
+
+{{#line4x_polar
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_polar.gppt"
+}}
+
+
+{{
+@line_5x
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line_5x.gppt"
+endp
+}}
+
+
+{{#line_on
+	include "routines\\_3_System_commands\\_2_Tool_Path\\line_on.gppt"
+}}
+
+
+{{
+@drill4x_polar
+	include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_polar.gppt"
+endp
+}}
+
+
+{{
+@drill4x_pnt
+	include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_pnt.gppt"
+endp
+}}
+
+
+{{#init_cpos
+	include "routines\\_3_System_commands\\_2_Tool_Path\\init_cpos.gppt"
 }}
 
 ;#endregion
@@ -755,46 +512,46 @@ endp
 ;#region 2.SC.c------ | Tool-Path Transform
 
 
-{{
-#@fourth_axis
-	toolPathXform.fourthAxis
-#endp
+{{#fourth_axis
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\fourth_axis.gppt"
 }}
 
-{{
-#@rotate
-	toolPathXform.rotate
-#endp
+
+{{#rotate
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotate.gppt"
 }}
 
-{{
-#@rotary_info
-	toolPathXform.rotaryInfo
-#endp
+
+{{#rotary_info
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotary_info.gppt"
 }}
 
-{{
-#@transform_info
-	toolPathXform.xformInfo
-#endp
-}}
 
 {{
-#@mirror
-	toolPathXform.mirror
-#endp
+@transform_info
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\transform_info.gppt"
+endp
 }}
 
-{{
-#@change_ref_point
-	toolPathXform.chngRefPoint
-#endp
-}}
 
 {{
-#@chng_tool_cnext
-	toolPathXform.chngToolCnxt
-#endp
+@mirror
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\mirror.gppt"
+endp
+}}
+
+
+{{
+@change_ref_point
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\change_ref_point.gppt"
+endp
+}}
+
+
+{{
+@chng_tool_cnext
+	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\chng_tool_cnext.gppt"
+endp
 }}
 
 
@@ -813,52 +570,45 @@ endp
 ;#region 2.SC.d------ | MCO
 
 
-{{
-#@mco_cycle
-	mco.mco
-#endp
+{{#mco_cycle
+	include 'routines\\_3_System_commands\\_4_MCO\\mco_cycle.gppt'
 }}
 
-{{
-#@stop_tool
-	mco.stopTool
-#endp
+
+{{#stop_tool
+	include "routines\\_3_System_commands\\_4_MCO\\stop_tool.gppt"
 }}
 
-{{
-#@start_obj_act
-	mco.startObjAct
-#endp
+
+{{#start_obj_act
+	include "routines\\_3_System_commands\\_4_MCO\\start_obj_act.gppt"
 }}
 
-{{
-#@start_mach_ctrl
-	mco.startMachCtrl
-#endp
+
+{{#start_mach_ctrl
+	include "routines\\_3_System_commands\\_4_MCO\\start_mach_ctrl.gppt"
 }}
 
-{{
-#@spindles_sync
-	mco.spindlesSync
-#endp
+
+{{#spindles_sync
+	include "routines\\_3_System_commands\\_4_MCO\\spindles_sync.gppt"
 }}
 
-{{
-#@move_object
-	mco.moveObj
-#endp
+
+{{#move_object
+	include "routines\\_3_System_commands\\_4_MCO\\move_object.gppt"
 }}
 
-{{
-#@start_tool
-	mco.startTool
-#endp
+
+{{#start_tool
+	include "routines\\_3_System_commands\\_4_MCO\\start_tool.gppt"
 }}
 
+
 {{
-#@delay
-	mco.delay
-#endp
+@delay
+	include "routines\\_3_System_commands\\_4_MCO\\delay.gppt"
+endp
 }}
 
 
@@ -876,28 +626,23 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.e------ | Plane Rotations
 
-{{
-#@tmatrix
-	planeRotations.tmatrix
-#endp
+{{#tmatrix
+	include "routines\\_3_System_commands\\_5_Plane_Rotations\\tmatrix.gppt"
 }}
 
-{{
-#@plane_data
-	planeRotations.planeData
-#endp
+
+{{#plane_data
+	include "routines\\_3_System_commands\\_5_Plane_Rotations\\plane_data.gppt"
 }}
 
-{{
-#@rotate_to_plane
-	planeRotations.rotateToPlane
-#endp
+
+{{#rotate_to_plane
+	include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt"
 }}
 
-{{
-#@drill_plane
-	planeRotations.drillPlane
-#endp
+
+{{#drill_plane
+	include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt"
 }}
 
 ;#endregion
@@ -914,40 +659,33 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.f------ | Proc
 
-{{
-#@proc
-	proc.proc
-#endp
+{{#proc
+	include "routines\\_3_System_commands\\_6_Proc\\proc.gppt"
 }}
 
-{{
-#@loop
-	proc.loop
-#endp
+
+{{#loop
+	include "routines\\_3_System_commands\\_6_Proc\\loop.gppt"
 }}
 
-{{
-#@end_proc
-	proc.endLoop
-#endp
+
+{{#end_proc
+	include "routines\\_3_System_commands\\_6_Proc\\end_proc.gppt"
 }}
 
-{{
-#@call_proc
-	proc.callProc
-#endp
+
+{{#call_proc
+	include "routines\\_3_System_commands\\_6_Proc\\call_proc.gppt"
 }}
 
-{{
-#@call_prms
-	proc.callPrms
-#endp
+
+{{#call_prms
+	include "routines\\_3_System_commands\\_6_Proc\\call_prms.gppt"
 }}
 
-{{
-#@end_loop
-	proc.endLoop
-#endp
+
+{{#end_loop
+	include "routines\\_3_System_commands\\_6_Proc\\end_loop.gppt"
 }}
 
 ;#endregion
@@ -965,52 +703,40 @@ endp
 ;#region 2.SC.g------ | Tool
 
 
-{{
-#@tool_breakage
-	tool.toolBreakage
-#endp
+{{#tool_breakage
+	include "routines\\_3_System_commands\\_7_Tool\\tool_breakage.gppt"
+}}
+
+
+{{#turn_change_tool
+	include "routines\\_3_System_commands\\_7_Tool\\turn_change_tool.gppt"
+}}
+
+
+{{#turn_chng_offset
+	include "routines\\_3_System_commands\\_7_Tool\\turn_chng_offset.gppt"
+}}
+
+
+{{#change_tool
+	include "routines\\_3_System_commands\\_7_Tool\\change_tool.gppt"
 }}
 
 
 {{
-#@turn_change_tool
-	tool.turnChangeTool
-#endp
+@offset_change
+	include "routines\\_3_System_commands\\_7_Tool\\offset_change.gppt"
+endp
 }}
 
 
-{{
-#@turn_chng_offset
-	tool.turnChangeOffset
-#endp
+{{#def_tool
+	include "routines\\_3_System_commands\\_7_Tool\\def_tool.gppt"
 }}
 
 
-{{
-#@change_tool
-	tool.changeTool
-#endp
-}}
-
-
-{{
-#@offset_change
-	tool.offsetChange
-#endp
-}}
-
-
-{{
-#@def_tool
-	tool.defTool
-#endp
-}}
-
-
-{{
-#@def_turn_tool
-	tool.defTurnTool
-#endp
+{{#def_turn_tool
+	include "routines\\_3_System_commands\\_7_Tool\\def_turn_tool.gppt"
 }}
 
 ;#endregion
@@ -1311,9 +1037,6 @@ endp
 	sL_String = upper(sL_String)
 endp
 
-
-
-
 @usr_ToolTypeName
 	;Software limits - there is no "tool_user_type" at turning operations and it is on english
 	local string lS_UserToolType lS_ToolType lS_ToolTypeMill<<100>> lS_ToolTypeTurn<<100>>
@@ -1420,10 +1143,8 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.h------ | Channel Synchronization
 
-{{
-#@sync_process
-	channelSync.syncProc
-#endp
+{{#sync_process
+	include "routines\\_3_System_commands\\_8_Channel_Synchronization\\sync_process.gppt"
 }}
 
 ;#endregion
@@ -1440,51 +1161,39 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.i------ | Turning Cycles
 
-{{
-#@turn_endproc
-	turningCycles.turnEndProc
-#endp
+{{#turn_endproc
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_endproc.gppt"
 }}
 
 
-{{
-#@turn_opt_parms
-	turningCycles.turnOptParms
-#endp
+{{#turn_opt_parms
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_opt_parms.gppt"
 }}
 
 
-{{
-#@turn_proc
-	turningCycles.turnProc
-#endp
+{{#turn_proc
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_proc.gppt"
 }}
 
 
-{{
-#@turn_drill
-	turningCycles.turnDrill
-#endp
+{{#turn_drill
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_drill.gppt"
 }}
 
 
-{{
-#@thread
-	turningCycles.thread
-#endp
+{{#thread
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\thread.gppt"
 }}
 
 
-{{
-#@turning
-	turningCycles.turning
-#endp
+{{#turning
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turning.gppt"
 }}
 
 
 {{
 #@groove
-	turningCycles.groove
+	include "routines\\_3_System_commands\\_9_Turning_Cycles\\groove.gppt"
 #endp
 }}
 
@@ -1502,59 +1211,43 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.j------ | Probe
 
-{{
-#@start_probe
-	probe.start
-#endp
+{{#start_probe
+	include "routines\\_3_System_commands\\_10_Probe\\start_probe.gppt"
 }}
 
 
-{{
-#@end_probe
-	probe.endProbe
-#endp
+{{#end_probe
+	include "routines\\_3_System_commands\\_10_Probe\\end_probe.gppt"
 }}
 
 
-{{
-#@move_probe
-	probe.move
-#endp
+{{#move_probe
+	include "routines\\_3_System_commands\\_10_Probe\\move_probe.gppt"
 }}
 
 
-{{
-#@line_probe
-	probe.line
-#endp
+{{#line_probe
+	include "routines\\_3_System_commands\\_10_Probe\\line_probe.gppt"
 }}
 
 
-{{
-#@prb_cyc_xyz_plan
-	probe.point
-#endp
+{{#prb_cyc_xyz_plan
+	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_xyz_plan.gppt"
 }}
 
 
-{{
-#@prb_cyc_angle
-	probe.angle
-#endp
+{{#prb_cyc_angle
+	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_angle.gppt"
 }}
 
 
-{{
-#@prb_cyc_hol_cyl
-	probe.cylinder
-#endp
+{{#prb_cyc_hol_cyl
+	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_hol_cyl.gppt"
 }}
 
 
-{{
-#@prb_cyc_bos_pckt
-	probe.boss
-#endp
+{{#prb_cyc_bos_pckt
+	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_bos_pckt.gppt"
 }}
 
 

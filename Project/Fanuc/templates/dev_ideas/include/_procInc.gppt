@@ -1,0 +1,10 @@
+{{ 
+    _proc = {
+		_callPrms 	:include "routines\\_3_System_commands\\_6_Proc\\call_prms.gppt",
+		_callProc 	:include "routines\\_3_System_commands\\_6_Proc\\call_proc.gppt",
+		_endLoop 	:include "routines\\_3_System_commands\\_6_Proc\\end_loop.gppt",
+		_endProc 	:include "routines\\_3_System_commands\\_6_Proc\\end_proc.gppt",
+		_loop 		:include "routines\\_3_System_commands\\_6_Proc\\loop.gppt",
+		_proc 		:include "routines\\_3_System_commands\\_6_Proc\\proc.gppt"
+	}
+}}

@@ -1,0 +1,31 @@
+{{
+    _toolPath = {
+        _arc 				:include "routines\\_3_System_commands\\_2_Tool_Path\\arc.gppt",
+        _arc4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_cartesian.gppt",
+        _arc4xPolar 		:include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_polar.gppt",
+        _arc5x 				:include "routines\\_3_System_commands\\_2_Tool_Path\\arc_5x.gppt",
+        _comp 				:include "routines\\_3_System_commands\\_2_Tool_Path\\compensation.gppt",
+        _compH 				:include "routines\\_3_System_commands\\_2_Tool_Path\\compensation_h.gppt",
+        _drill 				:include "routines\\_3_System_commands\\_2_Tool_Path\\drill.gppt",
+        _drill4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_cartesian.gppt",
+        _drill4xPnt 		:include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_pnt.gppt",
+        _drill4xPolar 	 	:include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_polar.gppt",
+        _drillPoint 		:include "routines\\_3_System_commands\\_2_Tool_Path\\drill_point.gppt",
+        _drillEnd 			:include "routines\\_3_System_commands\\_2_Tool_Path\\end_drill.gppt",
+        _initCpos 			:include "routines\\_3_System_commands\\_2_Tool_Path\\init_cpos.gppt",
+        _line 				:include "routines\\_3_System_commands\\_2_Tool_Path\\line.gppt",
+        _line5x 			:include "routines\\_3_System_commands\\_2_Tool_Path\\line_5x.gppt",
+        _lineOn 			:include "routines\\_3_System_commands\\_2_Tool_Path\\line_on.gppt",
+        _line4x				:include "routines\\_3_System_commands\\_2_Tool_Path\\line_4x.gppt",
+        _line4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_cartesian.gppt",
+        _line4xDir 			:include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_dir.gppt",
+        _line4xPolar 		:include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_polar.gppt",
+        _move4x 			:include "routines\\_3_System_commands\\_2_Tool_Path\\move_4x.gppt",
+        _move4xCartesian 	:include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_cartesian.gppt",
+        _move4xDir 			:include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_dir.gppt",
+        _move4xPolar 		:include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_polar.gppt",
+        _move5x 			:include "routines\\_3_System_commands\\_2_Tool_Path\\move_5x.gppt",
+        _moveRapid 			:include "routines\\_3_System_commands\\_2_Tool_Path\\rapid_move.gppt",
+        _info 				:include "routines\\_3_System_commands\\_2_Tool_Path\\tool_path_info.gppt"
+    }
+}}
