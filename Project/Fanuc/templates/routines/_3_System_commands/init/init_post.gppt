@@ -94,48 +94,38 @@ global logical b_LoopTransform b_InsideJob b_ChangeRef b_Rotate b_FourthAxisUsed
    		{{"\x20"}}b_Is5XMachine
    {{end~}}
 {{end~}}
-global logical b_PrintHomeNumber b_HomeNumberAtEachJob b_StraightKinematics b_WithoutSpeedMonitoring
-   global logical b_TappingWithG95 b_IsHeadHead b_IsHeadTable b_UseVMIDRetreatLimits b_FineToolCorr b_CallFromMCO b_RetreatToToolZLevel
-   global logical b_RetreatToToolZLevel b_ToolWearWithG10 b_SmoothinAvailable b_TappingWithM29 b_TCwithPlaceNumber b_PlaneData2
-   global logical bA_GeometryLabelNrPrinted<<999>> bA_ProcGeometry<<9999>> bA_ProcInLoop<<9999>> bA_InsideJobFourtAxis<<999>> b_InsideJob<<999>>
-   global logical bA_FineToolCorr<<999>> bA_PlaneDataSaved<<999>> bA_PlaneDataSaved2<<6,99>>
+	
+	global logical b_PrintHomeNumber b_HomeNumberAtEachJob b_StraightKinematics b_WithoutSpeedMonitoring
+  	global logical b_TappingWithG95 b_IsHeadHead b_IsHeadTable b_UseVMIDRetreatLimits b_FineToolCorr b_CallFromMCO b_RetreatToToolZLevel
+  	global logical b_RetreatToToolZLevel b_ToolWearWithG10 b_SmoothinAvailable b_TappingWithM29 b_TCwithPlaceNumber b_PlaneData2
+   	global logical bA_GeometryLabelNrPrinted<<999>> bA_ProcGeometry<<9999>> bA_ProcInLoop<<9999>> bA_InsideJobFourtAxis<<999>> b_InsideJob<<999>>
+  	global logical bA_FineToolCorr<<999>> bA_PlaneDataSaved<<999>> bA_PlaneDataSaved2<<6,99>>
 
-;coolant and mco
+	;coolant and mco
    
-{{-include "routines/coolant_definition.gppt"~}}
+	{{-include "routines/coolant_definition.gppt"~}}
    
-   global integer i_ChipConveyCW i_ChipConveyCCW i_ChipConveyOff i_MistCollectorOn i_MistCollectorOff i_OilSkimmerOn i_OilSkimmerOff i_RecordMachiningOn i_RecordMachiningOff i_OpenDoorOn i_OpenDoorOff
-   global integer i_MachineLightOn i_MachineLightOff i_MachinePowerOn i_MachinePowerOff i_VacuumPumpOn i_VacuumPumpOff i_TCPType iGeometryLabelNr
+  	global integer i_ChipConveyCW i_ChipConveyCCW i_ChipConveyOff i_MistCollectorOn i_MistCollectorOff i_OilSkimmerOn i_OilSkimmerOff i_RecordMachiningOn i_RecordMachiningOff i_OpenDoorOn i_OpenDoorOff
+  	global integer i_MachineLightOn i_MachineLightOff i_MachinePowerOn i_MachinePowerOff i_VacuumPumpOn i_VacuumPumpOff i_TCPType iGeometryLabelNr
    
 
-   ;new Variables by PP creation
-   global logical {{sL_VmidBoolName}}
-
-	if i_TraceCount eq 0 
-		{{-if b_IsGmbH}}
-			call @usr_FillSolidCamArray
-			call @usr_UserAccount(b_IsPPTeam)
-		{{else}}		
-		{{end-}}
-		i_TraceCount=i_TraceCount+1
-		{{-if b_IsGmbH}}
-			if b_IsPPTeam
-		{{else}}
-		{{end-}}
-         input 'trace 0=no ... trace 5=all:' i_TraceMode
-         trace"all": i_TraceMode
-         {{-if b_IsGmbH}}
-      		endif
-		{{end}}
-   endif
-   {{#end}}
-
-   blknum_f               = '8.0(p)'
-   blknum_gen             = false
-   blknum_exist           = true
-   blknum_delta           = 1
-   blknum                 = 1
-   blknum_max             = 1000000
+   	;new Variables by PP creation
+  	global logical {{sL_VmidBoolName}}
+	
+	if gpp_debugging
+		if i_TraceCount eq 0 
+			i_TraceCount = i_TraceCount + 1
+			input 'trace 0 = no ... trace 5 = all:' i_TraceMode
+			trace"all": i_TraceMode
+	   endif
+	endif
+	
+	blknum_f               = '8.0(p)'
+	blknum_gen             = false
+	blknum_exist           = true
+	blknum_delta           = 1
+	blknum                 = 1
+	blknum_max             = 1000000
    
 endp
 

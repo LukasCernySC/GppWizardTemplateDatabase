@@ -1,0 +1,11 @@
+ ;#region Trace
+ 
+	if gpp_debugging
+		if i_TraceCount == 0
+			i_TraceCount = i_TraceCount + 1
+			input 'trace 0 = no ... trace 5 = all:' i_TraceCount
+			trace"all": i_TraceCount
+		endif
+	endif
+	
+;# endregion

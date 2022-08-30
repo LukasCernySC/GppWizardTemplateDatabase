@@ -1,10 +1,18 @@
 {{
-	#-----------------Include Section----------------------
-
-		#Template Engine - Support Functions
 	include "functions\\functions.gppt"
 	include "functions\\stringFunctions.gppt"
 	include "functions\\vmidFunctions.gppt"
+}}
+
+{{
+	include "routines\\_3_System_commands\\init\\init_post.gppt"
+}}
+
+{{
+	#-----------------Include Section----------------------
+
+		#Template Engine - Support Functions
+	
 	
 	#----VMID----
 	include "routines\\_1_VMID\\add_vmid_options.gppt"
@@ -14,14 +22,9 @@
 	print_comments 			= include "routines\\print_comments.gppt"
 
 	
-		#----Trace----
-	if res.language == de
-		trace = include "routines\\_2_Trace\\german_trace.gppt"
-	else if res.language == en
-		trace = include "routines\\_2_Trace\\usa_trace.gppt"
-	else
-		trace = include "routines\\_2_Trace\\devTrace.gppt"
-	end
+	#----Trace----
+	
+	trace = include "routines\\_2_Trace\\Trace.gppt"
 	
 	#--------------------------------------------------------
 }}
@@ -35,12 +38,6 @@
 	
 	print_comments
 #--------------------------------------------------------
-}}
-
-{{
-@init_post
-	include : 'routines\\_3_System_commands\\init\\_initPost.gpp'
-endp
 }}
 
 {{
