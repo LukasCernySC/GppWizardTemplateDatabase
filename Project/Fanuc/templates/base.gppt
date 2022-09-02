@@ -1,18 +1,51 @@
 {{
-	include "functions\\functions.gppt"
-	include "functions\\stringFunctions.gppt"
-	include "functions\\vmidFunctions.gppt"
+	#Functions
+	include "functions/stringFunctions.gppt"
+	include "functions/vmidFunctions.gppt"
+	
+	
+	
+	
+	# ==== Routines ====
+	
+	# @init_post
+	include "routines/_3_System_commands/init/init_post.gppt"	
 }}
 
+;-------------------------
+;#region |03-Interpolation
+;-------------------------
+
 {{
-	include "routines\\_3_System_commands\\init\\init_post.gppt"
+	# @rapid_move
+	include "routines/_3_System_commands/_2_Tool_Path/rapid_move.gppt"
+	
+	# @line
+	include "routines/_3_System_commands/_2_Tool_Path/line.gppt"
+	
+	# @arc
+	include "routines/_3_System_commands/_2_Tool_Path/arc.gppt"
+	
+	if vmid_hasRotaryAxis()
+		# @move_5x
+		include "routines/_3_System_commands/_2_Tool_Path/move_5x.gppt"
+		
+		# @line_5x
+		include "routines/_3_System_commands/_2_Tool_Path/line_5x.gppt"
+	end
 }}
+
+;-------------------------
+;#endregion
+;-------------------------
+;=========================
+
 
 {{
 	#-----------------Include Section----------------------
 
-		#Template Engine - Support Functions
-	
+	#Template Engine - Support Functions
+	include "functions/functions.gppt"
 	
 	#----VMID----
 	include "routines\\_1_VMID\\add_vmid_options.gppt"

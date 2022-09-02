@@ -1,3 +1,7 @@
-{{#line
 
-}}
+@line
+
+	gcode=1	
+	{nb gcode [xlpos] [ylpos] [zlpos] [feed]}
+	
+endp

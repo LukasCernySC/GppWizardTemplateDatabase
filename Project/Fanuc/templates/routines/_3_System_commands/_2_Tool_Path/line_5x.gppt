@@ -1,3 +1,32 @@
-{{#line_5x
 
+{{
+tiltedPlaneDef = vmid_getTiltedPlaneDefinition()
+isRotationOrderKinematic = tiltedPlaneDef.type == "KINEMATIC_AXES"
 }}
+
+
+@line_5x
+
+	gcode = 1
+	
+	if x5_job
+	{nb gcode [xhpos] [yhpos] [zhpos] [apos]
+	
+	{{- if vmid_hasSecondRotaryAxis()}} [bpos]{{end}}
+	{{-}} [feed]
+	{{-}}}
+	else
+		{{-if isRotationOrderKinematic}}
+			;x4 radial and face
+			{nb gcode [xopos] [yopos] [zopos] [apos] [feed]}
+		{{else}}
+			if rot_axis_type eq axis4_radial
+				{nb gcode [xlpos] [ylpos] [zlpos]}
+			else
+				{nb gcode [xopos] [yopos] [zopos]}
+			endif
+			{[apos] [feed]}
+		{{end-}}
+	endif
+	
+endp

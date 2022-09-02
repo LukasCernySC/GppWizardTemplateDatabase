@@ -1,0 +1,82 @@
+
+
+
+{{
+	#====== VMID function list ======= 
+	# vmid_getAxisName(axisId)						-> Returns the name of the axis based on its ID
+	# vmid_hasRotaryAxis()							-> Returns true if any of the submachine has at least one rotary axis
+	# vmid_hasSecondRotaryAxis()					-> Returns true if any of the submachine has at second rotary axis
+	# vmid_hasMillingSubmachine()					-> Returns true if any of the submachine type is milling
+	# vmid_hasTurningSubmachine()					-> Returns true if any of the submachine type is turning
+	# vmid_hasMillturnSubmachine()					-> Returns true if any of the submachine type is mill-turn
+	# vmid_getTiltedPlaneDefinition(submachId = 0) 	-> Returns tilted plane definition object for given submachine or default if submachine ID is not set
+	
+	#=================================
+	
+	
+	func vmid_getAxisName(axisId)
+		for axis in vmid.axes
+			if axis.id == axisId
+				ret axis.name
+			end
+		end
+		ret "Unknown"
+	end
+	
+	func vmid_hasRotaryAxis()
+		for submachine in vmid.submachines
+			if submachine.hasFirstRotAxis
+				ret true
+			end
+		end
+		ret false
+	end
+	
+	func vmid_hasSecondRotaryAxis()
+		for submachine in vmid.submachines
+			if submachine.hasSecondRotAxis
+				ret true
+			end
+		end
+		ret false
+	end
+	
+	func vmid_hasMillingSubmachine()
+		for submachine in vmid.submachines
+			if submachine.operationType == "MILL"
+				ret true
+			end
+		end
+		ret false
+	end
+	
+	func vmid_hasTurningSubmachine()
+		for submachine in vmid.submachines
+			if submachine.operationType == "TURN"
+				ret true
+			end
+		end
+		ret false
+	end
+	
+	func vmid_hasMillturnSubmachine()
+		for submachine in vmid.submachines
+			if submachine.operationType == "MILL_TURN"
+				ret true
+			end
+		end
+		ret false
+	end
+	
+	func vmid_getTiltedPlaneDefinition(submachId = 0)
+		if submachId == 0
+			ret vmid.tiltedPlaneDefs[0]
+		end
+		for def in vmid.tiltedPlaneDefs
+			if def.submachineId == submachId
+				ret def
+			end
+		end
+		ret vmid.tiltedPlaneDefs[0]		
+	end
+}}

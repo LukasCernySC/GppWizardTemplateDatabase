@@ -1,3 +1,18 @@
-{{#arc
 
-}}
+@arc
+
+	gcode = 2 + arc_direction
+	{nb gcode xlpos ylpos [zlpos]}
+
+	if round(arc_size,0) ge 360 or change(zlpos)
+		{xlcenter_rel ylcenter_rel}
+	else
+		if arc_size ge 180
+			radius = -radius
+	  	endif
+	  	{radius}
+	endif
+	
+    {[feed]}
+   
+endp
