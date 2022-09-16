@@ -1,3 +1,6 @@
-{{#delay
-
+{{
+	#TODO: delay
 }}
+
+	;TODO: delay
+	gcode = 4

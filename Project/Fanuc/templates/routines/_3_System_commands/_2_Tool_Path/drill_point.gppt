@@ -1,15 +1,5 @@
-{{#drill_point}}
-
-   {{
-   vmid_Cycle_2 = {
-      GppName:"Cycle_1",
-      GuiName:"Cycle 1",
-      Type:"DRILLING"
-   }
-
-   vmid_add_drill_t(vmid_Cycle_2)
-
-   }}
-
-
+{{
+	#TODO: drill_point
 }}
+
+	;TODO: drill_point

@@ -29,3 +29,14 @@ end}}
 	ret false
 	
 end}}
+
+{{func MachineOperationType()
+	if vmid.operationType == "TURN"
+		ret "turning"
+	else if vmid.operationType == "MILLING"
+		ret "milling"
+	else if vmid.operationType == "MILL_TURN"
+		ret "millturn"
+	end
+
+end}}

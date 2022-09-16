@@ -10,6 +10,8 @@
 	# vmid_hasTurningSubmachine()					-> Returns true if any of the submachine type is turning
 	# vmid_hasMillturnSubmachine()					-> Returns true if any of the submachine type is mill-turn
 	# vmid_getTiltedPlaneDefinition(submachId = 0) 	-> Returns tilted plane definition object for given submachine or default if submachine ID is not set
+	# vmid_getRotationType(submachId = 0)			-> Returns Rotation Type as string from given submachine or default of submachine ID is not set | "KINEMATIC" "CYCLE19" "CUSTOMIZE"
+	# vmid_getPosByRotType(rotType)					-> Returns pos set as string from given rotation type
 	
 	#=================================
 	
@@ -79,4 +81,25 @@
 		end
 		ret vmid.tiltedPlaneDefs[0]		
 	end
+	
+	func vmid_getRotationType(submachId = 0)
+		if submachId.type == "KINEMATIC_AXES"
+			ret "KINEMATIC"
+		else if submachId.type == "CYCLE_19"
+			ret "CYCLE19"
+		else if submachId.type == "CUSTOMIZE"
+			ret "CUSTOMIZE"
+		end
+	end
+	
+	func vmid_getPosByRotType(rotType)
+		if rotType == "KINEMATIC"
+			ret "opos"
+		else if rotType == "CYCLE19"
+			ret "opos"
+		else if rotType == "CUSTOMIZE"
+			ret "lpos"
+		end
+	end
+		
 }}

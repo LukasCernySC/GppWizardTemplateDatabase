@@ -3,9 +3,6 @@
 	include "functions/stringFunctions.gppt"
 	include "functions/vmidFunctions.gppt"
 	
-	
-	
-	
 	# ==== Routines ====
 	
 	# @init_post
@@ -17,6 +14,8 @@
 ;-------------------------
 
 {{
+	dev_showConditionalProcs = true		# Shows procs that do not always need to be output
+
 	# @rapid_move
 	include "routines/_3_System_commands/_2_Tool_Path/rapid_move.gppt"
 	
@@ -89,98 +88,97 @@ endp
 ;#region 2.SC.a------ | Common
 
 {{
-	include "routines\\_3_System_commands\\_1_Common\\absolute_mode.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\absolute_mode.gppt"
+	end
 }}
 
 
-{{#@relative_mode
-	include "routines\\_3_System_commands\\_1_Common\\relative_mode.gppt"
+{{# @relative_mode
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\relative_mode.gppt"
+	end
 }}
 
 
-{{
 @feed_spin
-	include "routines\\_3_System_commands\\_1_Common\\feed_spin.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\feed_spin.gppt"}}
 endp
-}}
 
 
-{{
 @start_of_job
-	include "routines\\_3_System_commands\\_1_Common\\start_of_job.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\start_of_job.gppt"}}
 endp
-}}
 
 
-{{
 @start_of_file
-	include "routines\\_3_System_commands\\_1_Common\\start_of_file.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\start_of_file.gppt"}}
 @endp
-}}
 
 
 {{#@vmid_info
-	include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\vmid_info.gppt"
+	end
 }}
 
 
 {{#@setup
-	include "routines\\_3_System_commands\\_1_Common\\setup.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\setup.gppt"
+	end
 }}
 
 
-{{
 @start_program
-	include "routines\\_3_System_commands\\_1_Common\\start_program.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\start_program.gppt"}}
 endp
-}}
 
 
 {{#@message
-	include "routines\\_3_System_commands\\_1_Common\\message.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\message.gppt"
+	end
 }}
 
 
-{{
 @machine_plane
-	include "routines\\_3_System_commands\\_1_Common\\machine_plane.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\machine_plane.gppt"}}	
 endp
-}}
 
 
-{{
 @m_feed_spin
-	include "routines\\_3_System_commands\\_1_Common\\m_feed_spin.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\m_feed_spin.gppt"}}
 endp
-}}
 
 
 {{#@home_data
-	include "routines\\_3_System_commands\\_1_Common\\home_data.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\home_data.gppt"
+	end
 }}
 
 
-{{#@home_number
-	include "routines\\_3_System_commands\\_1_Common\\home_number.gppt"
+{{# @home_number
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_1_Common\\home_number.gppt"
+	end
 }}
 
-{{
+
 @end_of_job
-	include "routines\\_3_System_commands\\_1_Common\\end_of_job.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\end_of_job.gppt"}}
 endp
-}}
 
-{{
+
 @end_program
-	include "routines\\_3_System_commands\\_1_Common\\end_program.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\end_program.gppt"}}
 endp
-}}
 
-{{
+
 @end_of_file
-	include "routines\\_3_System_commands\\_1_Common\\end_of_file.gppt"
+{{include "routines\\_3_System_commands\\_1_Common\\end_of_file.gppt"}}
 endp
-}}
 
 
 ;# endregion
@@ -315,179 +313,172 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.b------ | Tool-Path
 
-{{
+
 @arc
-	include "routines\\_3_System_commands\\_2_Tool_Path\\arc.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\arc.gppt"}}
 endp
-}}
 
 
-{{
 @arc_5x
-	include "routines\\_3_System_commands\\_2_Tool_Path\\arc_5x.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\arc_5x.gppt"}}
 endp
+
+{{# @arc_4x_cartesian
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_cartesian.gppt"
+	end
 }}
 
 
-{{
-@arc_4x_cartesian
-	include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_cartesian.gppt"
-endp
-}}
-
-{{
-@arc_4x_polar
-	include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_polar.gppt"
-endp
+{{# @arc_4x_polar
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\arc_4x_polar.gppt"
+	end
 }}
 
 
-{{#@tool_path_info
-	include "routines\\_3_System_commands\\_2_Tool_Path\\tool_path_info.gppt"
+{{# @tool_path_info
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\tool_path_info.gppt"
+	end
 }}
 
 
-{{
 @rapid_move
-	include "routines\\_3_System_commands\\_2_Tool_Path\\rapid_move.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\rapid_move.gppt"}}
 endp
-}}
 
 
-{{
 @move_5x
-	include "routines\\_3_System_commands\\_2_Tool_Path\\move_5x.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\move_5x.gppt"}}
 endp
+
+
+{{# @move_4x
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\move_4x.gppt"
+	end
 }}
 
 
-{{
-@move_4x
-	include "routines\\_3_System_commands\\_2_Tool_Path\\move_4x.gppt"
-endp
+{{# @move4x_polar
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_polar.gppt"
+	end
 }}
 
 
-{{
-@move4x_polar
-	include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_polar.gppt"
-endp
+{{# @move4x_dir
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_dir.gppt"
+	end
 }}
 
 
-{{
-@move4x_dir
-	include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_dir.gppt"
-endp
+{{# @move4x_cartesian
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_cartesian.gppt"
+	end
 }}
 
 
-{{
-@move4x_cartesian
-	include "routines\\_3_System_commands\\_2_Tool_Path\\move4x_cartesian.gppt"
-endp
-}}
-
-
-{{
 @drill_point
-	include "routines\\_3_System_commands\\_2_Tool_Path\\drill_point.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\drill_point.gppt"}}
 endp
-}}
 
 
-{{
 @drill
-	include "routines\\_3_System_commands\\_2_Tool_Path\\drill.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\drill.gppt"}}
 endp
+
+
+{{# @drill4x_cartesian
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_cartesian.gppt"
+	end
 }}
 
 
-{{#@drill4x_cartesian
-	include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_cartesian.gppt"
-}}
-
-
-{{
 @end_drill
-	include "routines\\_3_System_commands\\_2_Tool_Path\\end_drill.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\end_drill.gppt"}}
 endp
-}}
 
 
-{{
 @compensation
-	include "routines\\_3_System_commands\\_2_Tool_Path\\compensation.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\compensation.gppt"}}
 endp
+
+
+{{# @compensation_h
+	if dev_showConditionalProcs == true || vmid.operationType == "MILL"
+		include "routines\\_3_System_commands\\_2_Tool_Path\\compensation_h.gppt"
+	end
 }}
 
 
-{{
-@compensation_h
-	include "routines\\_3_System_commands\\_2_Tool_Path\\compensation_h.gppt"
-endp
-}}
-
-
-{{
 @line
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\line.gppt"}}
 endp
+
+
+{{
+	if dev_showConditionalProcs == true || vmid.operationType == "MILL"
+		include "routines\\_3_System_commands\\_2_Tool_Path\\line_4x.gppt"
+	end
 }}
 
 
 {{
-@line_4x
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line_4x.gppt"
-endp
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_cartesian.gppt"
+	end
 }}
 
 
-{{
-@line4x_cartesian
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_cartesian.gppt"
-endp
+{{# @line4x_dir
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_dir.gppt"
+	end
 }}
 
 
-{{#line4x_dir
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_dir.gppt"
+{{# @line4x_polar
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_polar.gppt"
+	end
 }}
 
 
-{{#line4x_polar
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line4x_polar.gppt"
-}}
-
-
-{{
 @line_5x
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line_5x.gppt"
+{{include "routines\\_3_System_commands\\_2_Tool_Path\\line_5x.gppt"}}
 endp
+
+
+{{# @line_on
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\line_on.gppt"
+	end
 }}
 
 
-{{#line_on
-	include "routines\\_3_System_commands\\_2_Tool_Path\\line_on.gppt"
+{{# @drill4x_polar
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_polar.gppt"
+	end
 }}
 
 
-{{
-@drill4x_polar
-	include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_polar.gppt"
-endp
+{{# @drill4x_pnt
+	if dev_showConditionalProcs == true || vmid.operationType == "MILL"
+		include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_pnt.gppt"
+	end
 }}
 
 
-{{
-@drill4x_pnt
-	include "routines\\_3_System_commands\\_2_Tool_Path\\drill4x_pnt.gppt"
-endp
-}}
-
-
-{{#init_cpos
-	include "routines\\_3_System_commands\\_2_Tool_Path\\init_cpos.gppt"
+{{# @init_cpos
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_2_Tool_Path\\init_cpos.gppt"
+	end
 }}
 
 ;#endregion
@@ -529,7 +520,6 @@ endp
 endp
 
 
-
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.b.1.1 | Cus_Tool-Path
@@ -541,47 +531,44 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.c------ | Tool-Path Transform
 
-
-{{#fourth_axis
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\fourth_axis.gppt"
-}}
-
-
-{{#rotate
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotate.gppt"
-}}
-
-
-{{#rotary_info
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotary_info.gppt"
-}}
-
-
-{{
-@transform_info
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\transform_info.gppt"
+@fourth_axis
+{{include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\fourth_axis.gppt"}}
 endp
+
+
+@rotate
+{{include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotate.gppt"}}
+endp
+
+
+{{# @rotary_info
+	if dev_showConditionalProcs == true || vmid.operationType == "MILL"
+		include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\rotary_info.gppt"
+	end
 }}
 
 
-{{
+{{# @transform_info
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\transform_info.gppt"
+	end
+}}
+
+
 @mirror
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\mirror.gppt"
+{{include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\mirror.gppt"}}
 endp
-}}
 
 
-{{
 @change_ref_point
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\change_ref_point.gppt"
+{{include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\change_ref_point.gppt"}}
 endp
-}}
 
 
 {{
-@chng_tool_cnext
-	include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\chng_tool_cnext.gppt"
-endp
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_3_Tool_Path_Transform\\chng_tool_cnext.gppt"
+	end
 }}
 
 
@@ -599,47 +586,43 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.d------ | MCO
 
+@mco_cycle
+{{include 'routines\\_3_System_commands\\_4_MCO\\mco_cycle.gppt'}}
+endp
 
-{{#mco_cycle
-	include 'routines\\_3_System_commands\\_4_MCO\\mco_cycle.gppt'
-}}
+@stop_tool
+{{include "routines\\_3_System_commands\\_4_MCO\\stop_tool.gppt"}}
+endp
 
+@start_obj_act
+{{include "routines\\_3_System_commands\\_4_MCO\\start_obj_act.gppt"}}
+endp
 
-{{#stop_tool
-	include "routines\\_3_System_commands\\_4_MCO\\stop_tool.gppt"
-}}
-
-
-{{#start_obj_act
-	include "routines\\_3_System_commands\\_4_MCO\\start_obj_act.gppt"
-}}
-
-
-{{#start_mach_ctrl
-	include "routines\\_3_System_commands\\_4_MCO\\start_mach_ctrl.gppt"
-}}
+@start_mach_ctrl
+{{include "routines\\_3_System_commands\\_4_MCO\\start_mach_ctrl.gppt"}}
+endp
 
 
 {{#spindles_sync
-	include "routines\\_3_System_commands\\_4_MCO\\spindles_sync.gppt"
+	if dev_showConditionalProcs == true || vmid.operationType == "MILL_TURN"
+		include "routines\\_3_System_commands\\_4_MCO\\spindles_sync.gppt"
+	end
 }}
 
 
-{{#move_object
-	include "routines\\_3_System_commands\\_4_MCO\\move_object.gppt"
-}}
-
-
-{{#start_tool
-	include "routines\\_3_System_commands\\_4_MCO\\start_tool.gppt"
-}}
-
-
-{{
-@delay
-	include "routines\\_3_System_commands\\_4_MCO\\delay.gppt"
+@move_object
+{{include "routines\\_3_System_commands\\_4_MCO\\move_object.gppt"}}
 endp
-}}
+
+
+@start_tool
+{{include "routines\\_3_System_commands\\_4_MCO\\start_tool.gppt"}}
+endp
+
+
+@delay
+{{include "routines\\_3_System_commands\\_4_MCO\\delay.gppt"}}
+endp
 
 
 ;#endregion
@@ -657,23 +640,24 @@ endp
 ;#region 2.SC.e------ | Plane Rotations
 
 {{#tmatrix
-	include "routines\\_3_System_commands\\_5_Plane_Rotations\\tmatrix.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_5_Plane_Rotations\\tmatrix.gppt"
+	end
 }}
 
 
-{{#plane_data
-	include "routines\\_3_System_commands\\_5_Plane_Rotations\\plane_data.gppt"
-}}
+@plane_data
+{{include "routines\\_3_System_commands\\_5_Plane_Rotations\\plane_data.gppt"}}
+endp
 
 
-{{#rotate_to_plane
-	include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt"
-}}
+@rotate_to_plane
+{{include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt"}}
+endp
 
-
-{{#drill_plane
-	include "routines\\_3_System_commands\\_5_Plane_Rotations\\rotate_to_plane.gppt"
-}}
+@drill_plane
+{{include "routines\\_3_System_commands\\_5_Plane_Rotations\\drill_plane.gppt"}}
+endp
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -689,34 +673,34 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.f------ | Proc
 
-{{#proc
-	include "routines\\_3_System_commands\\_6_Proc\\proc.gppt"
-}}
+@proc
+{{include "routines\\_3_System_commands\\_6_Proc\\proc.gppt"}}
+endp
 
 
-{{#loop
-	include "routines\\_3_System_commands\\_6_Proc\\loop.gppt"
-}}
+@loop
+{{include "routines\\_3_System_commands\\_6_Proc\\loop.gppt"}}
+endp
 
 
-{{#end_proc
-	include "routines\\_3_System_commands\\_6_Proc\\end_proc.gppt"
-}}
+@end_proc
+{{include "routines\\_3_System_commands\\_6_Proc\\end_proc.gppt"}}
+endp
 
-
-{{#call_proc
-	include "routines\\_3_System_commands\\_6_Proc\\call_proc.gppt"
-}}
+@call_proc
+{{include "routines\\_3_System_commands\\_6_Proc\\call_proc.gppt"}}
+endp
 
 
 {{#call_prms
-	include "routines\\_3_System_commands\\_6_Proc\\call_prms.gppt"
+	if dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_6_Proc\\call_prms.gppt"
+	end
 }}
 
-
-{{#end_loop
-	include "routines\\_3_System_commands\\_6_Proc\\end_loop.gppt"
-}}
+@end_loop
+{{include "routines\\_3_System_commands\\_6_Proc\\end_loop.gppt"}}
+endp
 
 ;#endregion
 ;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -739,17 +723,23 @@ endp
 
 
 {{#turn_change_tool
-	include "routines\\_3_System_commands\\_7_Tool\\turn_change_tool.gppt"
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"
+		include "routines\\_3_System_commands\\_7_Tool\\turn_change_tool.gppt"
+	end
 }}
 
 
 {{#turn_chng_offset
-	include "routines\\_3_System_commands\\_7_Tool\\turn_chng_offset.gppt"
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"
+		include "routines\\_3_System_commands\\_7_Tool\\turn_chng_offset.gppt"
+	end
 }}
 
 
 {{#change_tool
-	include "routines\\_3_System_commands\\_7_Tool\\change_tool.gppt"
+	if vmid.operationType == "MILL"
+		include "routines\\_3_System_commands\\_7_Tool\\change_tool.gppt"
+	end
 }}
 
 
@@ -761,12 +751,16 @@ endp
 
 
 {{#def_tool
-	include "routines\\_3_System_commands\\_7_Tool\\def_tool.gppt"
+	if vmid.operationType == "MILL" || vmid.operationType == "MILL_TURN"
+		include "routines\\_3_System_commands\\_7_Tool\\def_tool.gppt"
+	end
 }}
 
 
 {{#def_turn_tool
-	include "routines\\_3_System_commands\\_7_Tool\\def_turn_tool.gppt"
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"
+		include "routines\\_3_System_commands\\_7_Tool\\def_turn_tool.gppt"
+	end
 }}
 
 ;#endregion

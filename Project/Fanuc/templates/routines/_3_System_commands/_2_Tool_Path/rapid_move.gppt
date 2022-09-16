@@ -1,14 +1,12 @@
+{{# @rapid_move
 
-@rapid_move
+}}
+gcode=0
 
-	gcode=0
-
-	if b_FirstMove
-	  
-		;TODO: first move coordinates
-	  	b_FirstMove = false
-	else
-	  	{nb gcode [xlpos] [ylpos] [zlpos]}
-	endif
+if b_FirstMove 
+	;TODO: first move coordinates
+b_FirstMove = false
+else
+	{nb gcode [xlpos] [ylpos] [zlpos]}
+endif
    
-endp

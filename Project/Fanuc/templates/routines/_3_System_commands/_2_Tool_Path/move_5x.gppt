@@ -1,5 +1,6 @@
+{{
 
-@move_5x
+}}
 
 	gcode = 0
 	if b_FirstMove
@@ -12,6 +13,3 @@
 		{{- if vmid_hasSecondRotaryAxis()}} [bpos]{{end}}
 		{{-}}}	
 	endif
-	
-	
-endp

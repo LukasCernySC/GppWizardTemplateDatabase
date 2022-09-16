@@ -1,3 +1,9 @@
-{{#move4x_dir
-
+{{
+	#TODO: move4x_dir
 }}
+
+@move4x_dir
+
+	;TODO: move4x_dir
+
+endp

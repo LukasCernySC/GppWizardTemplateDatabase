@@ -4,9 +4,6 @@ tiltedPlaneDef = vmid_getTiltedPlaneDefinition()
 isRotationOrderKinematic = tiltedPlaneDef.type == "KINEMATIC_AXES"
 }}
 
-
-@line_5x
-
 	gcode = 1
 	
 	if x5_job
@@ -29,4 +26,3 @@ isRotationOrderKinematic = tiltedPlaneDef.type == "KINEMATIC_AXES"
 		{{end-}}
 	endif
 	
-endp

@@ -3,6 +3,8 @@
 	
 	{{# ===== Init variables =====}}
 	global logical b_FirstMove                   ;Indicates first move of the job
+	global logical b_ChangeTool					 ;Tool has been changed | initial true @change_tool
+	global logical b_LoopTransform				 ;Flagged true @loop and false @end_loop
 	
 	
 	
