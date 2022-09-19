@@ -1,0 +1,69 @@
+{{
+
+	#-------------------Region Generator--------------------------
+
+	comment = ";"
+	regionStart = "#region | "
+	regionEnd = "#endregion"
+	separator = ": "
+	displayChar = '-'
+	globalNum = ""
+	globalName = ""
+	globalDelta = 0
+	globalRegionBreakChar = ""
+	globalRegionSepChar = ""
+	
+	
+	func gen_RegionHead(stringNum, stringName, regionBreakChar = "", regionSepChar = "", delta = 0)
+		
+		globalNum = stringNum
+		globalName = stringName
+		globalDelta = delta
+		
+		if regionBreakChar != ""
+			displayChar = regionBreakChar
+		end
+		if regionSepChar != ""
+			separator = regionSepChar
+		end
+		
+		regionName = comment + regionStart + stringNum + separator + stringName + "\n"
+		regBreak = comment + displayChar * ( gen_GetHeaderSize() + delta ) + "\n"
+		
+		regBreak
+		regionName
+		regBreak
+		
+	end
+	
+	
+	func gen_GetHeaderSize()
+	
+		regionSize = regionStart.size + globalNum.size + separator.size + globalName.size
+		ret regionSize
+		
+	end
+	
+	
+	func gen_RegionFoot(delta = 0, SameLenAsHead = false)
+	
+		charDispLen = 0
+		regBreak = ""
+	
+		if SameLenAsHead == true
+			charDispLen = gen_GetHeaderSize() + globalDelta + delta
+			regBreak = comment + (displayChar * charDispLen)
+		else
+			charDispLen = regionEnd.size + delta
+			regBreak = comment + (displayChar * charDispLen )
+		end
+		
+		regEnd = comment + regionEnd
+		
+		regBreak + "\n"
+		regEnd + "\n"
+		regBreak
+	end
+	
+	#-------------------------------------------------------------
+}}

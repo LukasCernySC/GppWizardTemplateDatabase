@@ -1,4 +1,7 @@
 {{
+	#Generators
+	include "generators/region.gppt"
+	
 	#Functions
 	include "functions/stringFunctions.gppt"
 	include "functions/vmidFunctions.gppt"
@@ -9,9 +12,10 @@
 	include "routines/_3_System_commands/init/init_post.gppt"	
 }}
 
-;-------------------------
-;#region |03-Interpolation
-;-------------------------
+
+{{gen_RegionHead("03", "Interpolation", regionBreakChar: "-", regionSepChar: ": ", delta: 0)}}
+{{gen_RegionFoot(delta: 0, SameLenAsHead: false)}}
+
 
 {{
 	dev_showConditionalProcs = true		# Shows procs that do not always need to be output
@@ -717,48 +721,50 @@ endp
 ;#region 2.SC.g------ | Tool
 
 
-{{#tool_breakage
-	include "routines\\_3_System_commands\\_7_Tool\\tool_breakage.gppt"
+{{# @tool_breakage
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_7_Tool\\tool_breakage.gppt"
+	end
 }}
 
 
-{{#turn_change_tool
-	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"
+{{# @turn_change_tool
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
 		include "routines\\_3_System_commands\\_7_Tool\\turn_change_tool.gppt"
 	end
 }}
 
 
-{{#turn_chng_offset
-	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"
+{{# @turn_chng_offset
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
 		include "routines\\_3_System_commands\\_7_Tool\\turn_chng_offset.gppt"
 	end
 }}
 
 
-{{#change_tool
-	if vmid.operationType == "MILL"
+{{# @change_tool
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
 		include "routines\\_3_System_commands\\_7_Tool\\change_tool.gppt"
 	end
 }}
 
 
-{{
-@offset_change
-	include "routines\\_3_System_commands\\_7_Tool\\offset_change.gppt"
-endp
+{{# @offset_change
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_7_Tool\\offset_change.gppt"
+	end
 }}
 
 
-{{#def_tool
-	if vmid.operationType == "MILL" || vmid.operationType == "MILL_TURN"
+{{# @def_tool
+	if vmid.operationType == "MILL" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
 		include "routines\\_3_System_commands\\_7_Tool\\def_tool.gppt"
 	end
 }}
 
 
-{{#def_turn_tool
-	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"
+{{# @def_turn_tool
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
 		include "routines\\_3_System_commands\\_7_Tool\\def_turn_tool.gppt"
 	end
 }}
@@ -1167,8 +1173,10 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.h------ | Channel Synchronization
 
-{{#sync_process
-	include "routines\\_3_System_commands\\_8_Channel_Synchronization\\sync_process.gppt"
+{{# @sync_process
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_8_Channel_Synchronization\\sync_process.gppt"
+	end
 }}
 
 ;#endregion
@@ -1185,40 +1193,52 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.i------ | Turning Cycles
 
-{{#turn_endproc
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_endproc.gppt"
+{{# @turn_endproc
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_endproc.gppt"
+	end
 }}
 
 
-{{#turn_opt_parms
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_opt_parms.gppt"
+{{# @turn_opt_parms
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_opt_parms.gppt"
+	end
 }}
 
 
-{{#turn_proc
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_proc.gppt"
+{{# @turn_proc
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_proc.gppt"
+	end
 }}
 
 
-{{#turn_drill
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_drill.gppt"
+{{# @turn_drill
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\turn_drill.gppt"
+	end
 }}
 
 
-{{#thread
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\thread.gppt"
+{{# @thread
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\thread.gppt"
+	end
 }}
 
 
-{{#turning
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\turning.gppt"
+{{# @turning
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\turning.gppt"
+	end
 }}
 
 
-{{
-#@groove
-	include "routines\\_3_System_commands\\_9_Turning_Cycles\\groove.gppt"
-#endp
+{{# @groove
+	if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_9_Turning_Cycles\\groove.gppt"
+	end
 }}
 
 ;#endregion
@@ -1235,43 +1255,59 @@ endp
 ;-------------------------------------------------------------------------------------------------------------------------------------------
 ;#region 2.SC.j------ | Probe
 
-{{#start_probe
-	include "routines\\_3_System_commands\\_10_Probe\\start_probe.gppt"
+{{# @start_probe
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\start_probe.gppt"
+	end
 }}
 
 
-{{#end_probe
-	include "routines\\_3_System_commands\\_10_Probe\\end_probe.gppt"
+{{# @end_probe
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\end_probe.gppt"
+	end
 }}
 
 
-{{#move_probe
-	include "routines\\_3_System_commands\\_10_Probe\\move_probe.gppt"
+{{# @move_probe
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\move_probe.gppt"
+	end
 }}
 
 
-{{#line_probe
-	include "routines\\_3_System_commands\\_10_Probe\\line_probe.gppt"
+{{# @line_probe
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\line_probe.gppt"
+	end
 }}
 
 
-{{#prb_cyc_xyz_plan
-	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_xyz_plan.gppt"
+{{# @prb_cyc_xyz_plan
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_xyz_plan.gppt"
+	end
 }}
 
 
-{{#prb_cyc_angle
-	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_angle.gppt"
+{{# @prb_cyc_angle
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_angle.gppt"
+	end
 }}
 
 
-{{#prb_cyc_hol_cyl
-	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_hol_cyl.gppt"
+{{# @prb_cyc_hol_cyl
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_hol_cyl.gppt"
+	end
 }}
 
 
-{{#prb_cyc_bos_pckt
-	include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_bos_pckt.gppt"
+{{# @prb_cyc_bos_pckt
+	if vmid.operationType == "MILL" || dev_showConditionalProcs == true
+		include "routines\\_3_System_commands\\_10_Probe\\prb_cyc_bos_pckt.gppt"
+	end
 }}
 
 

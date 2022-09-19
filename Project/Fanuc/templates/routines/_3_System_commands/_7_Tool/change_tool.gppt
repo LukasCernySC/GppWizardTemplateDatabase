@@ -1,4 +1,8 @@
+{{
+	#TODO: change_tool
+}}
 @change_tool
+	;TODO: change_tool
 	b_ToolChange = true
 endp
 	
