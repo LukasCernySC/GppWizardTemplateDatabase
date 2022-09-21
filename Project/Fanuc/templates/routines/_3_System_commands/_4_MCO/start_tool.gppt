@@ -1,5 +1,10 @@
+
 {{
 	#TODO: start_tool
 }}
 
+@start_tool
+
 	;TODO: start_tool
+
+endp

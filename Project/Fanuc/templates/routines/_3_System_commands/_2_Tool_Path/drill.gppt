@@ -1,8 +1,6 @@
 {{
 	#TODO: drill
-}}
 
-{{
 	# Add drill cycles to VMID
    vmid_Cycle_2 = {
       GppName:"Cycle_1",
@@ -14,4 +12,8 @@
 
 }}
 
+@drill
+
 	;TODO: drill
+
+endp

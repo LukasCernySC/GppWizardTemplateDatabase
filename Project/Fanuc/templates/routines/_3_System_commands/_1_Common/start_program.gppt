@@ -1,5 +1,10 @@
+
 {{
 	#TODO: start_program
 }}
 
-;TODO: start_program
+@start_program
+
+	;TODO: start_program
+	
+endp

@@ -1,0 +1,56 @@
+
+{{
+
+include "generators/horizontalRule.gppt"
+
+variables = []
+
+func registerVariable(type, name, comment)
+    variable = { type:type, name:name, comment:comment, isSeperator:false }
+    variables = array.add variables variable
+end
+
+func registerSeperator(comment, lbChar)
+
+	if lbChar == true
+		lineBreak = true
+	else
+		lineBreak = false
+	end
+	seperator = {comment:comment, horizontalRule:lineBreak, isSeperator:true}
+    variables = array.add variables seperator
+end
+
+func printVariables()
+
+	spaceAmount = 44
+	vertRuler = 80 - 4 # Account for auto tab
+	vertRulePrefix = 8
+	prefix = ("-" * vertRulePrefix)
+	
+    for var in variables
+    
+    	if var.isSeperator == true
+    		if var.horizontalRule == true
+    			commentSize = var.comment.size + vertRulePrefix
+    			text = ";" + prefix + var.comment + HorizontalRule("-", vertRuler - commentSize) + "\n"
+    		else
+    			text = ";" + var.comment + "\n"
+    		end
+    	else
+    		nameLen = "global ".size + var.type.size + " ".size + var.name.size
+    		spaceConst = spaceAmount - nameLen
+    	
+    		if spaceConst < 1
+    			spaceConst = 1
+    		end
+    		
+       		text = "global " + var.type + " " + var.name + (spaceConst * " ") + ";" + var.comment + "\n"
+        	
+    	end
+    	text
+    end
+end
+
+
+}}

@@ -1,71 +1,45 @@
-{{# Section for global variables inside init_post
+{{
 
-;#region 1. Global Variables
-	
-	;Variables for controller stuff---------------------------------------------------------------------------------------------------------
-	global string s_ProgramNumber												;Program number output based on controller
-	;Variables for turret stuff-------------------------------------------------------------------------------------------------------------
-	global logical b_HalfIndex													;Half indexing turret 
+include "functions/globalVariables.gppt"
 
-	;----------------Variables for tool stuff-----------------------------------------------------------------------------------------------
-	
-	;		----Messages----
-	global string s_OpenComment, s_CloseComment									;String used for open and close comments
-	;		----Message formatting----
-	global integer i_ToolDescriptionLen											;Set how many characters are allowed on one line
-	global integer i_ToolDescriptionMaxLines									;Set max amount of lines allowed for tool Description
-	global logical l_DefaultMessageFormat										;True = Default message format. See @usr_MessageFormat
-	;																			False = @cus_MessageFormat. See @cus_MessageFormat
-	;		----Tool Change/Operation Messages----
-	global logical b_OutputToolMessage											;True = Tool Message at tool change
-	global logical b_DefaultOpMessage											;True = Generates a default operation message ex: TURN OD
-	
-	
-	;Variables for job stuff ---------------------------------------------------------------------------------------------------------------
-	global integer iA_SaveNumberOfChannels<<4>>									;Used in start_of_file to grab # of channels
-	;																			;If single channel we can skip logic for quicker post
-    ;		----Homing----
-	global logical l_EndProgram													;Used for homing. Posting one operation vs multiple
-	
-	
-	;Variables for C-axis stuff ------------------------------------------------------------------------------------------------------------
-	
-	
-	;Variables for position stuff ----------------------------------------------------------------------------------------------------------
-	global numeric nA_SaveLast_opos<<2,3>>										;Save the last axis position |X|Y|Z|
-	global numeric nA_SaveLast_hpos<<2,3>>										;Save the last axis position |X|Y|Z|
-	global numeric nA_SaveLast_apos<<2>>										;Save the last apos value
-	global numeric nA_SaveLast_bpos<<2>>										;Save the last bpos value
-	;Variables for interpolation stuff -----------------------------------------------------------------------------------------------------
-	global logical bA_CylindricalInterpolation<<2>>                             ;"true" if G12.1 + G16 active
-	global numeric nA_CylindricalCartesianY<<2>>								;Save the calculated cartesian Y value for output
-	global numeric nA_CylindricalCartesianY_RAW<<2>>							;Save the calculated cartesian Y value without rounding
-	global numeric nA_SaveLast_CylindricalCartesianY<<2>>						;Save the last cartesian Y value for G12.1 + G16
 
-	;Variables for synchronization ---------------------------------------------------------------------------------------------------------
-	global integer iA_Z_MasterChannel<<2>>										;Contains the channel which have Z-Axis control
-	global integer iA_C_MasterChannel<<2>>										;Contains the channel which have C-Axis control
-	
-	;Variables for format string -----------------------------------------------------------------------------------------------------------
-	global string  toolNumber_f                                                 ;Format style of tool call output
-	global string  wearNumber_f                                                 ;Format style of tool wear number output
-	global string  spin_TT1_f spin_TT2_f spin_TT3_f spin_TT4_f					;Format style of turning tool spin output
-	global string  spin_MT1_f spin_MT2_f spin_MT3_f spin_MT4_f					;Format style of milling tool spin output
-	global string  radius_f                                                     ;Format style of radius output
-	global string  anext_f                                                      ;Format style of C-Axis output
-	global string  dapos_f                                                      ;Format style of C-Axis incremental output
-	global string  bpos_f bnext_f                                               ;Format style of B-Axis output
-	global string  xonext_f yonext_f zonext_f                                   ;Format style of onext coordinates
-	global string  xhnext_f yhnext_f zhnext_f                                   ;Format style of hnext coordinates
-	global string  xocenter_rel_f yocenter_rel_f zocenter_rel_f                 ;Format style of ocenter_rel
-	global string  xhcenter_rel_f yhcenter_rel_f zhcenter_rel_f                 ;Format style of hcenter_rel
-	global string  xlcenter_rel_f ylcenter_rel_f zlcenter_rel_f                 ;Format style of lcenter_rel
-	global string  shift_x_after_rot_f                                          ;Format style of shift_#_after_rot
-	global string  shift_y_after_rot_f                                          ;Format style of shift_#_after_rot
-	global string  shift_z_after_rot_f                                          ;Format style of shift_#_after_rot
-	global string  Drill_Retract_f                                                    ;Format style of G8x R-value
-	global string  Drill_Peck_f                                                    ;Format style of G8x Q-value
-	global string  Drill_Dwell_f                                                    ;Format style of G8x P-value
+# ======= Register Variables ===============
 
+#		--------Tool--------
+registerSeperator("Tool",lbChar: true)
+
+# b_ChangeTool
+registerVariable("logical","b_ChangeTool", "Tool has been changed | initial true @change_tool")
+
+
+#		--------Motion--------
+registerSeperator("Motion",lbChar: true)
+
+# 	b_FirstMove
+registerVariable("logical","b_FirstMove", "Indicates first move of the job")
+
+
+#		--------Spin--------
+registerSeperator("Spin",lbChar: true)
+
+
+#		--------Feed--------
+registerSeperator("Feed",lbChar: true)
+
+
+#		--------Coolant--------
+registerSeperator("Coolant",lbChar: true)
+
+
+#		--------String Formatting--------
+
+registerSeperator("String Formatting",lbChar: true)
+
+
+#		--------Other--------
+registerSeperator("Other",lbChar: true)
+
+# b_LoopTransform
+registerVariable("logical","b_LoopTransform", "Flagged true @loop and false @end_loop")
 
 }}

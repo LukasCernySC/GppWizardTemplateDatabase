@@ -1,5 +1,10 @@
+
 {{
 	#TODO: start_mach_ctrl
 }}
 
+@start_mach_ctrl
+
 	;TODO: start_mach_ctrl
+
+endp

@@ -1,8 +1,9 @@
+
 {{
 
 }}
 
-
+@arc
 	gcode = 2 + arc_direction
 	{nb gcode xlpos ylpos [zlpos]}
 
@@ -16,4 +17,4 @@
 	endif
 	
     {[feed]}
-   
+endp

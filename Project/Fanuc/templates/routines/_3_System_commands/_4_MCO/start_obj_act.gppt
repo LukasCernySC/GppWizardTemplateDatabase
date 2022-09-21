@@ -1,5 +1,10 @@
+
 {{
 	#TODO: start_obj_act
 }}
 
+@start_obj_act
+
 	;TODO: start_obj_act
+
+endp

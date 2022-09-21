@@ -3,7 +3,7 @@
 	#-------------------Region Generator--------------------------
 
 	comment = ";"
-	regionStart = "#region | "
+	regionStart = "#region "
 	regionEnd = "#endregion"
 	separator = ": "
 	displayChar = '-'
@@ -30,7 +30,7 @@
 		regionName = comment + regionStart + stringNum + separator + stringName + "\n"
 		regBreak = comment + displayChar * ( gen_GetHeaderSize() + delta ) + "\n"
 		
-		regBreak
+		"\n" + regBreak
 		regionName
 		regBreak
 		
@@ -52,16 +52,15 @@
 	
 		if SameLenAsHead == true
 			charDispLen = gen_GetHeaderSize() + globalDelta + delta
-			regBreak = comment + (displayChar * charDispLen)
 		else
 			charDispLen = regionEnd.size + delta
-			regBreak = comment + (displayChar * charDispLen )
 		end
 		
-		regEnd = comment + regionEnd
+		regBreak = comment + (displayChar * charDispLen ) + "\n"
+		regEnd = comment + regionEnd + "\n"
 		
-		regBreak + "\n"
-		regEnd + "\n"
+		"\n" + regBreak
+		regEnd
 		regBreak
 	end
 	

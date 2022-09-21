@@ -1,5 +1,10 @@
+
 {{
 	#TODO: move_object
 }}
 
+@move_object
+
 	;TODO: move_object
+
+endp

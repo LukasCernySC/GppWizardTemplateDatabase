@@ -1,4 +1,9 @@
 
+{{
+
+}}
+
+@start_of_job
    if i_SubmaschineIDSave ne submachine_ID and !b_SubMachineChange
       call @usr_PrintMessage((10),('{{res.message | string.downcase}}+{{res.abort | string.downcase}}'),('@start_of_job'))
    endif
@@ -153,3 +158,5 @@ if HSM_job eq true or left(job_type,3) eq '3-d' or left(job_type,3) eq 'hss' or 
 
    b_InsideJob<<index_job>> = true ;for tranformation (@fourth_axis)
    b_TurretINRefPos = false
+   
+endp

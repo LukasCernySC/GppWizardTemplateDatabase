@@ -1,0 +1,65 @@
+
+{{
+
+	func HorizontalRule(char, charCount, comment = false)
+		if comment == true
+			rule = ";" + (char * charCount)
+		else
+			rule = char * charCount
+		end
+		ret rule
+	end
+	
+	func dev_HorizontalRule(sectionName, charCount, newLineOpen = false, newLineClose = false)
+		devComment = {}
+		
+		# open
+		nameCount = sectionName.size
+		
+		remainingChars = charCount - nameCount  # number of spaces sectionName took
+		halfTheChars = remainingChars / 2 		# split remaining in half
+		indexPos = halfTheChars | math.floor 	# halfTheChars to floor = index position to place sectionName
+		
+		chars = "-" * indexPos
+		lineSize = (chars.size * 2) + sectionName.size # used for no 'End sectionName'
+		
+		# close
+		sectionEnd = "End " + sectionName
+		nameEndCount = sectionEnd.size
+		
+		nameEndRemChars = charCount - nameEndCount
+		nameEndHalfChars = nameEndRemChars / 2
+		nameEndIndexPos = nameEndHalfChars | math.floor
+		
+		nameEndStart = "-" * nameEndIndexPos
+		
+		devCommentOpenSize = 0
+		devCommentCloseSize = 0
+		
+		#open
+		if newLineOpen == true
+			devComment.open = "\n#" + chars + sectionName + chars + "\n"
+			devCommentOpenSize = devComment.open.size
+		else
+			devComment.open = "\n#" + chars + sectionName + chars
+			devCommentOpenSize = devComment.open.size
+		end
+		
+		#close
+		if newLineClose == true
+			devComment.close = "\n#" + nameEndStart + sectionEnd + chars + "\n"
+			devCommentCloseSize = devComment.close.size
+		else
+			devComment.close = "\n#" + nameEndStart + sectionEnd + chars
+			#devComment.close = "\n#" + ("-" * lineSize)
+			devCommentCloseSize = devComment.close.size
+		end
+
+		if (devCommentCloseSize - devCommentOpenSize) == 3
+			devComment.open = devComment.open | string.append ("-" * 2)
+		end
+		
+		ret devComment
+	end
+	
+}}

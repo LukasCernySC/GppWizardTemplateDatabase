@@ -1,3 +1,4 @@
+
 {{
 	#TODO: start_of_file
 
@@ -7,4 +8,9 @@
 	# User proceedure to reset logic
 	# call @usr_InitMachineStatus (not currently defined)
 }}
-;TODO: start_of_file
+
+@start_of_file
+
+	;TODO: start_of_file
+	
+endp

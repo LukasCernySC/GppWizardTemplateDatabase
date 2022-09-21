@@ -1,5 +1,10 @@
+
 {{
 	#TODO: arc_5x
 }}
 
-;TODO: arc_5x
+@arc_5x
+
+	;TODO: arc_5x
+	
+endp

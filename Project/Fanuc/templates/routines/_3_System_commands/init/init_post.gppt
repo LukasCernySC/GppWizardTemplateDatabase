@@ -1,12 +1,15 @@
 
+{{
+	include "routines/_3_System_commands/init/globalVars.gppt"
+	include "generators/horizontalRule.gppt"
+	#include "functions/stringFunctions.gppt"
+	#include "functions/SCvariableFormatter.gppt"
+}}
+
 @init_post
-	
 	{{# ===== Init variables =====}}
-	global logical b_FirstMove                   ;Indicates first move of the job
-	global logical b_ChangeTool					 ;Tool has been changed | initial true @change_tool
-	global logical b_LoopTransform				 ;Flagged true @loop and false @end_loop
 	
-	
+	{{printVariables()}}
 	
 	
 	if gpp_debugging
@@ -23,4 +26,5 @@
    	blknum_delta           = 1
    	blknum                 = 1
    	blknum_max             = 1000000
+   	
 endp
