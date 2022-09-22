@@ -1,0 +1,50 @@
+
+{{
+include "generators/horizontalRule.gppt"
+
+	# Initial variable assignment
+	
+scSysVars = []
+	
+
+func VarAssignment(name, value, stringFormat = true)
+	varObj = {name:name, value:value, isSformat:stringFormat, isSeperator:false}
+	scSysVars = array.add scSysVars varObj
+end
+
+
+func VarSeparator(comment)
+	varSeperator = {comment:comment, isSeperator:true}
+    scSysVars = array.add scSysVars varSeperator
+end
+
+
+func initVarAssignment()
+	
+	spaceAmount = 22
+	
+	prefix = ('-' * 4)
+	affix = prefix
+	
+	for var in scSysVars
+		if var.isSeperator == true
+    		outputVar = ";" + prefix + var.comment + affix + "\n"
+    	else
+			nameLen = var.name.size
+			spaceConst = spaceAmount - nameLen
+			if var.isSformat == true
+				strFormat = "'" + var.value + "'\n"
+			else
+				strFormat =  var.value + "\n"
+			end
+			if spaceConst < 1
+    			spaceConst = 1
+    		end
+	
+			outputVar = var.name + (' ' * spaceConst) + '=' + ' ' + strFormat
+		end
+		outputVar
+	end
+end
+
+}}

@@ -45,8 +45,7 @@ func printVariables()
     			spaceConst = 1
     		end
     		
-       		text = "global " + var.type + " " + var.name + (spaceConst * " ") + ";" + var.comment + "\n"
-        	
+       		text = "global " + var.type + " " + var.name + (spaceConst * " ") + ";" + var.comment + "\n"	
     	end
     	text
     end

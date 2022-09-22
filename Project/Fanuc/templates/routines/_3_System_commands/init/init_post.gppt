@@ -1,30 +1,20 @@
 
 {{
 	include "routines/_3_System_commands/init/globalVars.gppt"
+	include "routines/_3_System_commands/init/initVarAssignment.gppt"
 	include "generators/horizontalRule.gppt"
-	#include "functions/stringFunctions.gppt"
-	#include "functions/SCvariableFormatter.gppt"
 }}
 
 @init_post
-	{{# ===== Init variables =====}}
+	{{
+	# ===== Init variables =====
+	printVariables()
 	
-	{{printVariables()}}
+	# ===== Init variable value assignment =====
+	initVarAssignment()
+
+	# ==== Trace ====
+	include "routines/_2_Trace/Trace.gppt"
+	}}
 	
-	
-	if gpp_debugging
-		if i_TraceCount == 0
-			i_TraceCount = i_TraceCount + 1
-			input 'trace 0 = no ... trace 5 = all:' i_TraceCount
-			trace"all": i_TraceCount
-		endif
-	endif
-	
-	blknum_f               = '8.0(p)'
-   	blknum_gen             = false
-   	blknum_exist           = true
-   	blknum_delta           = 1
-   	blknum                 = 1
-   	blknum_max             = 1000000
-   	
 endp

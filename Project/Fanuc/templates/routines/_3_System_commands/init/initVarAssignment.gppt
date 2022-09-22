@@ -1,0 +1,87 @@
+
+{{
+	include "functions/initialVariableAssignment.gppt"
+	
+	if res.language == "en"
+		decPlaces = "4"
+	else
+		decPlaces = "3"
+	end
+
+	#===========Register SolidCAM System Variables==============
+	
+	VarSeparator("Post Output Formatting")
+	# remove_blanks
+		# If TRUE, all blanks (spaces) are removed out of the generated GCode file.
+		# This leads to more compact GCode files (in terms of memory), but to a less readable GCode.
+	VarAssignment("remove_blanks", "false", stringFormat: false)
+	# gcode_space
+		# If TRUE, G-field that was omitted due to modality is filled with spaces to keep the field after in fixed column.
+	VarAssignment("gcode_space", "false", stringFormat: false)
+	# end_block_text
+		# String appended to the end of each block.
+	VarAssignment("end_block_text", "" )
+	
+	VarSeparator("Numbering")
+	VarAssignment("numeric_def_f", "5."+decPlaces+"(r)")
+	VarAssignment("integer_def_f", "8.0(p)")
+	
+	
+	# == Position Formatting ==
+	VarSeparator("Position")
+	# X pos
+	VarSeparator("X")
+	if vmid.operationType != "MILL"
+		xFormat = "'<X>' + numeric_def_f + '(*2r)< >'"
+	else
+		xFormat = "'<X>' + numeric_def_f + '(r)< >'"
+	end
+		VarAssignment("xpos_f", xFormat, false)
+		VarAssignment("xhpos_f", "xpos_f", false)
+		VarAssignment("xmpos_f", "xpos_f", false)
+		VarAssignment("xlpos_f", "xpos_f", false)
+		VarAssignment("xopos_f", "xpos_f", false)
+		VarAssignment("xtpos_f", "xpos_f", false)
+		
+	# Y pos
+	VarSeparator("Y")
+		VarAssignment("ypos_f", "")
+		VarAssignment("yhpos_f", "ypos_f", false)
+		VarAssignment("ympos_f", "ypos_f", false)
+		VarAssignment("ylpos_f", "ypos_f", false)
+		VarAssignment("yopos_f", "ypos_f", false)
+		VarAssignment("ytpos_f", "ypos_f", false)
+		
+	# Z pos
+	VarSeparator("Z")
+		VarAssignment("zpos_f", "")
+		VarAssignment("zhpos_f", "zpos_f", false)
+		VarAssignment("zmpos_f", "zpos_f", false)
+		VarAssignment("zlpos_f", "zpos_f", false)
+		VarAssignment("zopos_f", "zpos_f", false)
+		VarAssignment("ztpos_f", "zpos_f", false)
+
+	# == A pos ==	
+	VarSeparator("A")
+	VarAssignment("apos_f", "<C>5."+decPlaces+"(r)< >")
+	#VarAssignment("anext_f", "apos_f", stringFormat: false)
+		
+	
+	# == GCode Formatting ==
+	VarSeparator("GCode")
+	VarAssignment("gcode_f", "<G>3.1(p)< >")
+	VarAssignment("mcode_f", "<M>3.0(p)< >")
+	VarAssignment("feed_f", "<F>6.0(p)< >")
+	
+	
+	
+	# == Block Numbering ==
+	VarSeparator("Block Numbers")
+	VarAssignment("blknum_f", "8.0(p)")
+	VarAssignment("blknum_gen", "false", stringFormat: false)
+	VarAssignment("blknum_exist", "true", stringFormat: false)
+	VarAssignment("blknum_delta", "1", stringFormat: false)
+	VarAssignment("blknum", "1", stringFormat: false)
+	VarAssignment("blknum_max", "1000000", stringFormat: false)
+	
+}}

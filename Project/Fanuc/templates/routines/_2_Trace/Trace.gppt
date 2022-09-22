@@ -1,5 +1,4 @@
- ;#region Trace
- 
+
 	if gpp_debugging
 		if i_TraceCount == 0
 			i_TraceCount = i_TraceCount + 1
@@ -7,5 +6,3 @@
 			trace"all": i_TraceCount
 		endif
 	endif
-	
-;# endregion
