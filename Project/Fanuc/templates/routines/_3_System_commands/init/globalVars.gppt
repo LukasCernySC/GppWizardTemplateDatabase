@@ -9,14 +9,14 @@ include "functions/globalVariables.gppt"
 registerSeperator("Tool",lbChar: true)
 
 # b_ChangeTool
-registerVariable("logical","b_ChangeTool", "Tool has been changed | initial true @change_tool")
+registerVariable("logical","b_ToolChange", "Tool: Tool has been changed | initial true @change_tool")
 
 
 #		--------Motion--------
 registerSeperator("Motion",lbChar: true)
 
 # 	b_FirstMove
-registerVariable("logical","b_FirstMove", "Indicates first move of the job")
+registerVariable("logical","b_FirstMove", "Motion: Indicates first move of the job")
 
 
 #		--------Spin--------
@@ -35,11 +35,23 @@ registerSeperator("Coolant",lbChar: true)
 
 registerSeperator("String Formatting",lbChar: true)
 
+registerVariable("string","s_ProgramNumber", "String Format: Formatted program number")
+registerVariable("string","tool_number_f", "String Format: Formatting string for 'tool_number'")
+
+#		--------Messages--------
+
+registerSeperator("Messages",lbChar: true)
+
+registerVariable("logical","b_OutputToolMessage", "Messages: true -> output tool messages")
+registerVariable("logical","b_DefaultOpMessage", "Messages: true -> output operation messages")
+registerVariable("integer","i_ToolDescriptionLen", "Messages: Max characters per line")
+registerVariable("integer","i_ToolDescriptionMaxLines", "Messages: Max number of lines")
+
 
 #		--------Other--------
 registerSeperator("Other",lbChar: true)
 
-# b_LoopTransform
-registerVariable("logical","b_LoopTransform", "Flagged true @loop and false @end_loop")
+registerVariable("integer","i_TraceCount", "Trace input value")
+
 
 }}

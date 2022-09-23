@@ -6,6 +6,5 @@
 @loop
 
 	;TODO: loop
-	b_LoopTransform = true
 
 endp

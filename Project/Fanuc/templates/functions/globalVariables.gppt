@@ -23,8 +23,8 @@ end
 
 func printVariables()
 
-	spaceAmount = 44
-	vertRuler = 80 - 4 # Account for auto tab
+	spaceAmount = 76
+	vertRuler = 140 - 5 # Account for auto tab and ';'
 	vertRulePrefix = 8
 	prefix = ("-" * vertRulePrefix)
 	

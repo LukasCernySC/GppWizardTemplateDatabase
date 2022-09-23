@@ -21,7 +21,7 @@ end
 
 func initVarAssignment()
 	
-	spaceAmount = 22
+	spaceAmount = 32
 	
 	prefix = ('-' * 4)
 	affix = prefix

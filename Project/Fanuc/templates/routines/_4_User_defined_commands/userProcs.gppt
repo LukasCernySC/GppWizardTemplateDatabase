@@ -6,119 +6,108 @@
 
 @usr_MessageFormat(string sMessage)
 	; CE 06.22.2022: tool_message 100% working
+	; 	need to test other messages such as MCO
 	; This function will take a message and convert it to either:
 	; a.)Limited Char count per line and max amount of line (set globally) ex: 32 char by 5 lines
 	; b.)If message is output on multi lines ex: 'Tool Description' in toolkit
 	;	and the user types x amount of chars, hits enter, and continues to type
 	local integer iL_To iL_From iL_CharCount iL_Count1 iL_MCount
 	local string sL_ReplacedToolMsg sLA_ToolDescription<<50>> sL_Temp
+    local integer iL_NewLinePos iL_MessageCount
 
 	; i_ToolDescriptionMaxLines = 5 | Max allowed lines set global
 	; i_ToolDescriptionLen = 32 | Max allowed characters per line set global
+
+
+    {{#i_ToolDescriptionLen = bVMID_MO_ToolMsgLen}}
+    {{#i_ToolDescriptionMaxLines = bVMID_MO_MaxToolMsgLines}}
 
 	sL_ReplacedToolMsg = sMessage
 	call @usr_ReplacedString(sL_ReplacedToolMsg) ; Account for any funky chars like degree (Alt + 0176)
 
 	if strlen(sL_ReplacedToolMsg) <> 0
-		if l_DefaultMessageFormat == true
-			if !instr(sL_ReplacedToolMsg, '\n'); Message typed out on one line
-				iL_To = i_ToolDescriptionLen
-				iL_Count1 = 1
-				iL_MCount = 1
-				iL_CharCount = strlen(sL_ReplacedToolMsg)
+        if !instr(sL_ReplacedToolMsg, '\n'); Message typed out on one line
+            iL_To = i_ToolDescriptionLen
+            iL_Count1 = 1
+            iL_MCount = 1
+            iL_CharCount = strlen(sL_ReplacedToolMsg)
 
-				while iL_Count1 < i_ToolDescriptionMaxLines
-					if iL_CharCount == strlen(sL_ReplacedToolMsg) 
-						sLA_ToolDescription<<iL_MCount>> = substr(trim(sL_ReplacedToolMsg), 1, iL_To)
-						{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
-						iL_CharCount = iL_CharCount - strlen(sLA_ToolDescription<<iL_MCount>>)
-						iL_From = i_ToolDescriptionLen
-					elseif iL_CharCount >= i_ToolDescriptionLen
-						sL_Temp = sLA_ToolDescription<<iL_MCount - 1>>
-						sLA_ToolDescription<<iL_MCount>> = substr(trim(sL_ReplacedToolMsg), iL_From, iL_To)
-						
-						if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
-							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
-						endif 
-						if right(sL_Temp, 1) == left(sLA_ToolDescription<<iL_MCount>>, 1)
-							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
-							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
-						else
-							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
-						endif
-						
-						iL_CharCount = iL_CharCount - strlen(sLA_ToolDescription<<iL_MCount>>)
-						iL_From = iL_From + i_ToolDescriptionLen
-					elseif iL_CharCount == 0
-						break
-					else
-						iL_From = strlen(sL_ReplacedToolMsg) - iL_CharCount
-						sL_Temp = sLA_ToolDescription<<iL_MCount - 1>>
-						sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg, iL_From, iL_To)
+            while iL_Count1 < i_ToolDescriptionMaxLines
+                if iL_CharCount == strlen(sL_ReplacedToolMsg) 
+                    sLA_ToolDescription<<iL_MCount>> = substr(trim(sL_ReplacedToolMsg), 1, iL_To)
+                    {nb, '('+sLA_ToolDescription<<iL_MCount>>+')'}
+                    iL_CharCount = iL_CharCount - strlen(sLA_ToolDescription<<iL_MCount>>)
+                    iL_From = i_ToolDescriptionLen
+                elseif iL_CharCount >= i_ToolDescriptionLen
+                    sL_Temp = sLA_ToolDescription<<iL_MCount - 1>>
+                    sLA_ToolDescription<<iL_MCount>> = substr(trim(sL_ReplacedToolMsg), iL_From, iL_To)
+                    
+                    if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
+                        sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+                    endif 
+                    if right(sL_Temp, 1) == left(sLA_ToolDescription<<iL_MCount>>, 1)
+                        sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+                        {nb, '('+sLA_ToolDescription<<iL_MCount>>+')'}
+                    else
+                        {nb, '('+sLA_ToolDescription<<iL_MCount>>+')'}
+                    endif
+                    
+                    iL_CharCount = iL_CharCount - strlen(sLA_ToolDescription<<iL_MCount>>)
+                    iL_From = iL_From + i_ToolDescriptionLen
+                elseif iL_CharCount == 0
+                    break
+                else
+                    iL_From = strlen(sL_ReplacedToolMsg) - iL_CharCount
+                    sL_Temp = sLA_ToolDescription<<iL_MCount - 1>>
+                    sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg, iL_From, iL_To)
 
-						if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
-							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
-						endif
-						if right(sL_Temp, 1) == left(sLA_ToolDescription<<iL_MCount>>, 1)
-							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
-							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
-						else
-							{nb, s_OpenComment+sLA_ToolDescription<<iL_MCount>>+s_CloseComment}
-						endif
-						
-						break
-					endif
-					iL_MCount = iL_MCount + 1
-					iL_Count1 = iL_Count1 + 1
-				endw
-				{nb}
-			else ; Message typed out on multiple lines
-				local integer iL_NewLinePos iL_MessageCount
-				
-				sL_ReplacedToolMsg = replace(sL_ReplacedToolMsg,'\r','')
-				if strlen(sL_ReplacedToolMsg) <> 0
-					iL_Count1 = 0
-					iL_MCount = 1
-					iL_MessageCount = iL_MCount
-					while iL_Count1 <= strlen(sL_ReplacedToolMsg)
-						iL_Count1 = iL_Count1 + 1
-						iL_NewLinePos = instr(sL_ReplacedToolMsg,'\n',iL_Count1)
-						if iL_NewLinePos <> 0
-							sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg,iL_Count1,(iL_NewLinePos-iL_Count1))
-							iL_MCount = iL_MCount + 1
-							iL_MessageCount = iL_MCount
-							iL_Count1 = iL_NewLinePos
-						else
-							sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg,iL_Count1,(strlen(sL_ReplacedToolMsg)-iL_Count1+1))
-							iL_Count1 = (strlen(sL_ReplacedToolMsg)+1)
-						endif
-					endw
-					iL_MCount = 1
-					while iL_MCount <= iL_MessageCount
-						if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
-							sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
-						endif
-						{nb,s_OpenComment,trim(sLA_ToolDescription<<iL_MCount>>),s_CloseComment}
-						iL_MCount = iL_MCount + 1
-					endw
-					{nb}
-				endif
-			endif
-		else; If customer would like some other way
-			call @cus_MessageFormat(sL_ReplacedToolMsg)
-		endif
+                    if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
+                        sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+                    endif
+                    if right(sL_Temp, 1) == left(sLA_ToolDescription<<iL_MCount>>, 1)
+                        sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+                        {nb, '('+sLA_ToolDescription<<iL_MCount>>+')'}
+                    else
+                        {nb, '('+sLA_ToolDescription<<iL_MCount>>+')'}
+                    endif
+                    
+                    break
+                endif
+                iL_MCount = iL_MCount + 1
+                iL_Count1 = iL_Count1 + 1
+            endw
+            {nb}
+        else ; Message typed out on multiple lines
+            sL_ReplacedToolMsg = replace(sL_ReplacedToolMsg,'\r','')
+            if strlen(sL_ReplacedToolMsg) <> 0
+                iL_Count1 = 0
+                iL_MCount = 1
+                iL_MessageCount = iL_MCount
+                while iL_Count1 <= strlen(sL_ReplacedToolMsg)
+                    iL_Count1 = iL_Count1 + 1
+                    iL_NewLinePos = instr(sL_ReplacedToolMsg,'\n',iL_Count1)
+                    if iL_NewLinePos <> 0
+                        sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg,iL_Count1,(iL_NewLinePos-iL_Count1))
+                        iL_MCount = iL_MCount + 1
+                        iL_MessageCount = iL_MCount
+                        iL_Count1 = iL_NewLinePos
+                    else
+                        sLA_ToolDescription<<iL_MCount>> = substr(sL_ReplacedToolMsg,iL_Count1,(strlen(sL_ReplacedToolMsg)-iL_Count1+1))
+                        iL_Count1 = (strlen(sL_ReplacedToolMsg)+1)
+                    endif
+                endw
+                iL_MCount = 1
+                while iL_MCount <= iL_MessageCount
+                    if left(sLA_ToolDescription<<iL_MCount>>, 1) == ' '
+                        sLA_ToolDescription<<iL_MCount>> = replace(sLA_ToolDescription<<iL_MCount>>, left(sLA_ToolDescription<<iL_MCount>>, 1), '', 1)
+                    endif
+                    {nb,'(',trim(sLA_ToolDescription<<iL_MCount>>),')'}
+                    iL_MCount = iL_MCount + 1
+                endw
+                {nb}
+            endif
+        endif
 	endif
-endp
-
-@cus_MessageFormat(string sMessage)
- ; Customer specific message styling/format. @usr_MessageFormat should not be altered.
- ; sL_ReplacedToolMsg gets passed in from @usr_MessageFormat and has already ran through special char cleaner
-	{nb, '(************************************)'}
-	{nb, upper('(!!!cus_MessageFormat not complete!!!)')}
-	{nb, '(************************************)'}
-	{nb}
-	{nb}
-	{nb, s_OpenComment + sMessage + s_CloseComment}
 endp
 
 @usr_ReplacedString(string sL_String)
@@ -165,6 +154,7 @@ endp
 	sL_String = upper(sL_String)
 endp
 
+{{if vmid.operationType == "TURN" || vmid.operationType == "MILL_TURN"}}
 @usr_ToolCall(logical b_HalfIndex)
 	local integer  iL_MessageLen ; Tool output section below
 	
@@ -413,6 +403,7 @@ endp
 		endif
 	endif
 endp
+{{end}}
 
 @usr_ToolTypeName
 	;Software limits - there is no "tool_user_type" at turning operations and it is on english
@@ -510,6 +501,7 @@ endp
 	{'('upper(lS_UserToolType)')'}
 endp
 
+
 @usr_defTool
 	local logical bL_ToolList
 	local string sL_ToolList
@@ -557,3 +549,4 @@ endp
 	endif
 	;---------------------------------------------------------------------------
 endp
+

@@ -1,12 +1,19 @@
 
 {{
 	include "functions/initialVariableAssignment.gppt"
+	include "functions/functions.gppt"
 	
 	if res.language == "en"
 		decPlaces = "4"
 	else
 		decPlaces = "3"
 	end
+
+	#===========String Ralated==============
+	VarSeparator("String and message ralated")
+	
+	VarAssignment("i_ToolDescriptionLen", "32", stringFormat: false)
+	VarAssignment("i_ToolDescriptionMaxLines", "5", stringFormat: false)
 
 	#===========Register SolidCAM System Variables==============
 	
@@ -22,9 +29,16 @@
 		# String appended to the end of each block.
 	VarAssignment("end_block_text", "" )
 	
+	
+	# == Numbering ==
 	VarSeparator("Numbering")
-	VarAssignment("numeric_def_f", "5."+decPlaces+"(r)")
+	VarAssignment("numeric_def_f", "5."+decPlaces)
 	VarAssignment("integer_def_f", "8.0(p)")
+	
+	
+	# == Tool ==
+	VarSeparator("Tooling")
+	VarAssignment("tool_number_f", "<T>6.0(n)< >")
 	
 	
 	# == Position Formatting ==
@@ -36,35 +50,47 @@
 	else
 		xFormat = "'<X>' + numeric_def_f + '(r)< >'"
 	end
+	
+	if vmid.operationType == "MILL"
 		VarAssignment("xpos_f", xFormat, false)
 		VarAssignment("xhpos_f", "xpos_f", false)
-		VarAssignment("xmpos_f", "xpos_f", false)
 		VarAssignment("xlpos_f", "xpos_f", false)
 		VarAssignment("xopos_f", "xpos_f", false)
+	else
+		VarAssignment("xmpos_f", "xpos_f", false)
 		VarAssignment("xtpos_f", "xpos_f", false)
+	end
 		
 	# Y pos
 	VarSeparator("Y")
-		VarAssignment("ypos_f", "")
+	if vmid.operationType == "MILL"
+		VarAssignment("ypos_f", "'<Y>' + numeric_def_f + '(r)< >'", false)
 		VarAssignment("yhpos_f", "ypos_f", false)
-		VarAssignment("ympos_f", "ypos_f", false)
 		VarAssignment("ylpos_f", "ypos_f", false)
 		VarAssignment("yopos_f", "ypos_f", false)
+	else
+		VarAssignment("ympos_f", "ypos_f", false)
 		VarAssignment("ytpos_f", "ypos_f", false)
+	end
 		
 	# Z pos
 	VarSeparator("Z")
-		VarAssignment("zpos_f", "")
+	if vmid.operationType == "MILL"
+		VarAssignment("zpos_f", "'<Z>' + numeric_def_f + '(r)< >'", false)
 		VarAssignment("zhpos_f", "zpos_f", false)
-		VarAssignment("zmpos_f", "zpos_f", false)
 		VarAssignment("zlpos_f", "zpos_f", false)
 		VarAssignment("zopos_f", "zpos_f", false)
+	else
+		VarAssignment("zmpos_f", "zpos_f", false)
 		VarAssignment("ztpos_f", "zpos_f", false)
+	end
 
 	# == A pos ==	
-	VarSeparator("A")
-	VarAssignment("apos_f", "<C>5."+decPlaces+"(r)< >")
-	#VarAssignment("anext_f", "apos_f", stringFormat: false)
+	if HasFirstAxis() == true
+		VarSeparator("A")
+		VarAssignment("apos_f", "<C>5."+decPlaces+"(r)< >")
+		#VarAssignment("anext_f", "apos_f", stringFormat: false)
+	end
 		
 	
 	# == GCode Formatting ==

@@ -6,6 +6,5 @@
 @end_loop
 
 	;TODO: end_loop
-	b_LoopTransform = false
 
 endp

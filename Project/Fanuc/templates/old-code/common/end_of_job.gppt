@@ -1,0 +1,74 @@
+
+{{
+
+}}
+
+@end_of_job
+{{if usr.bVMID_MI_G61_On-}}
+if bVMID_MI_G61_On ne 0
+      {nb,'G64'}
+   endif
+   {{end-}}
+
+   if b_ToolCorrG10
+      if is_chamfer
+         {nb,(10):gcode_f'L'i_ToolWearCompDiam'P'tostr(tool_number:'5.0(n)'),' R0',sA_Comment<<23>>}
+         cutting_diameter=0
+      endif
+   endif
+
+   b_ToolCorrG10 = false
+
+{{if usr.bVMID_MI_PRGStop-}}
+if bVMID_MI_PRGStop
+      call @usr_program_stop
+   endif
+   {{end}}
+
+   if !b_LoopTransform ; in order to print values from @change_ref_point
+      b_InsideJob = false
+   endif
+
+{{if HasFirstAxis}}
+if !b_Is3XMachine and (x5_job or b_Is5xJob)
+      if bVMID_MO_G93
+         {nb (94):gcode_f tool_feed:feed_f}
+      endif
+
+      call @usr_retreat(('Z'),n_ZRetreatValue,n_XRetreatValue,n_YRetreatValue) ;false ==> retreat Z, true ==> retreat Z, XY
+
+      {nb(49):gcode_f}
+
+      if b_G49WithZ
+         {sA_Comment<<21>>}
+      endif
+
+      b_G49Active = true
+      {nb (28):gcode_f (91):gcode_f (0):apos_f}
+      {nb (90):gcode_f}
+      n_FirstAxisAngleSave = 0
+      n_SecondAxisAngleSave = bpos
+      i_PartHomeSave = 0 ;because of next index Job in the same MAC-Position
+   endif
+   {{end}}
+
+{{if usr.sVMID_MI_UserInputEnd-}}
+if sVMID_MI_UserInputEnd ne ''
+      {nb,sVMID_MI_UserInputEnd}
+      sVMID_MI_UserInputEnd = ''
+   endif
+  {{end}}
+
+{{if HasFirstAxis}}
+if rot_axis_type ne axis4_none or X5_job
+      call @usr_Clamping
+   endif
+   {{end}}
+
+   i_SubmaschineIDSave = submachine_ID
+   b_Is5xJob = false
+   b_ChangeTool = false
+   b_InsideJob = false
+
+}}
+endp

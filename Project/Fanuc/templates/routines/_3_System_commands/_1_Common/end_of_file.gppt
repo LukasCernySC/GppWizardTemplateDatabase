@@ -6,5 +6,5 @@
 @end_of_file
 
 	;TODO: end_of_file
-
+	{nl, '%'}
 endp

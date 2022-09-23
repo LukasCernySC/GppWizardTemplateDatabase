@@ -11,6 +11,9 @@
 
 @start_of_file
 
+	s_ProgramNumber = tostr(program_number: '<O>z4.0(n)')
 	;TODO: start_of_file
+	{'%'}
+	{nl, s_ProgramNumber}
 	
 endp

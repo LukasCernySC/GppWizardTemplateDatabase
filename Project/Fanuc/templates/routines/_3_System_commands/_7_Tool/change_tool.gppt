@@ -7,6 +7,6 @@
 
 	;TODO: change_tool
 	b_ToolChange = true
-	
+	{nb, tool_number, (6):mcode_f}
 endp
 	
