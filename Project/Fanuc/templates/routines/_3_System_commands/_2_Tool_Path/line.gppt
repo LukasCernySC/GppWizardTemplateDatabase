@@ -1,17 +1,11 @@
 
 {{
-	#subMachine = vmid_getTiltedPlaneDefinition()
-	rotType = vmid_getRotationType(vmid_getTiltedPlaneDefinition(0))
-	if vmid_hasRotaryAxis()
-		pos = "hpos"
-	else
-		pos = vmid_getPosByRotType(rotType)	
-	end
+	
 }}
 
 @line
 
 	gcode = 1
-	{nb gcode [x{{pos}}] [y{{pos}}] [z{{pos}}] [feed]}
+	{nb gcode [x{{ pos }}] [y{{ pos }}] [z{{ pos }}] [feed]}
 	
 endp

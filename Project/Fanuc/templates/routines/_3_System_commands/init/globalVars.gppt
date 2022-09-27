@@ -37,6 +37,7 @@ registerSeperator("String Formatting",lbChar: true)
 
 registerVariable("string","s_ProgramNumber", "String Format: Formatted program number")
 registerVariable("string","tool_number_f", "String Format: Formatting string for 'tool_number'")
+registerVariable("string","radius_f", "String Format: Formatting string for 'radius'")
 
 #		--------Messages--------
 

@@ -3,6 +3,7 @@
 
 {{
 	#====== VMID function list ======= 
+	
 	# vmid_getAxisName(axisId)						-> Returns the name of the axis based on its ID
 	# vmid_hasRotaryAxis()							-> Returns true if any of the submachine has at least one rotary axis
 	# vmid_hasSecondRotaryAxis()					-> Returns true if any of the submachine has at second rotary axis
@@ -10,8 +11,6 @@
 	# vmid_hasTurningSubmachine()					-> Returns true if any of the submachine type is turning
 	# vmid_hasMillturnSubmachine()					-> Returns true if any of the submachine type is mill-turn
 	# vmid_getTiltedPlaneDefinition(submachId = 0) 	-> Returns tilted plane definition object for given submachine or default if submachine ID is not set
-	# vmid_getRotationType(submachId = 0)			-> Returns Rotation Type as string from given submachine or default of submachine ID is not set | "KINEMATIC" "CYCLE19" "CUSTOMIZE"
-	# vmid_getPosByRotType(rotType)					-> Returns pos set as string from given rotation type
 	
 	#=================================
 	
@@ -82,24 +81,107 @@
 		ret vmid.tiltedPlaneDefs[0]		
 	end
 	
-	func vmid_getRotationType(submachId = 0)
-		if submachId.type == "KINEMATIC_AXES"
-			ret "KINEMATIC"
-		else if submachId.type == "CYCLE_19"
-			ret "CYCLE19"
-		else if submachId.type == "CUSTOMIZE"
-			ret "CUSTOMIZE"
-		end
-	end
 	
-	func vmid_getPosByRotType(rotType)
-		if rotType == "KINEMATIC"
-			ret "opos"
-		else if rotType == "CYCLE19"
-			ret "opos"
-		else if rotType == "CUSTOMIZE"
-			ret "lpos"
+#===================Initial Setting of Pos set============================
+# 1. Collect all vectors in list (not sure if we should look at ID or name?)	-> GetLinearAxisVectors() returns array of objects
+# 2. Collect list of results. True or false looking at -1, 0, or 1				
+# 3. Look through list and return true or false									-> AllAxisVectorNormal() returns bool
+
+	func GetLinearAxisVectors()
+		vectors = []
+		xAxis = {}
+		yAxis = {}
+		zAxis = {}
+		
+		for ax in vmid.axes
+			if vmid_getAxisName(1203) == 'X'
+				xAxis.vecX = ax.vectorX
+				xAxis.vecY = ax.vectorY
+				xAxis.vecZ = ax.vectorZ
+			end
+			if ax.name == 'Y'
+				yAxis.vecX = ax.vectorX
+				yAxis.vecY = ax.vectorY
+				yAxis.vecZ = ax.vectorZ
+			end
+			if ax.name == 'Z'
+				zAxis.vecX = ax.vectorX
+				zAxis.vecY = ax.vectorY
+				zAxis.vecZ = ax.vectorZ
+			end
+		end
+		vectors = array.add vectors xAxis
+		vectors = array.add vectors yAxis
+		vectors = array.add vectors zAxis
+		ret vectors
+	end
+
+
+	func AllAxisVectorNormal()
+		checkedAxis = []
+		
+		for ax in GetLinearAxisVectors()
+			if ax.vecX == 0 || ax.vecX == -1 || ax.vecX == 1
+				checkedAxis = array.add checkedAxis true
+			else
+				checkedAxis = array.add checkedAxis false
+				break
+			end
+			if ax.vecY == 0 || ax.vecY == -1 || ax.vecY == 1
+				checkedAxis = array.add checkedAxis true
+			else
+				checkedAxis = array.add checkedAxis false
+				break
+			end
+			if ax.vecZ == 0 || ax.vecZ == -1 || ax.vecZ == 1
+				checkedAxis = array.add checkedAxis true
+			else
+				checkedAxis = array.add checkedAxis false
+				break
+			end
+		end
+		
+		for result in checkedAxis
+			if result == true
+				ret true
+			else
+				ret false
+			end
 		end
 	end
+
+# Kinematic Milling: lpos
+# Kinematic Turning: opos
+# Kinematic Mill_Turn: opos
+
+	func vmid_GetPosSet(operationType, submachID = 0)
+		operationType = string.downcase operationType
+
+		if submachID == 0
+			submachID = 1
+		end
+	
+		if operationType == "mill"
+			if AllAxisVectorNormal() == true # all axis vectors -1, 0, or 1
+				if vmid_hasMillingSubmachine() == true # milling submachine
+					if vmid_getTiltedPlaneDefinition(submachID).type == "KINEMATIC_AXES"
+						ret "lpos"
+					end
+				end
+			end
+		else if operationType == "turn"
+			if AllAxisVectorNormal() == true
+				if vmid_hasTurningSubmachine() == true
+					if vmid_getTiltedPlaneDefinition(submachID) == "KINEMATIC_AXES"
+						ret "opos"
+					end
+				end
+			end
+		else if operationType == "millturn"
+		else
+			ret "POS SET ERROR"
+		end
 		
+	end
+#===========================================================================	
 }}

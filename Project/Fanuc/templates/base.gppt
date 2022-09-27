@@ -41,7 +41,7 @@
 #	- @line_5x
 #	--------------------------------------------
 
-
+pos = vmid_GetPosSet("mill", 1) # Initial pos set based on Rotation type and Operation type 
 
 	#-----------------------------------Init Post-------------------------------------
 # @init_post

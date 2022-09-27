@@ -97,7 +97,8 @@
 	VarSeparator("GCode")
 	VarAssignment("gcode_f", "<G>3.1(p)< >")
 	VarAssignment("mcode_f", "<M>3.0(p)< >")
-	VarAssignment("feed_f", "<F>6.0(p)< >")
+	VarAssignment("feed_f", "<F>5."+decPlaces+"< >")
+	VarAssignment("radius_f", "<R>5."+decPlaces+"(p)< >")
 	
 	
 	
